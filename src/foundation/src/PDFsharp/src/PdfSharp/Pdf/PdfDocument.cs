@@ -418,6 +418,9 @@ namespace PdfSharp.Pdf
             }
             info.Elements.SetString(PdfDocumentInformation.Keys.Producer, producer);
 
+            // Prepare AcroForm. Must occur BEFORE preparing the Fonts !
+            Catalog.AcroForm?.PrepareForSave();
+
             // Prepare used fonts.
             _fontTable?.PrepareForSave();
 
@@ -639,7 +642,7 @@ namespace PdfSharp.Pdf
         /// <summary>
         /// Get the AcroForm dictionary.
         /// </summary>
-        public PdfAcroForm AcroForm => Catalog.AcroForm;
+        public PdfAcroForm? AcroForm => Catalog.AcroForm;
 
         /// <summary>
         /// Gets or sets the default language of the document.
@@ -706,6 +709,24 @@ namespace PdfSharp.Pdf
             => _internals ??= new PdfInternals(this);
 
         PdfInternals? _internals;
+
+        /// <summary>
+        /// Gets the existing <see cref="PdfAcroForm"/> or creates a new one, if there is no <see cref="PdfAcroForm"/> in the current document
+        /// </summary>
+        /// <returns>The <see cref="PdfAcroForm"/> associated with this document</returns>
+        public PdfAcroForm GetOrCreateAcroForm()
+        {
+            var form = AcroForm;
+            if (form == null)
+            {
+                form = new PdfAcroForm(this);
+                _irefTable.Add(new PdfReference(form));
+                if (form.Reference != null)
+                    form.Reference.Document = this;
+                Catalog.AcroForm = form;
+            }
+            return form;
+        }
 
         /// <summary>
         /// Creates a new page and adds it to this document.
@@ -783,14 +804,12 @@ namespace PdfSharp.Pdf
             => Internals.Catalog.Names.AddEmbeddedFile(name, stream);
 
         /// <summary>
-        /// Flattens a document (make the fields non-editable).
+        /// Flattens the AcroField's widget annotations of this document.<br></br>
+        /// Other annotations are unaffected.
         /// </summary>
         public void Flatten()
         {
-            for (int idx = 0; idx < AcroForm.Fields.Count; idx++)
-            {
-                AcroForm.Fields[idx].ReadOnly = true;
-            }
+            AcroForm?.Flatten();
         }
 
         /// <summary>

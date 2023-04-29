@@ -172,6 +172,10 @@ namespace PdfSharp.Pdf
                     throw new ArgumentOutOfRangeException(nameof(index), index, PSSR.IndexOutOfRange);
 
                 object obj = this[index];
+
+                if (obj is PdfReference reference)
+                    obj = reference.Value;
+
                 return obj switch
                 {
                     null => false,
@@ -193,6 +197,10 @@ namespace PdfSharp.Pdf
                     throw new ArgumentOutOfRangeException(nameof(index), index, PSSR.IndexOutOfRange);
 
                 object obj = this[index];
+
+                if (obj is PdfReference reference)
+                    obj = reference.Value;
+
                 return obj switch
                 {
                     null => 0,
@@ -214,6 +222,10 @@ namespace PdfSharp.Pdf
                     throw new ArgumentOutOfRangeException(nameof(index), index, PSSR.IndexOutOfRange);
 
                 object obj = this[index];
+
+                if (obj is PdfReference reference)
+                    obj = reference.Value;
+
                 return obj switch
                 {
                     null => 0,
@@ -237,6 +249,10 @@ namespace PdfSharp.Pdf
                     throw new ArgumentOutOfRangeException(nameof(index), index, PSSR.IndexOutOfRange);
 
                 object obj = this[index];
+
+                if (obj is PdfReference reference)
+                    obj = reference.Value;
+
                 return obj switch
                 {
                     null => null,
@@ -262,6 +278,10 @@ namespace PdfSharp.Pdf
                     throw new ArgumentOutOfRangeException(nameof(index), index, PSSR.IndexOutOfRange);
 
                 object obj = this[index];
+
+                if (obj is PdfReference reference)
+                    obj = reference.Value;
+
                 return obj switch
                 {
                     null => String.Empty,
@@ -285,6 +305,9 @@ namespace PdfSharp.Pdf
                 var obj = this[index];
                 if (obj == null!)
                     return "";
+
+                if (obj is PdfReference reference)
+                    obj = reference.Value;
 
                 var name = obj as PdfName;
                 if (name != null!)

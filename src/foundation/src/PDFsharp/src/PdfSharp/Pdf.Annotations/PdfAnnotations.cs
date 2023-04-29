@@ -32,7 +32,8 @@ namespace PdfSharp.Pdf.Annotations
         public void Add(PdfAnnotation annotation)
         {
             annotation.Document = Owner;
-            Owner._irefTable.Add(annotation);
+            if (annotation.ObjectID.IsEmpty || !Owner._irefTable.Contains(annotation.ObjectID))
+                Owner._irefTable.Add(annotation);
             Elements.Add(annotation.ReferenceNotNull);
         }
 
