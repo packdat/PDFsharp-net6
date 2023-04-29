@@ -92,6 +92,40 @@ namespace PdfSharp.Pdf.Annotations
         }
 
         /// <summary>
+        /// Gets or sets the page for this Annotation
+        /// </summary>
+        public PdfPage? Page
+        {
+            get
+            {
+                var pageRef = Elements.GetReference(Keys.Page);
+                if (pageRef == null)
+                {
+                    var page = TryFindPage();
+                    if (page != null)
+                    {
+                        Elements.SetReference(Keys.Page, page);
+                        pageRef = page.Reference;
+                    }
+                }
+                return pageRef != null && pageRef.Value is PdfDictionary
+                    ? pageRef.Value as PdfPage
+                    : null;
+            }
+            set
+            {
+                if (value is null)
+                    throw new ArgumentNullException(nameof(value));
+
+                var curPage = Page;
+                curPage?.Annotations.Remove(this);
+                Elements.SetReference(Keys.Page, value);
+                if (Reference != null && !value.Annotations.Elements.Contains(Reference))
+                    value.Annotations.Add(this);
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the text label to be displayed in the title bar of the annotation’s
         /// pop-up window when open and active. By convention, this entry identifies
         /// the user who added the annotation.
@@ -193,6 +227,45 @@ namespace PdfSharp.Pdf.Annotations
         }
 
         /// <summary>
+        /// Convenience-method that serves 2 purposes:<br></br>
+        /// 1: It allows setting the <see cref="Page"/> and the <see cref="Rectangle"/> with one call<br></br>
+        /// 2: It eases placing the annotation on the page by using the <b>top-left</b> of the page as the origin<br></br>
+        ///    (as opposed to the <b>bottom-left</b>, which would be the case when using <see cref="Rectangle"/> directly)
+        /// </summary>
+        /// <param name="page">The <see cref="PdfPage"/> the annotation should be placed on</param>
+        /// <param name="rectangle">The rectangle of the Annotation. The position should be relative to the top-left of the page</param>
+        public void PlaceOnPage(PdfPage page, PdfRectangle rectangle)
+        {
+            Page = page ?? throw new ArgumentNullException(nameof(page));
+            if (rectangle == null)
+                throw new ArgumentNullException(nameof(rectangle));
+
+            var location = new XPoint(rectangle.X1, page.Height.Point - rectangle.Y2);
+            Rectangle = new PdfRectangle(location, rectangle.Size);
+        }
+
+        private PdfPage? TryFindPage()
+        {
+            if (_document != null)
+            {
+                for (var i = 0; i < _document.PageCount; i++)
+                {
+                    var page = _document.Pages[i];
+                    if (page.Annotations != null && page.Annotations.Count > 0)
+                    {
+                        for (var a = 0; a < page.Annotations.Count; a++)
+                        {
+                            var annot = page.Annotations[a];
+                            if (annot.Reference == Reference)
+                                return page;
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
         /// Predefined keys of this dictionary.
         /// </summary>
         public class Keys : KeysBase
@@ -229,7 +302,14 @@ namespace PdfSharp.Pdf.Annotations
             [KeyInfo(KeyType.TextString | KeyType.Optional)]
             public const string Contents = "/Contents";
 
-            // P
+            /// <summary>
+            /// (Optional except as noted below; PDF 1.3; not used in FDF files) 
+            /// An indirect reference to the page object with which this annotation is associated.
+            /// This entry shall be present in screen annotations associated with rendition actions 
+            /// (PDF 1.5; see 12.5.6.18, “Screen Annotations” and 12.6.4.13, “Rendition Actions”)
+            /// </summary>
+            [KeyInfo(KeyType = KeyType.Optional)]
+            public const string Page = "/P";
 
             /// <summary>
             /// (Optional; PDF 1.4) The annotation name, a text string uniquely identifying it

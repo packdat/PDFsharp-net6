@@ -1,6 +1,8 @@
 // PDFsharp - A .NET library for processing PDF
 // See the LICENSE file in the solution root for more information.
 
+using PdfSharp.Pdf.Advanced;
+
 namespace PdfSharp.Pdf.AcroForms
 {
     /// <summary>
@@ -38,6 +40,225 @@ namespace PdfSharp.Pdf.AcroForms
             }
         }
         PdfAcroField.PdfAcroFieldCollection? _fields;
+
+        internal PdfResources? Resources
+        {
+            get
+            {
+                if (resources == null)
+                    resources = (PdfResources?)Elements.GetValue(Keys.DR, VCF.None);
+                return resources;
+            }
+        }
+        PdfResources? resources;
+
+        /// <summary>
+        /// Gets the <see cref="PdfResources"/> of this <see cref="PdfAcroForm"/> or creates a new one if none exist
+        /// </summary>
+        /// <returns>The <see cref="PdfResources"/> of this AcroForm</returns>
+        internal PdfResources GetOrCreateResources()
+        {
+            var resources = Resources;
+            if (resources == null)
+                Elements.Add(Keys.DR, new PdfResources(_document));
+            return Resources!;
+        }
+
+
+        internal override void PrepareForSave()
+        {
+            // Need to create "Fields" Entry after importing fields from external documents
+            if (_fields != null && _fields.Elements.Count > 0 && !Elements.ContainsKey(Keys.Fields))
+            {
+                Elements.Add(Keys.Fields, _fields);
+            }
+            // do not use the Fields-Property, as that may create new unwanted fields !
+            var fieldsArray = Elements.GetArray(Keys.Fields);
+            if (fieldsArray != null)
+            {
+                for (var i = 0; i < fieldsArray.Elements.Count; i++)
+                {
+                    var field = fieldsArray.Elements[i] as PdfReference;
+                    if (field != null && field.Value != null)
+                        field.Value.PrepareForSave();
+                }
+            }
+            base.PrepareForSave();
+        }
+
+        /// <summary>
+        /// Flattens the AcroForm by rendering Field-contents directly onto the page
+        /// </summary>
+        public void Flatten()
+        {
+            for (var i = 0; i < Fields.Elements.Count; i++)
+            {
+                var field = Fields[i];
+                field.Flatten();
+            }
+            _document.Catalog.AcroForm = null;
+        }
+
+        /// <summary>
+        /// Adds a new <see cref="PdfTextField"/> to the <see cref="PdfAcroForm"/>
+        /// </summary>
+        /// <param name="configure">
+        /// A method that receives the new <see cref="PdfTextField"/> for further customization<br></br>
+        /// </param>
+        /// <returns>The created and configured <see cref="PdfTextField"/></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public PdfTextField AddTextField(Action<PdfTextField> configure)
+        {
+            if (configure == null)
+                throw new ArgumentNullException(nameof(configure));
+            var field = new PdfTextField(_document);
+            _document._irefTable.Add(field);
+            configure(field);
+            if (field.Parent == null)
+                Fields.Elements.Add(field);
+            return field;
+        }
+
+        /// <summary>
+        /// Adds a new <see cref="PdfCheckBoxField"/> to the <see cref="PdfAcroForm"/>
+        /// </summary>
+        /// <param name="configure">
+        /// A method that receives the new <see cref="PdfCheckBoxField"/> for further customization<br></br>
+        /// </param>
+        /// <returns>The created and configured <see cref="PdfCheckBoxField"/></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public PdfCheckBoxField AddCheckBoxField(Action<PdfCheckBoxField> configure)
+        {
+            if (configure == null)
+                throw new ArgumentNullException(nameof(configure));
+            var field = new PdfCheckBoxField(_document);
+            _document._irefTable.Add(field);
+            configure(field);
+            if (field.Parent == null)
+                Fields.Elements.Add(field);
+            return field;
+        }
+
+        /// <summary>
+        /// Adds a new <see cref="PdfRadioButtonField"/> to the <see cref="PdfAcroForm"/>
+        /// </summary>
+        /// <param name="configure">
+        /// A method that receives the new <see cref="PdfRadioButtonField"/> for further customization<br></br>
+        /// </param>
+        /// <returns>The created and configured <see cref="PdfRadioButtonField"/></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public PdfRadioButtonField AddRadioButtonField(Action<PdfRadioButtonField> configure)
+        {
+            if (configure == null)
+                throw new ArgumentNullException(nameof(configure));
+            var field = new PdfRadioButtonField(_document);
+            _document._irefTable.Add(field);
+            configure(field);
+            if (field.Parent == null)
+                Fields.Elements.Add(field);
+            return field;
+        }
+
+        /// <summary>
+        /// Adds a new <see cref="PdfComboBoxField"/> to the <see cref="PdfAcroForm"/>
+        /// </summary>
+        /// <param name="configure">
+        /// A method that receives the new <see cref="PdfComboBoxField"/> for further customization<br></br>
+        /// </param>
+        /// <returns>The created and configured <see cref="PdfComboBoxField"/></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public PdfComboBoxField AddComboBoxField(Action<PdfComboBoxField> configure)
+        {
+            if (configure == null)
+                throw new ArgumentNullException(nameof(configure));
+            var field = new PdfComboBoxField(_document);
+            _document._irefTable.Add(field);
+            configure(field);
+            if (field.Parent == null)
+                Fields.Elements.Add(field);
+            return field;
+        }
+
+        /// <summary>
+        /// Adds a new <see cref="PdfListBoxField"/> to the <see cref="PdfAcroForm"/>
+        /// </summary>
+        /// <param name="configure">
+        /// A method that receives the new <see cref="PdfListBoxField"/> for further customization<br></br>
+        /// </param>
+        /// <returns>The created and configured <see cref="PdfListBoxField"/></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public PdfListBoxField AddListBoxField(Action<PdfListBoxField> configure)
+        {
+            if (configure == null)
+                throw new ArgumentNullException(nameof(configure));
+            var field = new PdfListBoxField(_document);
+            _document._irefTable.Add(field);
+            configure(field);
+            if (field.Parent == null)
+                Fields.Elements.Add(field);
+            return field;
+        }
+
+        /// <summary>
+        /// Adds a new <see cref="PdfPushButtonField"/> to the <see cref="PdfAcroForm"/>
+        /// </summary>
+        /// <param name="configure">
+        /// A method that receives the new <see cref="PdfPushButtonField"/> for further customization<br></br>
+        /// </param>
+        /// <returns>The created and configured <see cref="PdfPushButtonField"/></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public PdfPushButtonField AddPushButtonField(Action<PdfPushButtonField> configure)
+        {
+            if (configure == null)
+                throw new ArgumentNullException(nameof(configure));
+            var field = new PdfPushButtonField(_document);
+            _document._irefTable.Add(field);
+            configure(field);
+            if (field.Parent == null)
+                Fields.Elements.Add(field);
+            return field;
+        }
+
+        /// <summary>
+        /// Adds a new <see cref="PdfSignatureField"/> to the <see cref="PdfAcroForm"/>
+        /// </summary>
+        /// <param name="configure">
+        /// A method that receives the new <see cref="PdfSignatureField"/> for further customization<br></br>
+        /// </param>
+        /// <returns>The created and configured <see cref="PdfSignatureField"/></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public PdfSignatureField AddSignatureField(Action<PdfSignatureField> configure)
+        {
+            if (configure == null)
+                throw new ArgumentNullException(nameof(configure));
+            var field = new PdfSignatureField(_document);
+            _document._irefTable.Add(field);
+            configure(field);
+            if (field.Parent == null)
+                Fields.Elements.Add(field);
+            return field;
+        }
+
+        /// <summary>
+        /// Adds a new <see cref="PdfGenericField"/> to the <see cref="PdfAcroForm"/><br></br>
+        /// Typically used as a container for other fields
+        /// </summary>
+        /// <param name="configure">
+        /// A method that receives the new <see cref="PdfGenericField"/> for further customization<br></br>
+        /// </param>
+        /// <returns>The created and configured <see cref="PdfGenericField"/></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public PdfGenericField AddGenericField(Action<PdfGenericField> configure)
+        {
+            if (configure == null)
+                throw new ArgumentNullException(nameof(configure));
+            var field = new PdfGenericField(_document);
+            _document._irefTable.Add(field);
+            configure(field);
+            if (field.Parent == null)
+                Fields.Elements.Add(field);
+            return field;
+        }
 
         /// <summary>
         /// Predefined keys of this dictionary. 
@@ -82,7 +303,7 @@ namespace PdfSharp.Pdf.AcroForms
             /// <summary>
             /// (Optional) A document-wide default value for the DR attribute of variable text fields.
             /// </summary>
-            [KeyInfo(KeyType.Dictionary | KeyType.Optional)]
+            [KeyInfo(KeyType.Dictionary | KeyType.Optional, typeof(PdfResources))]
             public const string DR = "/DR";
 
             /// <summary>

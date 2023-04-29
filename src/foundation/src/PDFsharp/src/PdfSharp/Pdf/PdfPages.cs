@@ -455,7 +455,7 @@ namespace PdfSharp.Pdf
             CloneElement(page, importPage, PdfPage.Keys.ArtBox, true);
 #if true
             // Do not deep copy annotations.
-            CloneElement(page, importPage, PdfPage.Keys.Annots, false);
+            //CloneElement(page, importPage, PdfPage.Keys.Annots, false);
 #else
             // Deep copy annotations.
             CloneElement(page, importPage, PdfPage.Keys.Annots, true);

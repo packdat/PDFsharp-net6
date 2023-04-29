@@ -13,7 +13,9 @@ namespace PdfSharp.Pdf.AcroForms
         /// </summary>
         internal PdfSignatureField(PdfDocument document)
             : base(document)
-        { }
+        {
+            Elements.SetName(Keys.FT, "Sig");
+        }
 
         internal PdfSignatureField(PdfDictionary dict)
             : base(dict)

@@ -21,4 +21,13 @@
     <ProjectReference Include="..\..\src\PdfSharp\PdfSharp.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="assets\DemoFormWithCombs.pdf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="assets\DocumentWithAcroForm.pdf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
