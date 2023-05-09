@@ -132,7 +132,8 @@
         <Compile Include="..\PdfSharp\Drawing\XVector.cs" Link="Drawing\XVector.cs" />
         <Compile Include="..\PdfSharp\Events\DocumentEvents.cs" Link="Events\DocumentEvents.cs" />
         <Compile Include="..\PdfSharp\Fonts.Internal\FontResolvingOptions.cs" Link="Fonts.Internal\FontResolvingOptions.cs" />
-        <Compile Include="..\PdfSharp\Fonts.OpenType\enums\FontTechnology.cs" Link="Fonts.OpenType\enums\FontTechnology.cs" />
+		<Compile Include="..\PdfSharp\Fonts\DocumentFontResolver.cs" Link="Fonts\DocumentFontResolver.cs" />
+		<Compile Include="..\PdfSharp\Fonts.OpenType\enums\FontTechnology.cs" Link="Fonts.OpenType\enums\FontTechnology.cs" />
         <Compile Include="..\PdfSharp\Fonts.OpenType\enums\TableTagNames.cs" Link="Fonts.OpenType\enums\TableTagNames.cs" />
         <Compile Include="..\PdfSharp\Fonts.OpenType\FontDescriptor.cs" Link="Fonts.OpenType\FontDescriptor.cs" />
         <Compile Include="..\PdfSharp\Fonts.OpenType\GenericFontTable.cs" Link="Fonts.OpenType\GenericFontTable.cs" />
@@ -147,7 +148,24 @@
         <Compile Include="..\PdfSharp\Fonts.OpenType\OpenTypeFontTables.cs" Link="Fonts.OpenType\OpenTypeFontTables.cs" />
         <Compile Include="..\PdfSharp\Fonts.OpenType\OpenTypeFontWriter.cs" Link="Fonts.OpenType\OpenTypeFontWriter.cs" />
         <Compile Include="..\PdfSharp\Fonts.OpenType\TableDirectoryEntry.cs" Link="Fonts.OpenType\TableDirectoryEntry.cs" />
-        <Compile Include="..\PdfSharp\Fonts\AdobeGlyphList20.cs" Link="Fonts\AdobeGlyphList20.cs" />
+
+		<Compile Include="..\PdfSharp\Fonts\StandardFonts\Dingbats.cs" Link="Fonts\StandardFonts\Dingbats.cs" />
+		<Compile Include="..\PdfSharp\Fonts\StandardFonts\NimbusMonoPS-Bold.cs" Link="Fonts\StandardFonts\NimbusMono-PS-Bold.cs" />
+		<Compile Include="..\PdfSharp\Fonts\StandardFonts\NimbusMonoPS-BoldItalic.cs" Link="Fonts\StandardFonts\NimbusMono-PS-BoldItalic.cs" />
+		<Compile Include="..\PdfSharp\Fonts\StandardFonts\NimbusMonoPS-Italic.cs" Link="Fonts\StandardFonts\NimbusMono-PS-Italic.cs" />
+		<Compile Include="..\PdfSharp\Fonts\StandardFonts\NimbusMonoPS-Regular.cs" Link="Fonts\StandardFonts\NimbusMono-PS-Regular.cs" />
+		<Compile Include="..\PdfSharp\Fonts\StandardFonts\NimbusRoman-Bold.cs" Link="Fonts\StandardFonts\NimbusRoman-Bold.cs" />
+		<Compile Include="..\PdfSharp\Fonts\StandardFonts\NimbusRoman-BoldItalic.cs" Link="Fonts\StandardFonts\NimbusRoman-BoldItalic.cs" />
+		<Compile Include="..\PdfSharp\Fonts\StandardFonts\NimbusRoman-Italic.cs" Link="Fonts\StandardFonts\NimbusRoman-Italic.cs" />
+		<Compile Include="..\PdfSharp\Fonts\StandardFonts\NimbusRoman-Regular.cs" Link="Fonts\StandardFonts\NimbusRoman-Regular.cs" />
+		<Compile Include="..\PdfSharp\Fonts\StandardFonts\NimbusSans-Bold.cs" Link="Fonts\StandardFonts\NimbusSans-Bold.cs" />
+		<Compile Include="..\PdfSharp\Fonts\StandardFonts\NimbusSans-BoldItalic.cs" Link="Fonts\StandardFonts\NimbusSans-BoldItalic.cs" />
+		<Compile Include="..\PdfSharp\Fonts\StandardFonts\NimbusSans-Italic.cs" Link="Fonts\StandardFonts\NimbusSans-Italic.cs" />
+		<Compile Include="..\PdfSharp\Fonts\StandardFonts\NimbusSans-Regular.cs" Link="Fonts\StandardFonts\NimbusSans-Regular.cs" />
+		<Compile Include="..\PdfSharp\Fonts\StandardFonts\StandardSymbolsPS.cs" Link="Fonts\StandardFonts\StandardSymbolsPS.cs" />
+		<Compile Include="..\PdfSharp\Fonts\StandardFonts\StandardFontData.cs" Link="Fonts\StandardFonts\StandardFontData.cs" />
+		
+		<Compile Include="..\PdfSharp\Fonts\AdobeGlyphList20.cs" Link="Fonts\AdobeGlyphList20.cs" />
         <Compile Include="..\PdfSharp\Fonts\AdobeGlyphListForNewFonts.cs" Link="Fonts\AdobeGlyphListForNewFonts.cs" />
         <Compile Include="..\PdfSharp\Fonts\CMapInfo.cs" Link="Fonts\CMapInfo.cs" />
         <Compile Include="..\PdfSharp\Fonts\FontDescriptorCache.cs" Link="Fonts\FontDescriptorCache.cs" />
@@ -271,8 +289,9 @@
         <Compile Include="..\PdfSharp\Pdf.Internal\PdfEncoders.cs" Link="Pdf.Internal\PdfEncoders.cs" />
         <Compile Include="..\PdfSharp\Pdf.Internal\RawEncoding.cs" Link="Pdf.Internal\RawEncoding.cs" />
         <Compile Include="..\PdfSharp\Pdf.Internal\RawUnicodeEncoding.cs" Link="Pdf.Internal\RawUnicodeEncoding.cs" />
-        <Compile Include="..\PdfSharp\Pdf.Internal\ThreadLocalStorage.cs" Link="Pdf.Internal\ThreadLocalStorage.cs" />
-        <Compile Include="..\PdfSharp\Pdf.IO\Chars.cs" Link="Pdf.IO\Chars.cs" />
+        <Compile Include="..\PdfSharp\Pdf.Internal\StringExtensions.cs" Link="Pdf.Internal\StringExtensions.cs" />
+		<Compile Include="..\PdfSharp\Pdf.Internal\ThreadLocalStorage.cs" Link="Pdf.Internal\ThreadLocalStorage.cs" />
+		<Compile Include="..\PdfSharp\Pdf.IO\Chars.cs" Link="Pdf.IO\Chars.cs" />
         <Compile Include="..\PdfSharp\Pdf.IO\enums\PasswordValidity.cs" Link="Pdf.IO\enums\PasswordValidity.cs" />
         <Compile Include="..\PdfSharp\Pdf.IO\enums\PdfDocumentOpenMode.cs" Link="Pdf.IO\enums\PdfDocumentOpenMode.cs" />
         <Compile Include="..\PdfSharp\Pdf.IO\enums\PdfWriterLayout.cs" Link="Pdf.IO\enums\PdfWriterLayout.cs" />
