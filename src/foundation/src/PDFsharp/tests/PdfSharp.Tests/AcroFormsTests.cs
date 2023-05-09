@@ -3,14 +3,12 @@ using PdfSharp.Drawing;
 using PdfSharp.Fonts;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.AcroForms;
-using PdfSharp.Pdf.Annotations;
 using PdfSharp.Pdf.IO;
 using PdfSharp.Snippets.Font;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -20,7 +18,7 @@ namespace PdfSharp.Tests
     {
         private readonly ITestOutputHelper output;
 
-        public AcroFormsTests(ITestOutputHelper outputHelper) 
+        public AcroFormsTests(ITestOutputHelper outputHelper)
         { 
             output = outputHelper;
         }
@@ -29,12 +27,12 @@ namespace PdfSharp.Tests
         public void CanImportForm()
         {
             // required for now (when using the CORE lib)
-            GlobalFontSettings.FontResolver = new FailsafeFontResolver();
+            //GlobalFontSettings.FontResolver = new DocumentFontResolver();
 
             using var fs = File.OpenRead(Path.Combine("assets", "DocumentWithAcroForm.pdf"));
             var inputDocument = PdfReader.Open(fs, PdfDocumentOpenMode.Import);
 
-            var fieldFont = new XFont("Arial", 12);
+            //var fieldFont = new XFont("Helvetica", 12);
             PdfPage lastPage = null;
             // import into new document
             var copiedDocument = new PdfDocument();
@@ -47,19 +45,19 @@ namespace PdfSharp.Tests
             // PdfSharp seems to always create a font-subset that contains only those chars that are actually drawn.
             // while this is ok for static text, it is s problem for AcroFields where a user may enter different text.
             // it would be nice if we had the option to embed the FULL font.
-            var form = new XForm(copiedDocument, 1, 1);
-            using (var gfx = XGraphics.FromForm(form))
-            {
-                var sb = new StringBuilder(256);
-                for (var i = 32; i < 256; i++)
-                    sb.Append((char)i);
-                gfx.DrawString(sb.ToString(), fieldFont, XBrushes.Black, new XPoint(0, 10));
-            }
+            //var form = new XForm(copiedDocument, 1, 1);
+            //using (var gfx = XGraphics.FromForm(form))
+            //{
+            //    var sb = new StringBuilder(256);
+            //    for (var i = 32; i < 256; i++)
+            //        sb.Append((char)i);
+            //    gfx.DrawString(sb.ToString(), fieldFont, XBrushes.Black, new XPoint(0, 10));
+            //}
             // import AcroForm
-            copiedDocument.Internals.Catalog.ImportAcroForm(inputDocument.AcroForm, (originalField, importedField) =>
+            copiedDocument.ImportAcroForm(inputDocument.AcroForm, (originalField, importedField) =>
             {
                 // TODO: use DeterminedFontSize from original field
-                importedField.Font = fieldFont;
+                //importedField.Font = fieldFont;
             });
 
             copiedDocument.AcroForm.Should().NotBeNull();
@@ -94,10 +92,45 @@ namespace PdfSharp.Tests
                 var inputDocument = PdfReader.Open(fs, PdfDocumentOpenMode.Import);
                 foreach (var page in inputDocument.Pages)
                     copiedDocument.AddPage(page);
+                copiedDocument.ImportAcroForm(inputDocument.AcroForm);
                 importedFields.AddRange(GetAllFields(inputDocument));
             }
             var fieldsInCopiedDocument = GetAllFields(copiedDocument);
             fieldsInCopiedDocument.Count.Should().Be(importedFields.Count);
+
+            FillFields(fieldsInCopiedDocument);
+
+            var outFileName = Path.Combine(Path.GetTempPath(), "FilledForm.multiple.pdf");
+            using var fsOut = File.Create(outFileName);
+            copiedDocument.Save(fsOut);
+            fsOut.Close();
+
+            VerifyFieldsFilledWithDefaultValues(outFileName);
+        }
+
+        [Fact]
+        public void CanImportSameFormMultipleTimes()
+        {
+            // required for now (when using the CORE lib)
+            GlobalFontSettings.FontResolver = new FailsafeFontResolver();
+
+            var files = new[] { "DocumentWithAcroForm.pdf", "DocumentWithAcroForm.pdf" };
+            var copiedDocument = new PdfDocument();
+            var importedFields = new List<PdfAcroField>();
+            foreach (var file in files)
+            {
+                using var fs = File.OpenRead(Path.Combine("assets", file));
+                var inputDocument = PdfReader.Open(fs, PdfDocumentOpenMode.Import);
+                foreach (var page in inputDocument.Pages)
+                    copiedDocument.AddPage(page);
+                copiedDocument.ImportAcroForm(inputDocument.AcroForm);
+                importedFields.AddRange(GetAllFields(inputDocument));
+            }
+            var fieldsInCopiedDocument = GetAllFields(copiedDocument);
+            fieldsInCopiedDocument.Count.Should().Be(importedFields.Count);
+            // root field names should be distinct
+            var rootNames = copiedDocument.AcroForm.Fields.Names;
+            rootNames.Distinct().Count().Should().Be(rootNames.Length);
 
             FillFields(fieldsInCopiedDocument);
 
@@ -122,10 +155,19 @@ namespace PdfSharp.Tests
             var copiedDocument = new PdfDocument();
             foreach (var page in inputDocument.Pages)
                 copiedDocument.AddPage(page);
+            copiedDocument.ImportAcroForm(inputDocument.AcroForm);
 
             var fieldsInCopiedDocument = GetAllFields(copiedDocument);
             // fill all fields
             FillFields(fieldsInCopiedDocument);
+
+            //GlobalFontSettings.FontResolver = new DocumentFontResolver(copiedDocument);
+            //using (var gfx = XGraphics.FromPdfPage(copiedDocument.Pages[0]))
+            //{
+            //    var font = new XFont("Arial", 14);
+            //    var brush = new XSolidBrush(XColors.Black);
+            //    gfx.DrawString("Hello there !", font, brush, 50, 400);
+            //}
 
             // flatten the form. after that, AcroForm should be null and all annotations should be removed
             // (this is true for the tested document, other documents may contain annotations not related to Form-Fields)
