@@ -608,11 +608,13 @@ namespace PdfSharp.Pdf.Content
                 if (Char.IsLetterOrDigit(_currChar))
                 {
                     hex[0] = Char.ToUpper(_currChar);
-                    hex[1] = Char.ToUpper(_nextChar);
+                    // if there is an odd number of chars, the missing char should be treated as '0' according to the spec.
+                    hex[1] = _nextChar == '>' ? '0' : Char.ToUpper(_nextChar);
                     int ch = Int32.Parse(new string(hex), NumberStyles.AllowHexSpecifier);
                     _token.Append(Convert.ToChar(ch));
                     ScanNextChar();
-                    ScanNextChar();
+                    if (_currChar != '>')
+                        ScanNextChar();
                 }
             }
             string chars = _token.ToString();
