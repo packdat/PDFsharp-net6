@@ -105,6 +105,25 @@ namespace PdfSharp.Fonts.OpenType
                 throw new InvalidOperationException(PSSR.ErrorReadingFontData, ex);
             }
         }
+
+        public List<char> GetGlyphList()
+        {
+            var glyphList = new List<char>();
+
+            int segCount = segCountX2 / 2;
+            for (var i = 0; i < segCount; i++)
+            {
+                var start = startCount[i];
+                var end = endCount[i];
+                if (start == 0xffff && end == 0xffff)
+                    break;
+                for (var c = start; c <= end; c++)
+                {
+                    glyphList.Add((char)c);
+                }
+            }
+            return glyphList;
+        }
     }
 
     /// <summary>
