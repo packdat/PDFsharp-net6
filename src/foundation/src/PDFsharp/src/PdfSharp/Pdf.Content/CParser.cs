@@ -100,6 +100,8 @@ namespace PdfSharp.Pdf.Content
                     case CSymbol.UnicodeHexString:
                         s = new CString();
                         s.Value = _lexer.Token;
+                        // CString.ToString() only supports CStringType.String
+                        s.CStringType = CStringType.String;
                         _operands.Add(s);
                         break;
 
