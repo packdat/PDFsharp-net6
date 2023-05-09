@@ -2,6 +2,7 @@
 // See the LICENSE file in the solution root for more information.
 
 using PdfSharp.Pdf.Advanced;
+using PdfSharp.Pdf.Internal;
 
 namespace PdfSharp.Pdf.AcroForms
 {
@@ -112,11 +113,7 @@ namespace PdfSharp.Pdf.AcroForms
             if (configure == null)
                 throw new ArgumentNullException(nameof(configure));
             var field = new PdfTextField(_document);
-            _document._irefTable.Add(field);
-            configure(field);
-            if (field.Parent == null)
-                Fields.Elements.Add(field);
-            return field;
+            return AddToFieldList(field, configure);
         }
 
         /// <summary>
@@ -132,11 +129,7 @@ namespace PdfSharp.Pdf.AcroForms
             if (configure == null)
                 throw new ArgumentNullException(nameof(configure));
             var field = new PdfCheckBoxField(_document);
-            _document._irefTable.Add(field);
-            configure(field);
-            if (field.Parent == null)
-                Fields.Elements.Add(field);
-            return field;
+            return AddToFieldList(field, configure);
         }
 
         /// <summary>
@@ -152,11 +145,7 @@ namespace PdfSharp.Pdf.AcroForms
             if (configure == null)
                 throw new ArgumentNullException(nameof(configure));
             var field = new PdfRadioButtonField(_document);
-            _document._irefTable.Add(field);
-            configure(field);
-            if (field.Parent == null)
-                Fields.Elements.Add(field);
-            return field;
+            return AddToFieldList(field, configure);
         }
 
         /// <summary>
@@ -172,11 +161,7 @@ namespace PdfSharp.Pdf.AcroForms
             if (configure == null)
                 throw new ArgumentNullException(nameof(configure));
             var field = new PdfComboBoxField(_document);
-            _document._irefTable.Add(field);
-            configure(field);
-            if (field.Parent == null)
-                Fields.Elements.Add(field);
-            return field;
+            return AddToFieldList(field, configure);
         }
 
         /// <summary>
@@ -192,11 +177,7 @@ namespace PdfSharp.Pdf.AcroForms
             if (configure == null)
                 throw new ArgumentNullException(nameof(configure));
             var field = new PdfListBoxField(_document);
-            _document._irefTable.Add(field);
-            configure(field);
-            if (field.Parent == null)
-                Fields.Elements.Add(field);
-            return field;
+            return AddToFieldList(field, configure);
         }
 
         /// <summary>
@@ -212,11 +193,7 @@ namespace PdfSharp.Pdf.AcroForms
             if (configure == null)
                 throw new ArgumentNullException(nameof(configure));
             var field = new PdfPushButtonField(_document);
-            _document._irefTable.Add(field);
-            configure(field);
-            if (field.Parent == null)
-                Fields.Elements.Add(field);
-            return field;
+            return AddToFieldList(field, configure);
         }
 
         /// <summary>
@@ -232,11 +209,7 @@ namespace PdfSharp.Pdf.AcroForms
             if (configure == null)
                 throw new ArgumentNullException(nameof(configure));
             var field = new PdfSignatureField(_document);
-            _document._irefTable.Add(field);
-            configure(field);
-            if (field.Parent == null)
-                Fields.Elements.Add(field);
-            return field;
+            return AddToFieldList(field, configure);
         }
 
         /// <summary>
@@ -253,10 +226,29 @@ namespace PdfSharp.Pdf.AcroForms
             if (configure == null)
                 throw new ArgumentNullException(nameof(configure));
             var field = new PdfGenericField(_document);
+            return AddToFieldList(field, configure);
+        }
+
+        private T AddToFieldList<T>(T field, Action<T> configure) where T: PdfAcroField
+        {
             _document._irefTable.Add(field);
             configure(field);
             if (field.Parent == null)
+            {
+                // ensure names of root-fields are unique
+                var existingField = Fields.GetValue(field.Name);
+                if (existingField != null)
+                {
+                    var name = existingField.Name.AddIncrementalSuffix();
+                    // search for next free number
+                    while (Fields.GetValue(name) != null)
+                    {
+                        name = name.AddIncrementalSuffix();
+                    }
+                    field.Name = name;
+                }
                 Fields.Elements.Add(field);
+            }
             return field;
         }
 

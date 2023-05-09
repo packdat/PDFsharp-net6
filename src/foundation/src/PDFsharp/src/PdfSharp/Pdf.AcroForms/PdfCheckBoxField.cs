@@ -138,7 +138,7 @@ namespace PdfSharp.Pdf.AcroForms
                                 var appSel = apps.Elements.GetDictionary(Checked ? GetNonOffValue() ?? CheckedName : "/Off");
                                 if (appSel != null)
                                 {
-                                    RenderContentStream(widget.Page, appSel.Stream, widget.Rectangle);
+                                    RenderContentStream(widget.Page, appSel, widget.Rectangle);
                                 }
                             }
                         }

@@ -175,7 +175,7 @@ namespace PdfSharp.Pdf.AcroForms
                             var appSel = apps.Elements.GetDictionary(selectedAppearance);
                             if (appSel != null)
                             {
-                                RenderContentStream(widget.Page, appSel.Stream, widget.Rectangle);
+                                RenderContentStream(widget.Page, appSel, widget.Rectangle);
                             }
                         }
                     }

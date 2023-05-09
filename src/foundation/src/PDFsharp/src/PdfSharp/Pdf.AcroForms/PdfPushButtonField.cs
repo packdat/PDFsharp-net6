@@ -42,7 +42,7 @@ namespace PdfSharp.Pdf.AcroForms
                         {
                             if (appSelRef.Value is PdfDictionary appSel)
                             {
-                                RenderContentStream(widget.Page, appSel.Stream, widget.Rectangle);
+                                RenderContentStream(widget.Page, appSel, widget.Rectangle);
                             }
                         }
                     }
