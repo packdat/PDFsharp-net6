@@ -36,7 +36,7 @@ namespace PdfSharp.Fonts.OpenType
             if (DirectoryEntry.Tag != TableTagNames.Head)
             {
                 byte[] bytes = new byte[DirectoryEntry.PaddedLength];
-                Buffer.BlockCopy(_irefDirectoryEntry.FontTable._fontData!.FontSource.Bytes, _irefDirectoryEntry.Offset, bytes, 0, DirectoryEntry.PaddedLength);
+                Buffer.BlockCopy(_irefDirectoryEntry.FontTable._fontData!.FontSource.Bytes, _irefDirectoryEntry.Offset, bytes, 0, DirectoryEntry.Length);
                 uint checkSum1 = DirectoryEntry.CheckSum;
                 uint checkSum2 = CalcChecksum(bytes);
                 // TODO: Sometimes this Assert fails,
@@ -50,7 +50,7 @@ namespace PdfSharp.Fonts.OpenType
         /// </summary>
         public override void Write(OpenTypeFontWriter writer)
         {
-            writer.Write(_irefDirectoryEntry.FontTable._fontData!.FontSource.Bytes, _irefDirectoryEntry.Offset, _irefDirectoryEntry.PaddedLength);
+            writer.Write(_irefDirectoryEntry.FontTable._fontData!.FontSource.Bytes, _irefDirectoryEntry.Offset, _irefDirectoryEntry.Length);
         }
     }
 }
