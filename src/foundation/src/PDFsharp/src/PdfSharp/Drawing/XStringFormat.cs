@@ -118,16 +118,6 @@ namespace PdfSharp.Drawing
         //public StringTrimming Trimming { get; set; }
 
         /// <summary>
-        /// Support PdfAcroFieldFlags.CombTextField
-        /// </summary>
-        public bool Comb { get; set; }
-
-        /// <summary>
-        /// Width of a single comb for the output-string
-        /// </summary>
-        public double CombWidth { get; set; }
-
-        /// <summary>
         /// Gets a new XStringFormat object that aligns the text left on the base line.
         /// </summary>
         [Obsolete("Use XStringFormats.Default. (Note plural in class name.)")]
