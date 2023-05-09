@@ -645,6 +645,19 @@ namespace PdfSharp.Pdf
         public PdfAcroForm? AcroForm => Catalog.AcroForm;
 
         /// <summary>
+        /// Imports the fields from the specified <see cref="PdfAcroForm"/> into the current document.<br></br>
+        /// If the current document does not contain an AcroForm, a new one is created automatically.<br></br>
+        /// This method should be called <b>after</b> importing pages into the current document.
+        /// </summary>
+        /// <param name="remoteForm">The <see cref="AcroForm"/> to import</param>
+        /// <param name="fieldHandler">A method that allows modifying a field after it was imported.<br></br>
+        /// It receives the original (remote) field and the imported (local) field as parameters.</param>
+        public void ImportAcroForm(PdfAcroForm remoteForm, Action<PdfAcroField, PdfAcroField>? fieldHandler = null)
+        {
+            Catalog.ImportAcroForm(remoteForm, fieldHandler);
+        }
+
+        /// <summary>
         /// Gets or sets the default language of the document.
         /// </summary>
         public string Language

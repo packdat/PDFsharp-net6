@@ -2,6 +2,8 @@
 // See the LICENSE file in the solution root for more information.
 
 using PdfSharp.Drawing;
+using PdfSharp.Fonts;
+using PdfSharp.Fonts.StandardFonts;
 using PdfSharp.Pdf.Advanced;
 using PdfSharp.Pdf.Annotations;
 using PdfSharp.Pdf.Content;
@@ -130,7 +132,7 @@ namespace PdfSharp.Pdf.AcroForms
         /// Gets the font name that was obtained by analyzing the Fields' content-stream.<br></br>
         /// This is the name of the font as present in the <b>DR/Font</b> dictionary
         /// </summary>
-        internal string? ContentFontName { get; private set; }
+        internal string? ContentFontName { get; set; }
 
         /// <summary>
         /// Gets the base font name that was obtained by analyzing the Fields' content-stream.<br></br>
@@ -169,12 +171,12 @@ namespace PdfSharp.Pdf.AcroForms
         /// endobj
         /// </code>
         /// </summary>
-        internal string? BaseContentFontName { get; private set; }
+        internal string? BaseContentFontName { get; set; }
 
         /// <summary>
         /// Gets the font size that was obtained by analyzing the Fields' content-stream.
         /// </summary>
-        public double DeterminedFontSize { get; private set; }
+        public double DeterminedFontSize { get; internal set; }
 
         /// <summary>
         /// Gets or sets the foreground color of the field.
@@ -290,7 +292,6 @@ namespace PdfSharp.Pdf.AcroForms
                 {
                     for (var i = 0; i < kidsArray.Elements.Count; i++)
                     {
-                        var kid = kidsArray.Elements.GetObject(i) as PdfDictionary;
                         // TODO: Don't know how to clearly distinguish a Field from an Annotation in the Kids-Array.
                         // 12.7.1:
                         //    As a convenience, when a field has only a single associated widget annotation, the
@@ -299,7 +300,7 @@ namespace PdfSharp.Pdf.AcroForms
                         // This means, a PdfObject may be a PdfAcroField AND a PdfWidgetAnnotation at the same time.
                         // For now, we consider a Kid to be a Field, if the "Subtype" Value is missing (which is required for Annotations),
                         // or it has an /T or /FT entry (which is required for terminal fields) -> Chapter 12.7.3.1 in PdfReference
-                        if (kid != null
+                        if (kidsArray.Elements.GetObject(i) is PdfDictionary kid
                             && (!kid.Elements.ContainsKey(PdfAnnotation.Keys.Subtype)
                                 || kid.Elements.ContainsKey(Keys.FT)
                                 || kid.Elements.ContainsKey(Keys.T)
@@ -490,7 +491,10 @@ namespace PdfSharp.Pdf.AcroForms
                                 // if it is a merged field, do not count as Annotation, but as a child-field
                                 && !obj.Elements.ContainsKey(Keys.FT) && !obj.Elements.ContainsKey(Keys.T))
                             {
-                                _annotations.Elements.Add(new PdfWidgetAnnotation(obj));
+                                var annot = new PdfWidgetAnnotation(obj);
+                                if (annot.Page != null)
+                                    annot.Parent = annot.Page.Annotations;
+                                _annotations.Elements.Add(annot);
                                 // must reset the value in the reference after type-transformation so a reference to this field points to the field, not the widget
                                 obj.Reference!.Value = obj;
                             }
@@ -499,7 +503,10 @@ namespace PdfSharp.Pdf.AcroForms
                     // if the dictionaries are merged (no childs), use current field as Widget
                     if (Elements.GetString(PdfAnnotation.Keys.Subtype) == "/Widget")
                     {
-                        _annotations.Elements.Add(new PdfWidgetAnnotation(this));
+                        var annot = new PdfWidgetAnnotation(this);
+                        if (annot.Page != null)
+                            annot.Parent = annot.Page.Annotations;
+                        _annotations.Elements.Add(annot);
                         // must reset the value in the reference after type-transformation
                         Reference!.Value = this;
                     }
@@ -662,21 +669,31 @@ namespace PdfSharp.Pdf.AcroForms
                 }
                 DeterminedFontSize = fontSize;
                 // When the field's font is one of the standard fonts, use WinAnsiEncoding, as that seems to work best with the tested documents
-                var systemFontName = BaseContentFontName;
+                var systemFontName = BaseContentFontName.TrimStart('/');
                 XFontStyleEx fontStyle = XFontStyleEx.Regular;
-                if (fontIsPresentInDocument || IsStandardFont(BaseContentFontName, out systemFontName, out fontStyle))
+                if (fontIsPresentInDocument)// || IsStandardFont(BaseContentFontName, out systemFontName, out fontStyle))
                 {
-                    font = new XFont
-                    (
-                        systemFontName!,
-                        Math.Max(1.0, fontSize),
-                        fontStyle,
-                        new XPdfFontOptions(presentFontEncoding)
-                    )
+                    var existingFontResolver = GlobalFontSettings.FontResolver;
+                    try
                     {
-                        FromDocument = true,
-                        DocumentFontName = ContentFontName
-                    };
+                        GlobalFontSettings.FontResolver = new DocumentFontResolver(this);
+                        font = new XFont
+                        (
+                            systemFontName!,
+                            Math.Max(1.0, fontSize),
+                            fontStyle,
+                            new XPdfFontOptions(presentFontEncoding)
+                        )
+                        {
+                            DocumentFontName = ContentFontName
+                        };
+                    }
+                    finally
+                    {
+                        // setter throws when assigning null
+                        if (existingFontResolver != null)
+                            GlobalFontSettings.FontResolver = existingFontResolver;
+                    }
                 }
                 else
                 {
@@ -705,48 +722,22 @@ namespace PdfSharp.Pdf.AcroForms
             return fontSize;
         }
 
-        // 9.6.2.2 Standard Type 1 Fonts (Standard 14 Fonts)
-        // TODO: check on non-Windows platforms
-        private static readonly Dictionary<string, string> standardFonts = new()
-        {
-            { "Times-Roman", "Times New Roman" },
-            { "Times-Bold", "Times New Roman" },
-            { "Times-Italic", "Times New Roman" },
-            { "Times-BoldItalic", "Times New Roman" },
-            { "Helvetica", "Arial" },
-            { "Helvetica-Bold", "Arial" },
-            { "Helvetica-Oblique", "Arial" },
-            { "Helvetica-BoldOblique", "Arial" },
-            { "Courier", "Courier New" },
-            { "Courier-Bold", "Courier New" },
-            { "Courier-Oblique", "Courier New" },
-            { "Courier-BoldOblique", "Courier New" },
-            { "ZapfDingbats", "ZapfDingbats" },
-            { "Symbol", "Symbol" },
-        };
-
         /// <summary>
         /// Gets a value indicating whether the specified font name is one of the predefined font-names for pdf documents
         /// </summary>
         /// <param name="fontName"></param>
-        /// <param name="systemFontName"></param>
         /// <returns></returns>
-        protected static bool IsStandardFont(string fontName, out string? systemFontName, out XFontStyleEx fontStyle)
+        protected static bool IsStandardFont(string fontName, out XFontStyleEx fontStyle)
         {
             fontStyle = XFontStyleEx.Regular;
-            foreach (var kv in standardFonts)
+            if (StandardFontData.IsStandardFont(fontName))
             {
-                if (fontName.Contains(kv.Key, StringComparison.OrdinalIgnoreCase))
-                {
-                    systemFontName = kv.Value;
-                    if (kv.Key.Contains("Bold") || kv.Key.Contains("Oblique"))
-                        fontStyle |= XFontStyleEx.Bold;
-                    if (kv.Key.Contains("Italic"))
-                        fontStyle |= XFontStyleEx.Italic;
-                    return true;
-                }
+                if (fontName.Contains("Bold"))
+                    fontStyle |= XFontStyleEx.Bold;
+                if (fontName.Contains("Italic") || fontName.Contains("Oblique"))
+                    fontStyle |= XFontStyleEx.Italic;
+                return true;
             }
-            systemFontName = null;
             return false;
         }
 
@@ -841,12 +832,6 @@ namespace PdfSharp.Pdf.AcroForms
                 }
                 if (widget.Page != null)
                 {
-                    // there's still something missing on page import, sometimes the owner of a widget is still the document we imported from...
-                    if (widget.Page.Owner != Owner)
-                    {
-                        widget.Page._document = Owner;
-                        Debug.WriteLine(string.Format("Fixed owner of Field {0}", FullyQualifiedName));
-                    }
                     var possibleResources = new[]
                     {
                         _document.AcroForm?.Elements.GetDictionary(PdfAcroForm.Keys.DR),
@@ -878,17 +863,17 @@ namespace PdfSharp.Pdf.AcroForms
             {
                 var widget = Annotations.Elements[i];
                 var rect = widget.Rectangle;
-                if (!rect.IsEmpty && widget.Page != null && (!widget.BackColor.IsEmpty || !widget.BorderColor.IsEmpty))
+                if (!rect.IsEmpty && widget.Page != null
+                    && this is PdfTextField
+                    && (!widget.BackColor.IsEmpty || !widget.BorderColor.IsEmpty))
                 {
-                    using (var gfx = XGraphics.FromPdfPage(widget.Page))
-                    {
-                        gfx.TranslateTransform(rect.X1, widget.Page.Height.Point - rect.Y2);
-                        if (widget.BackColor != XColor.Empty)
-                            gfx.DrawRectangle(new XSolidBrush(widget.BackColor), rect.ToXRect() - rect.Location);
-                        // Draw Border
-                        if (!widget.BorderColor.IsEmpty)
-                            gfx.DrawRectangle(new XPen(widget.BorderColor), rect.ToXRect() - rect.Location);
-                    }
+                    using var gfx = XGraphics.FromPdfPage(widget.Page);
+                    gfx.TranslateTransform(rect.X1, widget.Page.Height.Point - rect.Y2);
+                    if (widget.BackColor != XColor.Empty)
+                        gfx.DrawRectangle(new XSolidBrush(widget.BackColor), rect.ToXRect() - rect.Location);
+                    // Draw Border
+                    if (!widget.BorderColor.IsEmpty)
+                        gfx.DrawRectangle(new XPen(widget.BorderColor), rect.ToXRect() - rect.Location);
                 }
                 // Remove annotation
                 widget.Parent?.Remove(widget);
@@ -911,14 +896,44 @@ namespace PdfSharp.Pdf.AcroForms
         /// <summary>
         /// Renders the contents of the supplied Stream to the Page at the position specified by the provided Rectangle
         /// </summary>
-        /// <param name="page"></param>
-        /// <param name="stream"></param>
+        /// <param name="page">Page to render the content onto</param>
+        /// <param name="streamDict">A <see cref="PdfDictionary"/> containing a stream with drawing-operators and associated resources</param>
         /// <param name="rect"></param>
-        protected virtual void RenderContentStream(PdfPage page, PdfStream stream, PdfRectangle rect)
+        protected virtual void RenderContentStream(PdfPage page, PdfDictionary streamDict, PdfRectangle rect)
         {
-            if (stream == null || rect.IsEmpty)
+            if (streamDict == null || streamDict.Stream == null || rect.IsEmpty)
                 return;
+            var stream = streamDict.Stream;
             var content = ContentReader.ReadContent(stream.UnfilteredValue);
+            // check for graphical objects and copy them to the pages resources
+            foreach (var obj in content)
+            {
+                if (obj is COperator op)
+                {
+                    if (op.OpCode.OpCodeName == OpCodeName.Do)
+                    {
+                        var arg = op.Operands[0].ToString()!;
+                        var resources = streamDict.Elements.GetDictionary("/Resources");
+                        if (resources != null)
+                        {
+                            var xobjDict = resources.Elements.GetDictionary("/XObject");
+                            if (xobjDict != null && xobjDict.Elements.ContainsKey(arg))
+                            {
+                                var objDict = xobjDict.Elements.GetDictionary(arg)!;
+                                if (!page.Resources.Elements.ContainsKey("/XObject"))
+                                    page.Resources.Elements.Add("/XObject", new PdfDictionary());
+                                xobjDict = page.Resources.Elements.GetDictionary("/XObject")!;
+                                // create new unique name for the xobject
+                                var objKey = arg + Guid.NewGuid().ToString("N");
+                                objDict.Elements.SetName("/Name", objKey);
+                                xobjDict.Elements[objKey] = objDict;
+                                op.Operands[0] = new CName(objKey);
+                            }
+                        }
+                    }
+                }
+            }
+            // TODO: use W or W* operator to for clipping
             var matrix = new XMatrix();
             matrix.TranslateAppend(rect.X1, rect.Y1);
             var matElements = matrix.GetElements();
@@ -928,16 +943,14 @@ namespace PdfSharp.Pdf.AcroForms
             content.Insert(0, matrixOp);
 
             // Save and restore Graphics state
-            content.Insert(0, OpCodes.OperatorFromName("q"));
-            content.Add(OpCodes.OperatorFromName("Q"));
+            // Bug in PdfSharp ?
+            // These operands are not written to the stream, because the property "_sequence" of COperator is null
+            // (it is only set when accessing the "Operands" property)
+            //content.Insert(0, OpCodes.OperatorFromName("q"));
+            //content.Add(OpCodes.OperatorFromName("Q"));
             var appendedContent = page.Contents.AppendContent();
-            using (var ms = new System.IO.MemoryStream())
-            {
-                var cw = new ContentWriter(ms);
-                foreach (var obj in content)
-                    obj.WriteObject(cw);
-                appendedContent.CreateStream(ms.ToArray());
-            }
+            appendedContent.CreateStream(content.ToContent());
+            appendedContent.PreserveGraphicsState();    // wrap in q/Q
         }
 
         /// <summary>

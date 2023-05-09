@@ -176,6 +176,7 @@ namespace PdfSharp.Pdf.Advanced
                     if (AcroForm != null && AcroForm.Reference != null)
                         _document._irefTable.Remove(AcroForm.Reference);
                     Elements.Remove(Keys.AcroForm);
+                    _acroForm = null;
                 }
             }
         }
@@ -197,15 +198,7 @@ namespace PdfSharp.Pdf.Advanced
             }
         }
 
-        /// <summary>
-        /// Imports the fields from the specified <see cref="PdfAcroForm"/> into the current document.<br></br>
-        /// If the current document does not contain an AcroForm, a new one is created automatically.<br></br>
-        /// This method should be called <b>after</b> importing pages into the current document.
-        /// </summary>
-        /// <param name="remoteForm">The <see cref="AcroForm"/> to import</param>
-        /// <param name="fieldHandler">A method that allows modifying a field after it was imported.<br></br>
-        /// It receives the original field and the imported field as parameters.</param>
-        public void ImportAcroForm(PdfAcroForm remoteForm, Action<PdfAcroField, PdfAcroField>? fieldHandler = null)
+        internal void ImportAcroForm(PdfAcroForm remoteForm, Action<PdfAcroField, PdfAcroField>? fieldHandler = null)
         {
             // skip, if there is no AcroForm or an AcroForm without fields
             if (remoteForm == null || !remoteForm.Fields.Names.Any())
@@ -213,21 +206,21 @@ namespace PdfSharp.Pdf.Advanced
 
             var importedObjectTable = Owner.FormTable.GetImportedObjectTable(remoteForm.Owner);
             var needNewForm = _document.Catalog.AcroForm == null;
-            var ourForm = _document.GetOrCreateAcroForm();
+            var localForm = _document.GetOrCreateAcroForm();
             if (needNewForm)
             {
                 if (remoteForm.Elements.ContainsKey(PdfAcroForm.Keys.CO))
-                    ourForm.Elements[PdfAcroForm.Keys.CO] = ImportClosure(importedObjectTable, _document, remoteForm.Elements.GetObject(PdfAcroForm.Keys.CO)!);
+                    localForm.Elements[PdfAcroForm.Keys.CO] = ImportClosure(importedObjectTable, _document, remoteForm.Elements.GetObject(PdfAcroForm.Keys.CO)!);
                 if (remoteForm.Elements.ContainsKey(PdfAcroForm.Keys.DA))
-                    ourForm.Elements[PdfAcroForm.Keys.DA] = remoteForm.Elements[PdfAcroForm.Keys.DA];
+                    localForm.Elements[PdfAcroForm.Keys.DA] = remoteForm.Elements[PdfAcroForm.Keys.DA];
                 if (remoteForm.Elements.ContainsKey(PdfAcroForm.Keys.DR))
-                    ourForm.Elements[PdfAcroForm.Keys.DR] = ImportClosure(importedObjectTable, _document, remoteForm.Elements.GetObject(PdfAcroForm.Keys.DR)!);
+                    localForm.Elements[PdfAcroForm.Keys.DR] = ImportClosure(importedObjectTable, _document, remoteForm.Elements.GetObject(PdfAcroForm.Keys.DR)!);
                 if (remoteForm.Elements.ContainsKey(PdfAcroForm.Keys.NeedAppearances))
-                    ourForm.Elements[PdfAcroForm.Keys.NeedAppearances] = remoteForm.Elements[PdfAcroForm.Keys.NeedAppearances];
+                    localForm.Elements[PdfAcroForm.Keys.NeedAppearances] = remoteForm.Elements[PdfAcroForm.Keys.NeedAppearances];
                 if (remoteForm.Elements.ContainsKey(PdfAcroForm.Keys.Q))
-                    ourForm.Elements[PdfAcroForm.Keys.Q] = remoteForm.Elements[PdfAcroForm.Keys.Q];
+                    localForm.Elements[PdfAcroForm.Keys.Q] = remoteForm.Elements[PdfAcroForm.Keys.Q];
                 if (remoteForm.Elements.ContainsKey(PdfAcroForm.Keys.SigFlags))
-                    ourForm.Elements[PdfAcroForm.Keys.SigFlags] = remoteForm.Elements[PdfAcroForm.Keys.SigFlags];
+                    localForm.Elements[PdfAcroForm.Keys.SigFlags] = remoteForm.Elements[PdfAcroForm.Keys.SigFlags];
             }
             // copy font-resources from the imported AcroForm to the local form
             var extResources = remoteForm.Elements.GetDictionary(PdfAcroForm.Keys.DR);
@@ -236,7 +229,7 @@ namespace PdfSharp.Pdf.Advanced
                 var extFontList = extResources.Elements.GetDictionary(PdfResources.Keys.Font);
                 if (extFontList != null)
                 {
-                    var localResources = ourForm.Elements.GetDictionary(PdfAcroForm.Keys.DR) ?? new PdfDictionary(Owner);
+                    var localResources = localForm.Elements.GetDictionary(PdfAcroForm.Keys.DR) ?? new PdfDictionary(Owner);
                     var localFontList = localResources.Elements.GetDictionary(PdfResources.Keys.Font) ?? new PdfDictionary(Owner);
                     foreach (var key in extFontList.Elements.Keys)
                     {
@@ -245,21 +238,15 @@ namespace PdfSharp.Pdf.Advanced
                     }
                     if (!localResources.Elements.ContainsKey(PdfResources.Keys.Font))
                         localResources.Elements.Add(PdfResources.Keys.Font, localFontList);
-                    if (!ourForm.Elements.ContainsKey(PdfAcroForm.Keys.DR))
-                        ourForm.Elements.Add(PdfAcroForm.Keys.DR, localResources);
+                    if (!localForm.Elements.ContainsKey(PdfAcroForm.Keys.DR))
+                        localForm.Elements.Add(PdfAcroForm.Keys.DR, localResources);
                 }
             }
 
             for (var f = 0; f < remoteForm.Fields.Elements.Count; f++)
             {
                 var remoteField = remoteForm.Fields[f];
-                ImportAcroField(ourForm, remoteField, null, fieldHandler);
-            }
-
-            if (_document.AcroForm == null)
-            {
-                _document._irefTable.Add(ourForm);
-                _document.Catalog.AcroForm = ourForm;
+                ImportAcroField(localForm, remoteField, null, fieldHandler);
             }
         }
 
@@ -273,12 +260,14 @@ namespace PdfSharp.Pdf.Advanced
                 nameof(PdfCheckBoxField) => localForm.AddCheckBoxField(checkBoxField =>
                 {
                     var externalCheckBoxField = (PdfCheckBoxField)remoteField;
+                    checkBoxField.Name = remoteField.Name;
                     checkBoxField.Checked = externalCheckBoxField.Checked;
                     parentField?.AddChild(checkBoxField);
                 }),
                 nameof(PdfComboBoxField) => localForm.AddComboBoxField(comboBoxField =>
                 {
                     var externalComboBoxField = (PdfComboBoxField)remoteField;
+                    comboBoxField.Name = remoteField.Name;
                     comboBoxField.Options = externalComboBoxField.Options;
                     comboBoxField.SelectedIndex = externalComboBoxField.SelectedIndex;
                     if (remoteField.Elements.ContainsKey(PdfChoiceField.Keys.Opt))
@@ -288,6 +277,7 @@ namespace PdfSharp.Pdf.Advanced
                 nameof(PdfListBoxField) => localForm.AddListBoxField(listBoxField =>
                 {
                     var externalListBoxField = (PdfListBoxField)remoteField;
+                    listBoxField.Name = remoteField.Name;
                     listBoxField.Options = externalListBoxField.Options;
                     listBoxField.SelectedIndices = externalListBoxField.SelectedIndices;
                     if (remoteField.Elements.ContainsKey(PdfChoiceField.Keys.Opt))
@@ -300,6 +290,7 @@ namespace PdfSharp.Pdf.Advanced
                     // must copy annotations here, because SelectedIndex relies on them
                     ImportFieldAnnotations(radioButtonField, remoteField);
                     annotationsImported = true;
+                    radioButtonField.Name = remoteField.Name;
                     radioButtonField.SelectedIndex = extRadioButtonField.SelectedIndex;
                     if (remoteField.Elements.ContainsKey(PdfRadioButtonField.Keys.Opt))
                         radioButtonField.Elements[PdfRadioButtonField.Keys.Opt] = remoteField.Elements[PdfRadioButtonField.Keys.Opt]!.Clone();
@@ -307,17 +298,18 @@ namespace PdfSharp.Pdf.Advanced
                 }),
                 nameof(PdfSignatureField) => localForm.AddSignatureField(signatureField =>
                 {
-                    // no spcial properties
+                    signatureField.Name = remoteField.Name;
                     parentField?.AddChild(signatureField);
                 }),
                 nameof(PdfGenericField) => localForm.AddGenericField(genericField =>
                 {
-                    // no special properties
+                    genericField.Name = remoteField.Name;
                     parentField?.AddChild(genericField);
                 }),
                 nameof(PdfTextField) => localForm.AddTextField(textField =>
                 {
                     var externalTextField = (PdfTextField)remoteField;
+                    textField.Name = remoteField.Name;
                     textField.MaxLength = externalTextField.MaxLength;
                     textField.Text = externalTextField.Text;
                     textField.TextAlign = externalTextField.TextAlign;
@@ -325,13 +317,13 @@ namespace PdfSharp.Pdf.Advanced
                 }),
                 nameof(PdfPushButtonField) => localForm.AddPushButtonField(pushButton =>
                 {
-                    // no special properties
+                    pushButton.Name = remoteField.Name;
                     parentField?.AddChild(pushButton);
                 }),
                 _ => throw new NotImplementedException($"Field type {remoteField.GetType().Name} is not handled"),
             };
             // copy common properties
-            importedField.Name = remoteField.Name;
+            //importedField.Name = remoteField.Name;
             if (!string.IsNullOrEmpty(importedField.AlternateName))
                 importedField.AlternateName = remoteField.AlternateName;
             if (!string.IsNullOrEmpty(importedField.MappingName))
@@ -339,6 +331,10 @@ namespace PdfSharp.Pdf.Advanced
             if (remoteField.DefaultValue != null)
                 importedField.DefaultValue = remoteField.DefaultValue;
             importedField.SetFlags = remoteField.Flags;
+            importedField.Font = remoteField.Font;
+            importedField.DeterminedFontSize = remoteField.DeterminedFontSize;
+            importedField.ContentFontName = remoteField.ContentFontName;
+            importedField.BaseContentFontName = remoteField.BaseContentFontName;
 
             if (!annotationsImported)
                 ImportFieldAnnotations(importedField, remoteField);
@@ -372,8 +368,11 @@ namespace PdfSharp.Pdf.Advanced
                         annot.Elements[PdfAnnotation.Keys.AS] = remoteAnnot.Elements[PdfAnnotation.Keys.AS];
                     if (remoteAnnot.Page != null && importedObjectTable.Contains(remoteAnnot.Page.ObjectID))
                     {
-                        var pageRef = importedObjectTable[remoteAnnot.Page.ObjectID]!;
-                        annot.Page = pageRef.Value as PdfPage;
+                        var localPage = importedObjectTable[remoteAnnot.Page.ObjectID]!.Value as PdfPage;
+                        // avoid duplicate annotations (page-import already imported annotations)
+                        if (localPage != null && importedObjectTable[remoteAnnot.ObjectID].Value is PdfDictionary importedAnnot)
+                            localPage.Annotations.Remove(new PdfGenericAnnotation(importedAnnot));
+                        annot.Page = localPage;
                     }
                 });
             }

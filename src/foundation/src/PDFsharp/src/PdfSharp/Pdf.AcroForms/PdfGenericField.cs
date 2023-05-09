@@ -34,7 +34,7 @@ namespace PdfSharp.Pdf.AcroForms
                     var normalAppearance = appearances != null ? appearances.Elements.GetDictionary("/N") : null;
                     var activeAppearance = widget.Elements.GetString(PdfAnnotation.Keys.AS);
                     if (!String.IsNullOrEmpty(activeAppearance) && normalAppearance != null && normalAppearance.Elements.ContainsKey(activeAppearance))
-                        RenderContentStream(widget.Page, normalAppearance.Elements.GetDictionary(activeAppearance)!.Stream, widget.Rectangle);
+                        RenderContentStream(widget.Page, normalAppearance.Elements.GetDictionary(activeAppearance)!, widget.Rectangle);
                 }
             }
         }

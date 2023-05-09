@@ -48,14 +48,12 @@ namespace PdfSharp.Pdf.AcroForms
                 if (isUnicodeText && BaseContentFontName is not null && (Font == null || Font.PdfOptions.FontEncoding != PdfFontEncoding.Unicode))
                 {
                     // HACK to support Unicode chars in Form-Fields
-                    if (IsStandardFont(BaseContentFontName, out var systemFontName, out var fontStyle))
-                        Font = new XFont(systemFontName!, Math.Max(1.0, DeterminedFontSize), fontStyle, new XPdfFontOptions(PdfFontEncoding.Unicode));
+                    if (IsStandardFont(BaseContentFontName, out var fontStyle))
+                        Font = new XFont(BaseContentFontName, Math.Max(1.0, DeterminedFontSize), fontStyle, new XPdfFontOptions(PdfFontEncoding.Unicode));
                     else
                         Font = new XFont(BaseContentFontName.TrimStart('/'), Math.Max(1.0, DeterminedFontSize), XFontStyleEx.Regular, new XPdfFontOptions(PdfFontEncoding.Unicode));
-                    Elements.SetString(PdfAcroField.Keys.V, value ?? string.Empty);
                 }
-                else
-                    Elements.SetString(PdfAcroField.Keys.V, value ?? string.Empty);
+                Elements.SetString(PdfAcroField.Keys.V, value ?? string.Empty);
             }
         }
 
@@ -165,25 +163,34 @@ namespace PdfSharp.Pdf.AcroForms
                             if (widget.Rotation == 90 || widget.Rotation == 270)
                                 xRect = new XRect(0, 0, rect.Height, rect.Width);
                         }
-                        if (Combined && MaxLength > 0)
-                        {
-                            var combWidth = xRect.Width / MaxLength;
-                            format.Comb = true;
-                            format.CombWidth = combWidth;
-                        }
                         gfx.IntersectClip(xRect);
                         if (!widget.BackColor.IsEmpty)
                             gfx.DrawRectangle(new XSolidBrush(widget.BackColor), xRect);
                         if (!widget.BorderColor.IsEmpty)
                             gfx.DrawRectangle(new XPen(widget.BorderColor), xRect);
-                        // for Multiline fields, we use XTextFormatter to handle line-breaks and a fixed TextFormat (only TopLeft is supported)
-                        if (MultiLine)
+
+                        if (Combined && MaxLength > 0)
                         {
-                            var tf = new XTextFormatter(gfx);
-                            tf.DrawString(text, Font, new XSolidBrush(ForeColor), xRect, XStringFormats.TopLeft);
+                            var combWidth = xRect.Width / MaxLength;
+                            var cBrush = new XSolidBrush(ForeColor);
+                            var count = Math.Min(text.Length, MaxLength);
+                            for (var ci = 0; ci < count; ci++)
+                            {
+                                var cRect = new XRect(ci * combWidth, 0, combWidth, xRect.Height);
+                                gfx.DrawString(text[ci].ToString(), Font, new XSolidBrush(ForeColor), cRect, XStringFormats.BaseLineCenter);
+                            }
                         }
                         else
-                            gfx.DrawString(text, Font, new XSolidBrush(ForeColor), xRect, format);
+                        {
+                            // for Multiline fields, we use XTextFormatter to handle line-breaks and a fixed TextFormat (only TopLeft is supported)
+                            if (MultiLine)
+                            {
+                                var tf = new XTextFormatter(gfx);
+                                tf.DrawString(text, Font, new XSolidBrush(ForeColor), xRect, XStringFormats.TopLeft);
+                            }
+                            else
+                                gfx.DrawString(text, Font, new XSolidBrush(ForeColor), xRect, format);
+                        }
                     }
                 }
                 form.DrawingFinished();
@@ -211,9 +218,13 @@ namespace PdfSharp.Pdf.AcroForms
             // create DefaultAppearance for newly created fields (required according to the spec)
             if (!Elements.ContainsKey(Keys.DA) && _document.AcroForm != null)
             {
-                var pdfFont = _document.FontTable.GetFont(Font);
-                var formResources = _document.AcroForm.GetOrCreateResources();
-                var fontName = formResources.AddFont(pdfFont);
+                var fontName = Font.FromDocument ? Font.DocumentFontName : null;
+                if (fontName == null)
+                {
+                    var pdfFont = _document.FontTable.GetFont(Font);
+                    var formResources = _document.AcroForm.GetOrCreateResources();
+                    fontName = formResources.AddFont(pdfFont);
+                }
                 Elements.Add(Keys.DA, new PdfString(string.Format(
                     CultureInfo.InvariantCulture, "{0} {1} Tf {2:0.###} {3:0.###} {4:0.###} rg",
                     fontName, Font.Size, ForeColor.R / 255.0, ForeColor.G / 255.0, ForeColor.B / 255.0)));
@@ -258,22 +269,30 @@ namespace PdfSharp.Pdf.AcroForms
                                     if (widget.Rotation == 90 || widget.Rotation == 270)
                                         xRect = new XRect(rect.X1 - rect.Height, widget.Page.Height.Point - rect.Y2, xRect.Height, xRect.Width);
                                 }
-                                var format = TextAlign == TextAlignment.Left ? XStringFormats.CenterLeft : TextAlign == TextAlignment.Center ? XStringFormats.Center : XStringFormats.CenterRight;
+                                gfx.IntersectClip(xRect);
                                 if (Combined && MaxLength > 0)
                                 {
                                     var combWidth = xRect.Width / MaxLength;
-                                    format.Comb = true;
-                                    format.CombWidth = combWidth;
-                                }
-                                gfx.IntersectClip(xRect);
-                                // for Multiline fields, we use XTextFormatter to handle line-breaks and a fixed TextFormat (only TopLeft is supported)
-                                if (MultiLine)
-                                {
-                                    var tf = new XTextFormatter(gfx);
-                                    tf.DrawString(text, Font, new XSolidBrush(ForeColor), xRect, XStringFormats.TopLeft);
+                                    var cBrush = new XSolidBrush(ForeColor);
+                                    var count = Math.Min(text.Length, MaxLength);
+                                    for (var ci = 0; ci < count; ci++)
+                                    {
+                                        var cRect = new XRect(ci * combWidth + xRect.Left, xRect.Y, combWidth, xRect.Height);
+                                        gfx.DrawString(text[ci].ToString(), Font, new XSolidBrush(ForeColor), cRect, XStringFormats.Center);
+                                    }
                                 }
                                 else
-                                    gfx.DrawString(text, Font, new XSolidBrush(ForeColor), xRect, format);
+                                {
+                                    var format = TextAlign == TextAlignment.Left ? XStringFormats.CenterLeft : TextAlign == TextAlignment.Center ? XStringFormats.Center : XStringFormats.CenterRight;
+                                    // for Multiline fields, we use XTextFormatter to handle line-breaks and a fixed TextFormat (only TopLeft is supported)
+                                    if (MultiLine)
+                                    {
+                                        var tf = new XTextFormatter(gfx);
+                                        tf.DrawString(text, Font, new XSolidBrush(ForeColor), xRect, XStringFormats.TopLeft);
+                                    }
+                                    else
+                                        gfx.DrawString(text, Font, new XSolidBrush(ForeColor), xRect, format);
+                                }
                             }
                         }
                     }
