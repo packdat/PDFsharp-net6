@@ -4,6 +4,7 @@
 using PdfSharp.Fonts.OpenType;
 using PdfSharp.Internal;
 using PdfSharp.Pdf;
+using System.Reflection;
 
 namespace PdfSharp.Fonts
 {
@@ -40,7 +41,8 @@ namespace PdfSharp.Fonts
                     if (ReferenceEquals(_fontResolver, value))
                         return;
 
-                    if (FontFactory.HasFontSources)
+                    if (FontFactory.HasFontSources
+                        && !value.GetType().Namespace!.StartsWith("PdfSharp.")) // HACK to enable dynamically switching to DocumentFontResolver
 #if DEBUG
                     {
 #if CORE
