@@ -9,6 +9,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+	<ItemGroup>
+		<InternalsVisibleTo Include="$(AssemblyName).Tests" />
+	</ItemGroup>
+
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
