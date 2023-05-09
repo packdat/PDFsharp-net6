@@ -481,12 +481,12 @@ namespace PdfSharp.Drawing
         /// Indicates, whether this font was created from an existing document.<br></br>
         /// Intended to avoid unnecessary adding of new Fonts to the document when filling existing AcroForms.
         /// </summary>
-        internal bool FromDocument { get; set; }
+        public bool FromDocument => DocumentFontName != null;
 
         /// <summary>
         /// Gets or sets the name this Font is referenced by in an existing document
         /// </summary>
-        internal string? DocumentFontName { get; set; }
+        public string? DocumentFontName { get; internal set; }
 
         /// <summary>
         /// Gets the em-size of this font measured in the unit of this font object.
@@ -768,5 +768,14 @@ namespace PdfSharp.Drawing
         string DebuggerDisplay
         // ReSharper restore UnusedMember.Local
             => Invariant($"font=('{Name}' {Size:0.##}");
+
+        /// <summary>
+        /// Gets the list of characters supported by this font
+        /// </summary>
+        /// <returns>The list of characters supported by this font</returns>
+        public IList<char> GetGlyphList()
+        {
+            return GlyphTypeface.Fontface.cmap.cmap4.GetGlyphList();
+        }
     }
 }
