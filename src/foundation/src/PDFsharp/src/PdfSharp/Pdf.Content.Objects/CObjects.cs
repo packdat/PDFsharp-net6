@@ -867,8 +867,10 @@ namespace PdfSharp.Pdf.Content.Objects  // TODO: split into single files
                     // ReSharper disable once PossibleNullReferenceException because the loop is not entered if _sequence is null
                     _sequence[idx].WriteObject(writer);
                 }
-                writer.WriteLineRaw(ToString());
+                // BUG ?? should be moved out of the if-block, otherwise nothing is written for operand-less operators
+                //writer.WriteLineRaw(ToString());
             }
+            writer.WriteLineRaw(ToString());
         }
     }
 }
