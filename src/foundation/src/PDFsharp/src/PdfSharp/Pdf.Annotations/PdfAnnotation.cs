@@ -3,6 +3,7 @@
 
 using System;
 using PdfSharp.Drawing;
+using PdfSharp.Pdf.Advanced;
 
 namespace PdfSharp.Pdf.Annotations
 {
@@ -178,7 +179,9 @@ namespace PdfSharp.Pdf.Annotations
             get
             {
                 var item = Elements[Keys.C];
-                if (item is PdfArray array)  // TODO: check for iref?
+                if (item is PdfReference reference)
+                    item = reference.Value;
+                if (item is PdfArray array)
                 {
                     if (array.Elements.Count == 3)
                     {
@@ -193,8 +196,8 @@ namespace PdfSharp.Pdf.Annotations
             }
             set
             {
-                // TODO: an array.SetColor(clr) function may be useful here
-                var array = new PdfArray(Owner, new PdfReal[] { new PdfReal(value.R / 255.0), new PdfReal(value.G / 255.0), new PdfReal(value.B / 255.0) });
+                var array = new PdfArray(Owner, new PdfReal(value.R / 255.0),
+                    new PdfReal(value.G / 255.0), new PdfReal(value.B / 255.0));
                 Elements[Keys.C] = array;
                 Elements.SetDateTime(Keys.M, DateTime.Now);
             }
@@ -216,7 +219,7 @@ namespace PdfSharp.Pdf.Annotations
             }
             set
             {
-                if (value < 0 || value > 1)
+                if (value is < 0 or > 1)
                     throw new ArgumentOutOfRangeException(nameof(value), value, "Opacity must be a value in the range from 0 to 1.");
                 Elements.SetReal(Keys.CA, value);
                 Elements.SetDateTime(Keys.M, DateTime.Now);

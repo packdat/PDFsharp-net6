@@ -532,7 +532,7 @@ namespace PdfSharp.Pdf.AcroForms
                 ParentField = this
             };
             // must add to iref-table here because we need a valid Reference for the field's Kids-array
-            Owner._irefTable.Add(annotation);
+            Owner.IrefTable.Add(annotation);
 
             configure(annotation);
             if (!Elements.ContainsKey(Keys.Kids))
@@ -890,7 +890,7 @@ namespace PdfSharp.Pdf.AcroForms
             }
 
             if (Reference != null)
-                _document._irefTable.Remove(Reference);
+                _document.IrefTable.Remove(Reference);
         }
 
         /// <summary>

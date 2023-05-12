@@ -231,7 +231,7 @@ namespace PdfSharp.Pdf.AcroForms
 
         private T AddToFieldList<T>(T field, Action<T> configure) where T: PdfAcroField
         {
-            _document._irefTable.Add(field);
+            _document.IrefTable.Add(field);
             configure(field);
             if (field.Parent == null)
             {

@@ -174,7 +174,7 @@ namespace PdfSharp.Pdf.Advanced
                 else
                 {
                     if (AcroForm != null && AcroForm.Reference != null)
-                        _document._irefTable.Remove(AcroForm.Reference);
+                        _document.IrefTable.Remove(AcroForm.Reference);
                     Elements.Remove(Keys.AcroForm);
                     _acroForm = null;
                 }

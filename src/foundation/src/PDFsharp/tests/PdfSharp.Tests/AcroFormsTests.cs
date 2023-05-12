@@ -33,7 +33,7 @@ namespace PdfSharp.Tests
             var inputDocument = PdfReader.Open(fs, PdfDocumentOpenMode.Import);
 
             //var fieldFont = new XFont("Helvetica", 12);
-            PdfPage lastPage = null;
+            PdfPage? lastPage = null;
             // import into new document
             var copiedDocument = new PdfDocument();
             foreach (var page in inputDocument.Pages)
@@ -54,7 +54,7 @@ namespace PdfSharp.Tests
             //    gfx.DrawString(sb.ToString(), fieldFont, XBrushes.Black, new XPoint(0, 10));
             //}
             // import AcroForm
-            copiedDocument.ImportAcroForm(inputDocument.AcroForm, (originalField, importedField) =>
+            copiedDocument.ImportAcroForm(inputDocument.AcroForm!, (originalField, importedField) =>
             {
                 // TODO: use DeterminedFontSize from original field
                 //importedField.Font = fieldFont;
@@ -92,7 +92,7 @@ namespace PdfSharp.Tests
                 var inputDocument = PdfReader.Open(fs, PdfDocumentOpenMode.Import);
                 foreach (var page in inputDocument.Pages)
                     copiedDocument.AddPage(page);
-                copiedDocument.ImportAcroForm(inputDocument.AcroForm);
+                copiedDocument.ImportAcroForm(inputDocument.AcroForm!);
                 importedFields.AddRange(GetAllFields(inputDocument));
             }
             var fieldsInCopiedDocument = GetAllFields(copiedDocument);
@@ -123,13 +123,13 @@ namespace PdfSharp.Tests
                 var inputDocument = PdfReader.Open(fs, PdfDocumentOpenMode.Import);
                 foreach (var page in inputDocument.Pages)
                     copiedDocument.AddPage(page);
-                copiedDocument.ImportAcroForm(inputDocument.AcroForm);
+                copiedDocument.ImportAcroForm(inputDocument.AcroForm!);
                 importedFields.AddRange(GetAllFields(inputDocument));
             }
             var fieldsInCopiedDocument = GetAllFields(copiedDocument);
             fieldsInCopiedDocument.Count.Should().Be(importedFields.Count);
             // root field names should be distinct
-            var rootNames = copiedDocument.AcroForm.Fields.Names;
+            var rootNames = copiedDocument.AcroForm!.Fields.Names;
             rootNames.Distinct().Count().Should().Be(rootNames.Length);
 
             FillFields(fieldsInCopiedDocument);
@@ -155,7 +155,7 @@ namespace PdfSharp.Tests
             var copiedDocument = new PdfDocument();
             foreach (var page in inputDocument.Pages)
                 copiedDocument.AddPage(page);
-            copiedDocument.ImportAcroForm(inputDocument.AcroForm);
+            copiedDocument.ImportAcroForm(inputDocument.AcroForm!);
 
             var fieldsInCopiedDocument = GetAllFields(copiedDocument);
             // fill all fields
@@ -171,7 +171,7 @@ namespace PdfSharp.Tests
 
             // flatten the form. after that, AcroForm should be null and all annotations should be removed
             // (this is true for the tested document, other documents may contain annotations not related to Form-Fields)
-            copiedDocument.AcroForm.Flatten();
+            copiedDocument.AcroForm!.Flatten();
             copiedDocument.AcroForm.Should().BeNull();
             copiedDocument.Pages[0].Annotations.Count.Should().Be(0);
 
@@ -392,7 +392,7 @@ namespace PdfSharp.Tests
                 && ((PdfRadioButtonField)field).SelectedIndex == 0
                 && field.Annotations.Elements.Count == 3
                 && ((PdfRadioButtonField)field).Options.SequenceEqual(new[] { "/male", "/female", "/unspecified" })
-                && field.Value.ToString() == "/male");
+                && field.Value!.ToString() == "/male");
             fields.Should().Contain(field =>
                 field.FullyQualifiedName == "SelectedNumber"
                 && field.GetType() == typeof(PdfComboBoxField)
@@ -407,7 +407,7 @@ namespace PdfSharp.Tests
                 && ((PdfListBoxField)field).SelectedIndices.Count() == 1
                 && ((PdfListBoxField)field).SelectedIndices.Contains(1)
                 && ((PdfListBoxField)field).Options.SequenceEqual(new[] { "Blue", "Red", "Green", "Black", "White" })
-                && ((PdfString)((PdfListBoxField)field).Value).Value == "Red"
+                && ((PdfString)((PdfListBoxField)field).Value!).Value == "Red"
                 && field.Annotations.Elements.Count == 1);
         }
 
@@ -481,7 +481,7 @@ namespace PdfSharp.Tests
         private static IList<PdfAcroField> GetAllFields(PdfDocument doc)
         {
             var fields = new List<PdfAcroField>();
-            for (var i = 0; i < doc.AcroForm.Fields.Elements.Count; i++)
+            for (var i = 0; i < doc.AcroForm!.Fields.Elements.Count; i++)
             {
                 var field = doc.AcroForm.Fields[i];
                 TraverseFields(field, ref fields);
