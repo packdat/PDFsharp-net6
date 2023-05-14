@@ -60,7 +60,7 @@ namespace PdfSharp.Pdf.AcroForms
         /// </summary>
         /// <param name="widget"></param>
         /// <returns></returns>
-        protected string? GetNonOffValue(PdfWidgetAnnotation widget)
+        protected static string? GetNonOffValue(PdfWidgetAnnotation widget)
         {
             if (widget != null)
             {

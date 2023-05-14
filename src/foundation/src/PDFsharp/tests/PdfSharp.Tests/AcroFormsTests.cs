@@ -189,13 +189,13 @@ namespace PdfSharp.Tests
             const string lastNameValue = "Süßölgefäß";  // yep, that's a valid german word
 
             // required for now (when using the CORE lib)
-            GlobalFontSettings.FontResolver = new FailsafeFontResolver();
+            GlobalFontSettings.FontResolver = new DocumentFontResolver();
 
             var document = new PdfDocument();
             var page1 = document.AddPage();
             var page2 = document.AddPage();
             var acroForm = document.GetOrCreateAcroForm();
-            var textFont = new XFont("Arial", 12);
+            var textFont = new XFont("Helvetica", 12);
             double x = 40, y = 80;
             var page1Renderer = XGraphics.FromPdfPage(page1);
             var page2Renderer = XGraphics.FromPdfPage(page2);
@@ -306,9 +306,8 @@ namespace PdfSharp.Tests
                     annot.PlaceOnPage(page1, new PdfRectangle(new XRect(x, y, 12, 12)));
                 });
                 page1Renderer.DrawString("Unspecified", textFont, XBrushes.Black, x + 20, y + 10);
-                // must be a name-object ! (starting with a slash)
                 // as an alternative, you can also use field.SelectedIndex
-                field.Value = "/male";
+                field.Value = "male";
                 groupGender.AddChild(field);
             });
 
@@ -349,6 +348,7 @@ namespace PdfSharp.Tests
             fsOut.Close();
 
             // read back and validate
+            GlobalFontSettings.FontResolver = new FailsafeFontResolver();
             document = PdfReader.Open(filePath, PdfDocumentOpenMode.Modify);
             var fields = GetAllFields(document);
 
@@ -391,8 +391,8 @@ namespace PdfSharp.Tests
                 && field.GetType() == typeof(PdfRadioButtonField)
                 && ((PdfRadioButtonField)field).SelectedIndex == 0
                 && field.Annotations.Elements.Count == 3
-                && ((PdfRadioButtonField)field).Options.SequenceEqual(new[] { "/male", "/female", "/unspecified" })
-                && field.Value!.ToString() == "/male");
+                && ((PdfRadioButtonField)field).Options.SequenceEqual(new[] { "male", "female", "unspecified" })
+                && ((PdfRadioButtonField)field).Value == "male");
             fields.Should().Contain(field =>
                 field.FullyQualifiedName == "SelectedNumber"
                 && field.GetType() == typeof(PdfComboBoxField)

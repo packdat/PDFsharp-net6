@@ -3,6 +3,7 @@
 
 using PdfSharp.Drawing;
 using PdfSharp.Pdf.Annotations;
+using System.Collections.ObjectModel;
 
 namespace PdfSharp.Pdf.AcroForms
 {
@@ -28,37 +29,45 @@ namespace PdfSharp.Pdf.AcroForms
             {
                 var array = new PdfArray(_document);
                 foreach (var val in Options)
-                    array.Elements.Add(new PdfName(val));
+                    array.Elements.Add(new PdfString(val));
                 Elements.Add(Keys.Opt, array);
             }
         }
 
         /// <summary>
-        /// Gets or sets the value of this field. This should be an item from the <see cref="Options"/> list.
+        /// Gets or sets the value of this field. This should be an item from the <see cref="Options"/> list.<br></br>
+        /// Setting this to null or an empty string unchecks all radio-buttons.
         /// </summary>
         public new string Value
         {
-            get { return base.Value?.ToString() ?? string.Empty; }
+            get { return (base.Value?.ToString() ?? string.Empty).TrimStart('/'); }
             set
             {
-                base.Value = new PdfString(value);
-                var index = IndexInFieldValues(value);
-                SelectedIndex = index;
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    Elements.SetName(PdfAcroField.Keys.V, value);
+                    var index = IndexInFieldValues(value);
+                    SelectedIndex = index;
+                }
+                else
+                    SelectedIndex = -1;
             }
         }
 
-        private IList<string>? options;
+        private List<string>? options;
 
         /// <summary>
         /// Gets the option-names of this RadioButton<br></br>
-        /// Use one of these values when setting <see cref="Value"/>
+        /// Use one of these values when setting <see cref="Value"/><br></br>
+        /// You cannot manipulate this collection directly.
+        /// To change the elements you have to manipulate the <see cref="PdfAcroField.Annotations"/> of this field.
         /// </summary>
-        public ICollection<string> Options
+        public ReadOnlyCollection<string> Options
         {
             get
             {
                 if (options != null)
-                    return options;
+                    return options.AsReadOnly();
 
                 var values = new List<string>();
                 for (var i = 0; i < Annotations.Elements.Count; i++)
@@ -66,11 +75,11 @@ namespace PdfSharp.Pdf.AcroForms
                     var widget = Annotations.Elements[i];
                     if (widget == null)
                         continue;
-
-                    values.Add(GetNonOffValue(widget) ?? i.ToString());
+                    // convert names to ordinary strings by removing the slash
+                    values.Add((GetNonOffValue(widget) ?? i.ToString()).TrimStart('/'));
                 }
                 options = values;
-                return options;
+                return options.AsReadOnly();
             }
         }
 
@@ -112,8 +121,7 @@ namespace PdfSharp.Pdf.AcroForms
         {
             get
             {
-                var value = Elements.GetString(PdfAcroField.Keys.V);
-                return IndexInFieldValues(value);
+                return IndexInFieldValues(Value);
             }
             set
             {
@@ -152,7 +160,7 @@ namespace PdfSharp.Pdf.AcroForms
 
         private int IndexInFieldValues(string value)
         {
-            return Options.ToList().IndexOf(value);
+            return Options.IndexOf(value);
         }
 
         internal override void Flatten()
