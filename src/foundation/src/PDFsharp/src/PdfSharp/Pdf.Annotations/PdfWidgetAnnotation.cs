@@ -121,6 +121,7 @@ namespace PdfSharp.Pdf.Annotations
 
         private void DetermineAppearance()
         {
+            // TODO: For the border, handle also the /Border and /BS entries (/BS is preferred over /Border if present)
             var mk = Elements.GetDictionary(Keys.MK);     // 12.5.6.19
             if (mk != null)
             {
