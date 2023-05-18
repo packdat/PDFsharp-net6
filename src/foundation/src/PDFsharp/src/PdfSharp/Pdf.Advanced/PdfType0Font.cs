@@ -107,11 +107,17 @@ namespace PdfSharp.Pdf.Advanced
             base.PrepareForSave();
 
             // Use GetGlyphIndices to create the widths array.
-            OpenTypeDescriptor descriptor = (OpenTypeDescriptor)FontDescriptor._descriptor;
-            StringBuilder w = new StringBuilder("[");
+            OpenTypeDescriptor descriptor = FontDescriptor._descriptor;
+            var w = new StringBuilder("[");
             if (_cmapInfo != null)
             {
+                if ((_fontOptions.FontEmbedding & PdfFontEmbedding.Full) == PdfFontEmbedding.Full)
+                {
+                    var charString = new string(descriptor.FontFace.cmap.cmap4.GetGlyphList().ToArray());
+                    _cmapInfo.AddChars(charString);
+                }
                 int[] glyphIndices = _cmapInfo.GetGlyphIndices();
+
                 int count = glyphIndices.Length;
                 int[] glyphWidths = new int[count];
 
@@ -122,7 +128,7 @@ namespace PdfSharp.Pdf.Advanced
 
                 for (int idx = 0; idx < count; idx++)
                     w.AppendFormat("{0}[{1}]", glyphIndices[idx], glyphWidths[idx]);
-                w.Append("]");
+                w.Append(']');
                 _descendantFont.Elements.SetValue(PdfCIDFont.Keys.W, new PdfLiteral(w.ToString()));
 
             }

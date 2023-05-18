@@ -31,6 +31,8 @@ namespace PdfSharp.Pdf.Advanced
 
         internal PdfFontEncoding FontEncoding;
 
+        internal PdfFontEmbedding FontEmbedding;
+
         /// <summary>
         /// Gets a value indicating whether this instance is symbol font.
         /// </summary>

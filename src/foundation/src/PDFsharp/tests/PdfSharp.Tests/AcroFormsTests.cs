@@ -1,14 +1,11 @@
 ﻿using FluentAssertions;
 using PdfSharp.Drawing;
 using PdfSharp.Fonts;
+using PdfSharp.Fonts.StandardFonts;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.AcroForms;
 using PdfSharp.Pdf.IO;
 using PdfSharp.Snippets.Font;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -188,14 +185,16 @@ namespace PdfSharp.Tests
             const string firstNameValue = "Sebastién";
             const string lastNameValue = "Süßölgefäß";  // yep, that's a valid german word
 
-            // required for now (when using the CORE lib)
+            // we use one of the 14 standard-fonts here (Helvetica)
             GlobalFontSettings.FontResolver = new DocumentFontResolver();
 
             var document = new PdfDocument();
             var page1 = document.AddPage();
             var page2 = document.AddPage();
             var acroForm = document.GetOrCreateAcroForm();
-            var textFont = new XFont("Helvetica", 12);
+            var textFont = new XFont(StandardFontNames.Helvetica, 12, XFontStyleEx.Regular,
+                new XPdfFontOptions(PdfFontEncoding.Unicode, PdfFontEmbedding.Full));
+
             double x = 40, y = 80;
             var page1Renderer = XGraphics.FromPdfPage(page1);
             var page2Renderer = XGraphics.FromPdfPage(page2);
@@ -348,7 +347,6 @@ namespace PdfSharp.Tests
             fsOut.Close();
 
             // read back and validate
-            GlobalFontSettings.FontResolver = new FailsafeFontResolver();
             document = PdfReader.Open(filePath, PdfDocumentOpenMode.Modify);
             var fields = GetAllFields(document);
 

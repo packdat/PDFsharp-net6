@@ -212,7 +212,7 @@ namespace PdfSharp.Fonts.OpenType
                     break;
 
                 case TableTagNames.Name:
-                    name = fontTable as NameTable ?? NRT.ThrowOnNull<NameTable>();
+                    name = (fontTable as NameTable)!;// ?? NRT.ThrowOnNull<NameTable>();
                     break;
 
                 case TableTagNames.Head:
@@ -378,6 +378,7 @@ namespace PdfSharp.Fonts.OpenType
             if (fpgm != null!)
                 fontData.AddTable(fpgm);
             fontData.AddTable(glyfNew);
+            fontData.AddTable(name);        // required to correctly read a generated document
             fontData.AddTable(head!);
             fontData.AddTable(hhea);
             fontData.AddTable(hmtx);

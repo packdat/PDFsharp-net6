@@ -163,6 +163,7 @@
 		<Compile Include="..\PdfSharp\Fonts\StandardFonts\NimbusSans-Regular.cs" Link="Fonts\StandardFonts\NimbusSans-Regular.cs" />
 		<Compile Include="..\PdfSharp\Fonts\StandardFonts\StandardSymbolsPS.cs" Link="Fonts\StandardFonts\StandardSymbolsPS.cs" />
 		<Compile Include="..\PdfSharp\Fonts\StandardFonts\StandardFontData.cs" Link="Fonts\StandardFonts\StandardFontData.cs" />
+		<Compile Include="..\PdfSharp\Fonts\StandardFonts\StandardFontNames.cs" Link="Fonts\StandardFonts\StandardFontNames.cs" />
 		
 		<Compile Include="..\PdfSharp\Fonts\AdobeGlyphList20.cs" Link="Fonts\AdobeGlyphList20.cs" />
         <Compile Include="..\PdfSharp\Fonts\AdobeGlyphListForNewFonts.cs" Link="Fonts\AdobeGlyphListForNewFonts.cs" />
