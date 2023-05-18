@@ -2,7 +2,9 @@
 {
     /// <summary>
     /// Provides the data for the 14 Standard-Fonts defined in the PDF-specification.<br></br>
-    /// Pdf spec. 1.7, Chapter 9.6.2.2: Standard Type 1 Fonts (Standard 14 Fonts)
+    /// Pdf spec. 1.7, Chapter 9.6.2.2: Standard Type 1 Fonts (Standard 14 Fonts)<br></br>
+    /// Mainly intended for existing documents which use one or more of the standard-fonts without embedding them.<br></br>
+    /// Used in conjunction with the <see cref="DocumentFontResolver"/>
     /// </summary>
     public static class StandardFontData
     {
@@ -13,7 +15,7 @@
         /// <returns>Font-data or null if a font with the specified name could not be found</returns>
         public static byte[]? GetFontData(string fontName)
         {
-            if (string.IsNullOrEmpty(fontName))
+            if (string.IsNullOrWhiteSpace(fontName))
                 return null;
 
             // if the name comes from a resource-dictionary...
@@ -32,6 +34,8 @@
         /// <returns>true, if <paramref name="fontName"/> is one of the 14 Standard-Fonts, otherwise false</returns>
         public static bool IsStandardFont(string fontName)
         {
+            if (string.IsNullOrWhiteSpace(fontName))
+                return false;
             return FontNames.Contains(fontName.TrimStart('/'));
         }
 
@@ -42,23 +46,23 @@
 
         private static readonly Dictionary<string, byte[]> fontData = new()
         {
-            { "Courier", Courier.FontData },
-            { "Courier-Bold", CourierBold.FontData },
-            { "Courier-Oblique", CourierItalic.FontData },
-            { "Courier-BoldOblique", CourierBoldItalic.FontData },
+            { StandardFontNames.Courier, Courier.FontData },
+            { StandardFontNames.CourierBold, CourierBold.FontData },
+            { StandardFontNames.CourierItalic, CourierItalic.FontData },
+            { StandardFontNames.CourierBoldItalic, CourierBoldItalic.FontData },
 
-            { "Helvetica", Helvetica.FontData },
-            { "Helvetica-Bold", HelveticaBold.FontData },
-            { "Helvetica-Oblique", HelveticaItalic.FontData },
-            { "Helvetica-BoldOblique", HelveticaBoldItalic.FontData },
+            { StandardFontNames.Helvetica, Helvetica.FontData },
+            { StandardFontNames.HelveticaBold, HelveticaBold.FontData },
+            { StandardFontNames.HelveticaItalic, HelveticaItalic.FontData },
+            { StandardFontNames.HelveticaBoldItalic, HelveticaBoldItalic.FontData },
 
-            { "Times-Roman", TimesRoman.FontData },
-            { "Times-Bold", TimesRomanBold.FontData },
-            { "Times-Italic", TimesRomanItalic.FontData },
-            { "Times-BoldItalic", TimesRomanBoldItalic.FontData },
+            { StandardFontNames.Times, TimesRoman.FontData },
+            { StandardFontNames.TimesBold, TimesRomanBold.FontData },
+            { StandardFontNames.TimesItalic, TimesRomanItalic.FontData },
+            { StandardFontNames.TimesBoldItalic, TimesRomanBoldItalic.FontData },
 
-            { "ZapfDingbats", ZapfDingbats.FontData },
-            { "Symbol", Symbol.FontData }
+            { StandardFontNames.ZapfDingbats, ZapfDingbats.FontData },
+            { StandardFontNames.Symbol, Symbol.FontData }
         };
     }
 }

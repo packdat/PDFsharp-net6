@@ -35,6 +35,7 @@ namespace PdfSharp.Pdf.Advanced
             Elements[Keys.FontDescriptor] = fontDescriptor.Reference;
 
             FontEncoding = font.PdfOptions.FontEncoding;
+            FontEmbedding = font.PdfOptions.FontEmbedding;
         }
 
         public PdfCIDFont(PdfDocument document, PdfFontDescriptor fontDescriptor, byte[] fontData)
@@ -56,6 +57,7 @@ namespace PdfSharp.Pdf.Advanced
             Elements[Keys.FontDescriptor] = fontDescriptor.Reference;
 
             FontEncoding = PdfFontEncoding.Unicode;
+            FontEmbedding = PdfFontEmbedding.Always;
         }
 
         public string BaseFont
@@ -79,7 +81,8 @@ namespace PdfSharp.Pdf.Advanced
 #endif
             // CID fonts must always be embedded. PDFsharp automatically embeds a subset.
             OpenTypeFontface? subSet = null;
-            if (FontDescriptor._descriptor.FontFace.loca == null!)
+            if (FontDescriptor._descriptor.FontFace.loca == null! ||
+                (FontEmbedding & PdfFontEmbedding.Full) == PdfFontEmbedding.Full)
                 subSet = FontDescriptor._descriptor.FontFace;
             else
                 subSet = FontDescriptor._descriptor.FontFace.CreateFontSubSet(_cmapInfo!.GlyphIndices, true);

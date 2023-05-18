@@ -9,12 +9,18 @@ namespace PdfSharp.Pdf
     /// Specifies the embedding options of an XFont when converted into PDF.
     /// Font embedding is not optional anymore. So Always is the only option.
     /// </summary>
+    [Flags]
     public enum PdfFontEmbedding
     {
         /// <summary>
         /// All fonts are embedded.
         /// </summary>
         Always,
+
+        /// <summary>
+        /// Embed the full font, not a subset
+        /// </summary>
+        Full = 0x100,
 
         /// <summary>
         /// Fonts are not embedded. This is not an option anymore.

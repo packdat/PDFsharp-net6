@@ -755,7 +755,7 @@ namespace PdfSharp.Drawing
         // ReSharper disable UnusedMember.Local
         string DebuggerDisplay
         // ReSharper restore UnusedMember.Local
-            => Invariant($"font=('{Name}' {Size:0.##}");
+            => Invariant($"font=('{Name}' {Size:0.##})");
 
         /// <summary>
         /// Gets the list of characters supported by this font

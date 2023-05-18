@@ -90,7 +90,9 @@ namespace PdfSharp.Pdf.Advanced
             base.PrepareForSave();
 
             // Fonts are always embedded.
-            OpenTypeFontface subSet = FontDescriptor._descriptor.FontFace.CreateFontSubSet(_cmapInfo!.GlyphIndices, false);
+            OpenTypeFontface subSet = (_fontOptions.FontEmbedding & PdfFontEmbedding.Full) == PdfFontEmbedding.Full
+                ? FontDescriptor._descriptor.FontFace
+                : FontDescriptor._descriptor.FontFace.CreateFontSubSet(_cmapInfo!.GlyphIndices, false);
             byte[] fontData = subSet.FontSource.Bytes;
 
             PdfDictionary fontStream = new PdfDictionary(Owner);
