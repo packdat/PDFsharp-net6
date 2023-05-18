@@ -1229,6 +1229,12 @@ namespace PdfSharp.Pdf.IO
                 ObjectID = objectID,
                 Value = xrefStream
             };
+            // this might happen, when an xref-stream contains a reference to the xref-stream located at the /Prev index
+            if (xrefTable.Contains(objectID))
+            {
+                Debug.Assert(xrefTable[objectID]!.Value == null);
+                xrefTable.ObjectTable.Remove(objectID);
+            }
             xrefTable.Add(iref);
 
             Debug.Assert(xrefStream.Stream != null);

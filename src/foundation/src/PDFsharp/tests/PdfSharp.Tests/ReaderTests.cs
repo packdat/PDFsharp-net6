@@ -299,6 +299,19 @@ namespace PdfSharp.Tests
             VerifyPdfCanBeImported(filePath);
         }
 
+        [Theory]
+        [InlineData("C:\\Temp\\TestPdf\\issue-362-20-0193.-.GR.10.BJAELKER.ENDELIGE.pdf")]
+        [InlineData("C:\\Temp\\TestPdf\\issue-362-Detaljer.ARGO.KOD.rev.B.pdf")]
+        public void Can_Open_Documents(string filePath)
+        {
+            var document = PdfReader.Open(filePath, PdfDocumentOpenMode.Import);
+
+            var copiedDoc = new PdfDocument();
+            foreach (var page in document.Pages)
+                copiedDoc.Pages.Add(page);
+            copiedDoc.Save(Path.Combine(Path.GetTempPath(), "out.pdf"));
+        }
+
         private bool VerifyPdfCanBeImported(string filePath)
         {
             try
