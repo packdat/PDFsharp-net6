@@ -369,8 +369,12 @@ namespace PdfSharp.Pdf.Advanced
                     {
                         var localPage = importedObjectTable[remoteAnnot.Page.ObjectID]!.Value as PdfPage;
                         // avoid duplicate annotations (page-import already imported annotations)
-                        if (localPage != null && importedObjectTable[remoteAnnot.ObjectID].Value is PdfDictionary importedAnnot)
+                        if (localPage != null
+                            && importedObjectTable.Contains(remoteAnnot.ObjectID)
+                            && importedObjectTable[remoteAnnot.ObjectID].Value is PdfDictionary importedAnnot)
+                        {
                             localPage.Annotations.Remove(new PdfGenericAnnotation(importedAnnot));
+                        }
                         annot.Page = localPage;
                     }
                 });
