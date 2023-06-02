@@ -613,9 +613,7 @@ namespace PdfSharp.Pdf.Content
         {
             if (ContLength <= _charIndex)
             {
-                _currChar = Chars.EOF;
-                if (IsOperatorChar(_nextChar))
-                    _token.Append(_nextChar);
+                _currChar = _nextChar;
                 _nextChar = Chars.EOF;
             }
             else

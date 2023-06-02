@@ -69,6 +69,7 @@ namespace PdfSharp.Tests
         [Theory]
         [InlineData("q (text) Tj Q ")]  // this works
         [InlineData("q (text) Tj Q")]   // this doesn't
+        [InlineData("Q")]   // check special case
         public void Content_Can_Be_Parsed_And_Reconstructed(string contentString)
         {
             var contentBytes = Encoding.UTF8.GetBytes(contentString);
@@ -84,7 +85,7 @@ namespace PdfSharp.Tests
             newContent.CreateStream(ms.ToArray());
 
             // ContentWriter adds a newline after each operator
-            newContent.Stream.ToString().Should().Be("q\n(text)Tj\nQ\n");
+            newContent.Stream.ToString().Should().Be(contentString.Length == 1 ? "Q\n" : "q\n(text)Tj\nQ\n");
             // is this intended ? ToString() writes only operator-names but not the operands...
             var s = sequence.ToString();    // result: "qTjQ"
         }
