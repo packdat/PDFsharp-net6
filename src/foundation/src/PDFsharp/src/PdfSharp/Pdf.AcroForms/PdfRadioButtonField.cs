@@ -163,35 +163,7 @@ namespace PdfSharp.Pdf.AcroForms
             return Options.IndexOf(value);
         }
 
-        internal override void Flatten()
-        {
-            base.Flatten();
-
-            for (var i = 0; i < Annotations.Elements.Count; i++)
-            {
-                var widget = Annotations.Elements[i];
-                if (widget.Page != null)
-                {
-                    var appearance = widget.Elements.GetDictionary(PdfAnnotation.Keys.AP);
-                    var selectedAppearance = widget.Elements.GetName(PdfAnnotation.Keys.AS);
-                    if (appearance != null && selectedAppearance != null)
-                    {
-                        // /N -> Normal appearance, /R -> Rollover appearance, /D -> Down appearance
-                        var apps = appearance.Elements.GetDictionary("/N");
-                        if (apps != null)
-                        {
-                            var appSel = apps.Elements.GetDictionary(selectedAppearance);
-                            if (appSel != null)
-                            {
-                                RenderContentStream(widget.Page, appSel, widget.Rectangle);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        private void RenderAppearance()
+        protected override void RenderAppearance()
         {
             for (var i = 0; i < Annotations.Elements.Count; i++)
             {
@@ -204,6 +176,8 @@ namespace PdfSharp.Pdf.AcroForms
                     {
                         widget.Elements.SetName(PdfAnnotation.Keys.AS, i == SelectedIndex ? Options.ElementAt(i) : "/Off");
                     }
+                    else
+                        CreateAppearance(widget, GetNonOffValue(widget) ?? "/Yes");
                 }
             }
         }
@@ -227,16 +201,7 @@ namespace PdfSharp.Pdf.AcroForms
                 using (var gfx = XGraphics.FromForm(formChecked))
                 {
                     gfx.IntersectClip(xRect);
-                    // draw border
-                    if (!widget.BorderColor.IsEmpty)
-                    {
-                        var borderPen = new XPen(widget.BorderColor);
-                        gfx.DrawEllipse(borderPen, 0, 0, rect.Width, rect.Height);
-                    }
-                    // draw a dot in the middle
-                    var dotRect = new XRect(xRect.Location, xRect.Size);
-                    dotRect.Inflate(-xRect.Width / 4.0, -xRect.Height / 4.0);
-                    gfx.DrawEllipse(new XSolidBrush(ForeColor), dotRect);
+                    Owner.AcroForm?.FieldRenderer.RadioButtonFieldRenderer.RenderCheckedState(this, widget, gfx, xRect);
                 }
                 formChecked.DrawingFinished();
 
@@ -245,12 +210,7 @@ namespace PdfSharp.Pdf.AcroForms
                 using (var gfx = XGraphics.FromForm(formUnchecked))
                 {
                     gfx.IntersectClip(xRect);
-                    // draw border
-                    if (!widget.BorderColor.IsEmpty)
-                    {
-                        var borderPen = new XPen(widget.BorderColor);
-                        gfx.DrawEllipse(borderPen, 0, 0, rect.Width, rect.Height);
-                    }
+                    Owner.AcroForm?.FieldRenderer.RadioButtonFieldRenderer.RenderUncheckedState(this, widget, gfx, xRect);
                 }
                 formUnchecked.DrawingFinished();
 

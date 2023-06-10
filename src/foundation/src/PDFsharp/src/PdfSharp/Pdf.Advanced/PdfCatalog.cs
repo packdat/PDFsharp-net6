@@ -312,7 +312,6 @@ namespace PdfSharp.Pdf.Advanced
                     textField.Name = remoteField.Name;
                     textField.MaxLength = externalTextField.MaxLength;
                     textField.Text = externalTextField.Text;
-                    textField.TextAlign = externalTextField.TextAlign;
                     parentField?.AddChild(textField);
                 }),
                 nameof(PdfPushButtonField) => localForm.AddPushButtonField(pushButton =>
@@ -335,6 +334,8 @@ namespace PdfSharp.Pdf.Advanced
             importedField.DeterminedFontSize = remoteField.DeterminedFontSize;
             importedField.ContentFontName = remoteField.ContentFontName;
             importedField.BaseContentFontName = remoteField.BaseContentFontName;
+            importedField.ForeColor = remoteField.ForeColor;
+            importedField.TextAlign = remoteField.TextAlign;
 
             if (!annotationsImported)
                 ImportFieldAnnotations(importedField, remoteField);

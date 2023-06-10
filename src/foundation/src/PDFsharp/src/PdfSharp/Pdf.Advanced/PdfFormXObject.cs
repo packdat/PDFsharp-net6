@@ -24,6 +24,13 @@ namespace PdfSharp.Pdf.Advanced
             Elements.SetName(Keys.Subtype, "/Form");
         }
 
+        internal PdfFormXObject(PdfDictionary dict)
+            : base(dict.Owner)
+        {
+            if (dict.Elements.GetName(Keys.Subtype) != "/Form")
+                throw new ArgumentException("Dictionary does not specify the required Subtype", nameof(dict));
+        }
+
         internal PdfFormXObject(PdfDocument thisDocument, XForm form)
             : base(thisDocument)
         {

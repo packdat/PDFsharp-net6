@@ -65,7 +65,7 @@ namespace PdfSharp.Pdf.AcroForms
         /// <param name="index">Index of the value that should be retrieved</param>
         /// <param name="useExportValue">true to get the export value, false to get the text shown in the UI</param>
         /// </summary>
-        protected string ValueInOptArray(int index, bool useExportValue)
+        internal string ValueInOptArray(int index, bool useExportValue)
         {
             var opt = Elements.GetArray(Keys.Opt);
             if (opt != null)

@@ -522,7 +522,7 @@ namespace PdfSharp.Pdf.AcroForms
         /// <param name="configure">A method that is used to configure the Annotation</param>
         /// <returns>The created and configured Annotation</returns>
         /// <exception cref="ArgumentNullException"></exception>
-        public PdfWidgetAnnotation AddAnnotation(Action<PdfWidgetAnnotation> configure)
+        public virtual PdfWidgetAnnotation AddAnnotation(Action<PdfWidgetAnnotation> configure)
         {
             if (configure == null)
                 throw new ArgumentNullException(nameof(configure));
@@ -797,6 +797,9 @@ namespace PdfSharp.Pdf.AcroForms
             // accessing the Fields-property may have created a new empty array, remove that
             if (Fields.Elements.Count == 0)
                 Elements.Remove(Keys.Kids);
+            // handle annotations
+            foreach (var annot in Annotations.Elements)
+                annot.PrepareForSave();
         }
 
         internal void RemoveAnnotation(PdfWidgetAnnotation widget)
@@ -862,19 +865,6 @@ namespace PdfSharp.Pdf.AcroForms
             for (var i = 0; i < Annotations.Elements.Count; i++)
             {
                 var widget = Annotations.Elements[i];
-                var rect = widget.Rectangle;
-                if (!rect.IsEmpty && widget.Page != null
-                    && this is PdfTextField
-                    && (!widget.BackColor.IsEmpty || !widget.BorderColor.IsEmpty))
-                {
-                    using var gfx = XGraphics.FromPdfPage(widget.Page);
-                    gfx.TranslateTransform(rect.X1, widget.Page.Height.Point - rect.Y2);
-                    if (widget.BackColor != XColor.Empty)
-                        gfx.DrawRectangle(new XSolidBrush(widget.BackColor), rect.ToXRect() - rect.Location);
-                    // Draw Border
-                    if (!widget.BorderColor.IsEmpty)
-                        gfx.DrawRectangle(new XPen(widget.BorderColor), rect.ToXRect() - rect.Location);
-                }
                 // Remove annotation
                 widget.Parent?.Remove(widget);
                 widget.Page?.Annotations.Remove(widget);
@@ -891,6 +881,50 @@ namespace PdfSharp.Pdf.AcroForms
 
             if (Reference != null)
                 _document.IrefTable.Remove(Reference);
+
+            RenderAppearance();
+            RenderAppearanceToPage();
+        }
+
+        /// <summary>
+        /// Must be overridden by subclasses
+        /// </summary>
+        protected virtual void RenderAppearance()
+        {
+        }
+
+        /// <summary>
+        /// Renders the widget-appearances of this field directly onto the page.<br></br>
+        /// Used by the <see cref="Flatten"/> method.
+        /// </summary>
+        protected void RenderAppearanceToPage()
+        {
+            // /N -> Normal appearance, /R -> Rollover appearance, /D -> Down appearance
+            const string normalName = "/N";
+
+            for (var i = 0; i < Annotations.Elements.Count; i++)
+            {
+                var widget = Annotations.Elements[i];
+                if (widget.Page != null)
+                {
+                    var appearances = widget.Elements.GetDictionary(PdfAnnotation.Keys.AP);
+                    if (appearances != null)
+                    {
+                        var normalAppearance = appearances.Elements.GetDictionary(normalName);
+                        var appeareanceState = widget.Elements.GetName(PdfAnnotation.Keys.AS);
+                        // if state is unset, treat normal appearance as the appearance itself
+                        if (normalAppearance != null && string.IsNullOrEmpty(appeareanceState))
+                            RenderContentStream(widget.Page, normalAppearance, widget.Rectangle);
+                        else if (normalAppearance != null)
+                        {
+                            // the state is used by radio-buttons and checkboxes, which have a checked and an unchecked state
+                            var selectedAppearance = normalAppearance.Elements.GetDictionary(appeareanceState);
+                            if (selectedAppearance != null)
+                                RenderContentStream(widget.Page, selectedAppearance, widget.Rectangle);
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>
