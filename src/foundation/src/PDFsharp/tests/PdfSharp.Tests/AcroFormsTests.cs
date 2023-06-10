@@ -23,13 +23,9 @@ namespace PdfSharp.Tests
         [Fact]
         public void CanImportForm()
         {
-            // required for now (when using the CORE lib)
-            //GlobalFontSettings.FontResolver = new DocumentFontResolver();
-
             using var fs = File.OpenRead(Path.Combine("assets", "DocumentWithAcroForm.pdf"));
             var inputDocument = PdfReader.Open(fs, PdfDocumentOpenMode.Import);
 
-            //var fieldFont = new XFont("Helvetica", 12);
             PdfPage? lastPage = null;
             // import into new document
             var copiedDocument = new PdfDocument();
@@ -38,24 +34,8 @@ namespace PdfSharp.Tests
                 copiedDocument.AddPage(page);
                 lastPage = page;
             }
-            // create dummy form to add all chars to the font
-            // PdfSharp seems to always create a font-subset that contains only those chars that are actually drawn.
-            // while this is ok for static text, it is s problem for AcroFields where a user may enter different text.
-            // it would be nice if we had the option to embed the FULL font.
-            //var form = new XForm(copiedDocument, 1, 1);
-            //using (var gfx = XGraphics.FromForm(form))
-            //{
-            //    var sb = new StringBuilder(256);
-            //    for (var i = 32; i < 256; i++)
-            //        sb.Append((char)i);
-            //    gfx.DrawString(sb.ToString(), fieldFont, XBrushes.Black, new XPoint(0, 10));
-            //}
             // import AcroForm
-            copiedDocument.ImportAcroForm(inputDocument.AcroForm!, (originalField, importedField) =>
-            {
-                // TODO: use DeterminedFontSize from original field
-                //importedField.Font = fieldFont;
-            });
+            copiedDocument.ImportAcroForm(inputDocument.AcroForm!);
 
             copiedDocument.AcroForm.Should().NotBeNull();
 
@@ -158,14 +138,6 @@ namespace PdfSharp.Tests
             // fill all fields
             FillFields(fieldsInCopiedDocument);
 
-            //GlobalFontSettings.FontResolver = new DocumentFontResolver(copiedDocument);
-            //using (var gfx = XGraphics.FromPdfPage(copiedDocument.Pages[0]))
-            //{
-            //    var font = new XFont("Arial", 14);
-            //    var brush = new XSolidBrush(XColors.Black);
-            //    gfx.DrawString("Hello there !", font, brush, 50, 400);
-            //}
-
             // flatten the form. after that, AcroForm should be null and all annotations should be removed
             // (this is true for the tested document, other documents may contain annotations not related to Form-Fields)
             copiedDocument.AcroForm!.Flatten();
@@ -201,6 +173,7 @@ namespace PdfSharp.Tests
             copiedDocument.Save(fsOut);
 
             // don't know what to assert here, have to check with "real" eyes
+            // (we mainly want to check the behavior of the AcroFieldRenderers)
         }
 
         [Fact]
