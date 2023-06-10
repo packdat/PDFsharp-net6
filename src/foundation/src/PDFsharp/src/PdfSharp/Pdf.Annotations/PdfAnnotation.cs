@@ -4,6 +4,7 @@
 using System;
 using PdfSharp.Drawing;
 using PdfSharp.Pdf.Advanced;
+using PdfSharp.Pdf.Annotations.enums;
 
 namespace PdfSharp.Pdf.Annotations
 {
@@ -52,6 +53,8 @@ namespace PdfSharp.Pdf.Annotations
         {
             Parent.Remove(this);
         }
+
+        public PdfAnnotationBorder Border { get; set; } = new PdfAnnotationBorder();
 
         /// <summary>
         /// Gets or sets the annotation flags of this instance.
@@ -263,6 +266,82 @@ namespace PdfSharp.Pdf.Annotations
                 }
             }
             return null;
+        }
+
+        /// <summary>
+        /// Determines the border-characteristics of this annotation<br></br>
+        /// PdfReference 1.7, Chapter 12.5.2 and 12.5.4
+        /// </summary>
+        protected void DetermineBorder()
+        {
+            var bs = Elements.GetDictionary(Keys.BS);
+            if (bs != null)
+            {
+                if (bs.Elements.ContainsKey("/W"))
+                    Border.Width = Math.Max(0, bs.Elements.GetInteger("/W"));
+                if (bs.Elements.ContainsKey("/S"))
+                {
+                    var styleName = bs.Elements.GetName("/S");
+                    Border.BorderStyle = styleName switch
+                    {
+                        "/S" => PdfAnnotationBorderStyle.Solid,
+                        "/D" => PdfAnnotationBorderStyle.Dashed,
+                        "/B" => PdfAnnotationBorderStyle.Beveled,
+                        "/I" => PdfAnnotationBorderStyle.Inset,
+                        "/U" => PdfAnnotationBorderStyle.Underline,
+                        _ => PdfAnnotationBorderStyle.None
+                    };
+                }
+                if (bs.Elements.ContainsKey("/D"))
+                {
+                    var patternArray = bs.Elements.GetArray("/D");
+                    if (patternArray?.Elements.Count > 0)
+                    {
+                        var numbers = new List<int>(patternArray.Elements.Count);
+                        foreach (var item in patternArray)
+                        {
+                            if (item is PdfInteger intItem)
+                                numbers.Add(intItem.Value);
+                        }
+                        Border.DashPattern = numbers.ToArray();
+                    }
+                }
+                return;     // BS takes precedence over Border
+            }
+            if (Elements.ContainsKey(Keys.Border))
+            {
+                var borderArray = Elements.GetArray(Keys.Border);
+                var hRadius = 0;
+                var vRadius = 0;
+                var width = 0;
+                int[]? dashPattern = null;
+                for (var i = 0; i < borderArray?.Elements.Count; i++)
+                {
+                    var val = borderArray.Elements[i];
+                    if (i == 0 && val is PdfInteger hItem)
+                        hRadius += hItem.Value;
+                    if (i == 1 && val is PdfInteger vItem)
+                        vRadius = vItem.Value;
+                    if (i == 2 && val is PdfInteger widthItem)
+                        width = widthItem.Value;
+                    if (i == 3 && val is PdfArray arrayItem)
+                    {
+                        var dash = new List<int>();
+                        foreach (var item in arrayItem)
+                        {
+                            if (item is PdfInteger intItem)
+                                dash.Add(intItem.Value);
+                        }
+                        if (dash.Count > 0)
+                            dashPattern = dash.ToArray();
+                    }
+                }
+                Border.Width = width;
+                Border.HorizontalRadius = hRadius;
+                Border.VerticalRadius = vRadius;
+                if (dashPattern != null)
+                    Border.DashPattern = dashPattern;
+            }
         }
 
         /// <summary>

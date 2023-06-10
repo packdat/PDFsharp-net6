@@ -146,14 +146,11 @@ namespace PdfSharp.Pdf.AcroForms
             }
         }
 
-        void RenderAppearance()
+        protected override void RenderAppearance()
         {
             if (Font is null)
                 return;
 
-            var format = TextAlign == TextAlignment.Left
-                ? XStringFormats.CenterLeft
-                : TextAlign == TextAlignment.Center ? XStringFormats.Center : XStringFormats.CenterRight;
             for (var idx = 0; idx < Annotations.Elements.Count; idx++)
             {
                 var widget = Annotations.Elements[idx];
@@ -169,93 +166,20 @@ namespace PdfSharp.Pdf.AcroForms
                 var form = new XForm(_document, xRect);
                 using (var gfx = XGraphics.FromForm(form))
                 {
-                    if (widget.BackColor != XColor.Empty)
-                        gfx.DrawRectangle(new XSolidBrush(widget.BackColor), xRect);
-                    // Draw Border
-                    if (!widget.BorderColor.IsEmpty)
-                        gfx.DrawRectangle(new XPen(widget.BorderColor), xRect);
-
-                    var lineHeight = Font.Size * 1.2;
-                    var y = 0.0;
-                    var startIndex = Math.Max(0, Math.Min(TopIndex, Options.Count - (int)(rect.Height / lineHeight)));
-                    for (var i = startIndex; i < Options.Count; i++)
-                    {
-                        var text = Options.ElementAt(i);
-                        // offset and shrink a bit to not draw on top of the outer border
-                        var lineRect = new XRect(1, y + 1, rect.Width - 2, lineHeight - 1);
-                        var selected = false;
-                        if (text.Length > 0)
-                        {
-                            if (SelectedIndices.Contains(i))
-                            {
-                                gfx.DrawRectangle(new XSolidBrush(HighlightColor), lineRect);
-                                selected = true;
-                            }
-                            lineRect.Inflate(-2, 0);
-                            gfx.DrawString(text, Font, new XSolidBrush(selected ? HighlightTextColor : ForeColor), lineRect, format);
-                            y += lineHeight;
-                        }
-                    }
+                    gfx.IntersectClip(xRect);
+                    Owner.AcroForm?.FieldRenderer.ListBoxFieldRenderer.Render(this, widget, gfx, xRect);
                 }
                 form.DrawingFinished();
-
                 SetXFormFont(form);
 
-                var ap = new PdfDictionary(this._document);
+                var ap = new PdfDictionary(Owner);
                 widget.Elements[PdfAnnotation.Keys.AP] = ap;
-                // Set XRef to normal state
-                ap.Elements["/N"] = form.PdfForm.Reference;
-                widget.Elements.SetName(PdfAnnotation.Keys.AS, "/N");   // set appearance state
-                // Set XRef to normal state
                 ap.Elements["/N"] = form.PdfForm.Reference;
 
                 var xobj = form.PdfForm;
                 var s = xobj.Stream.ToString();
                 s = "/Tx BMC\n" + s + "\nEMC";
                 xobj.Stream.Value = new RawEncoding().GetBytes(s);
-            }
-        }
-
-        internal override void Flatten()
-        {
-            base.Flatten();
-
-            if (Font is null)
-                return;
-
-            for (var i = 0; i < Annotations.Elements.Count; i++)
-            {
-                var widget = Annotations.Elements[i];
-                if (widget.Page != null)
-                {
-                    var rect = widget.Rectangle;
-                    if (!rect.IsEmpty)
-                    {
-                        var yOffset = 0.0;
-                        using (var gfx = XGraphics.FromPdfPage(widget.Page))
-                        {
-                            var xRect = new XRect(rect.X1, widget.Page.Height.Point - rect.Y2, rect.Width, rect.Height);
-                            gfx.Save();
-                            gfx.IntersectClip(xRect);
-                            // TODO: shouldn't we only render the selected items ?
-                            // what is the point in rendering the unselected items when flattening ?
-                            for (var index = TopIndex; index < Values.Count; index++)
-                            {
-                                var text = Values.ElementAt(index);
-                                var size = gfx.MeasureString(text, Font);
-                                var drawColor = ForeColor;
-                                if (SelectedIndices.Contains(index))
-                                {
-                                    gfx.DrawRectangle(new XSolidBrush(HighlightColor), new XRect(rect.X1, widget.Page.Height.Point - rect.Y2 + yOffset + 2.0, rect.Width, size.Height));
-                                    drawColor = HighlightTextColor;
-                                }
-                                gfx.DrawString(text, Font, new XSolidBrush(drawColor), xRect + new XPoint(0, yOffset), XStringFormats.TopLeft);
-                                yOffset += size.Height + 1.0;
-                            }
-                            gfx.Restore();
-                        }
-                    }
-                }
             }
         }
 

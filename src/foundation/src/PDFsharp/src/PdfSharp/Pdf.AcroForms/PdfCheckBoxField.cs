@@ -54,7 +54,7 @@ namespace PdfSharp.Pdf.AcroForms
             }
         }
 
-        void RenderAppearance()
+        protected override void RenderAppearance()
         {
             for (var i = 0; i < Annotations.Elements.Count; i++)
             {
@@ -75,36 +75,20 @@ namespace PdfSharp.Pdf.AcroForms
                     using (var gfx = XGraphics.FromForm(formChecked))
                     {
                         gfx.IntersectClip(xRect);
-                        // draw border
-                        if (!widget.BorderColor.IsEmpty)
-                        {
-                            var borderPen = new XPen(widget.BorderColor);
-                            gfx.DrawRectangle(borderPen, 0, 0, rect.Width, rect.Height);
-                        }
-                        // draw an X-shape
-                        var pen = new XPen(ForeColor, 2)
-                        {
-                            LineCap = XLineCap.Round
-                        };
-                        var pad = 2;
-                        gfx.DrawLine(pen, 0 + pad, pad, rect.Width - pad, rect.Height - pad);
-                        gfx.DrawLine(pen, 0 + pad, rect.Height - pad, rect.Width - pad, pad);
+                        Owner.AcroForm?.FieldRenderer.CheckBoxFieldRenderer.RenderCheckedState(this, widget, gfx, xRect);
                     }
                     formChecked.DrawingFinished();
+                    SetXFormFont(formChecked);
 
                     // unchecked state
                     var formUnchecked = new XForm(_document, rect.ToXRect());
                     using (var gfx = XGraphics.FromForm(formUnchecked))
                     {
                         gfx.IntersectClip(xRect);
-                        // draw border
-                        if (!widget.BorderColor.IsEmpty)
-                        {
-                            var borderPen = new XPen(widget.BorderColor);
-                            gfx.DrawRectangle(borderPen, 0, 0, rect.Width, rect.Height);
-                        }
+                        Owner.AcroForm?.FieldRenderer.CheckBoxFieldRenderer.RenderUncheckedState(this, widget, gfx, xRect);
                     }
                     formUnchecked.DrawingFinished();
+                    SetXFormFont(formUnchecked);
 
                     var ap = new PdfDictionary(_document);
                     var nDict = new PdfDictionary(_document);
@@ -113,36 +97,6 @@ namespace PdfSharp.Pdf.AcroForms
                     nDict.Elements["/Off"] = formUnchecked.PdfForm.Reference;
                     widget.Elements[PdfAnnotation.Keys.AP] = ap;
                     widget.Elements.SetName(PdfAnnotation.Keys.AS, Checked ? "/Yes" : "/Off");   // set appearance state
-                }
-            }
-        }
-
-        internal override void Flatten()
-        {
-            base.Flatten();
-
-            if (Checked)
-            {
-                for (var i = 0; i < Annotations.Elements.Count; i++)
-                {
-                    var widget = Annotations.Elements[i];
-                    if (widget.Page != null)
-                    {
-                        var appearance = widget.Elements.GetDictionary(PdfAnnotation.Keys.AP);
-                        if (appearance != null)
-                        {
-                            // /N -> Normal appearance, /R -> Rollover appearance, /D -> Down appearance
-                            var apps = appearance.Elements.GetDictionary("/N");
-                            if (apps != null)
-                            {
-                                var appSel = apps.Elements.GetDictionary(Checked ? GetNonOffValue() ?? CheckedName : "/Off");
-                                if (appSel != null)
-                                {
-                                    RenderContentStream(widget.Page, appSel, widget.Rectangle);
-                                }
-                            }
-                        }
-                    }
                 }
             }
         }

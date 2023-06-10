@@ -117,7 +117,7 @@ namespace PdfSharp.Pdf.AcroForms
         /// Creates the normal appearance form X object for the annotation that represents
         /// this acro form text field.
         /// </summary>
-        private void RenderAppearance()
+        protected override void RenderAppearance()
         {
             if (Font == null)
                 return;
@@ -137,64 +137,26 @@ namespace PdfSharp.Pdf.AcroForms
                 var form = (widget.Rotation == 90 || widget.Rotation == 270) && (widget.Flags & PdfAnnotationFlags.NoRotate) == 0
                     ? new XForm(_document, rect.Height, rect.Width)
                     : new XForm(_document, xRect);
+                
+                if (widget.Rotation != 0 && (widget.Flags & PdfAnnotationFlags.NoRotate) == 0)
+                {
+                    // I could not get this to work using gfx.Rotate/Translate Methods...
+                    const double deg2Rad = 0.01745329251994329576923690768489;  // PI/180
+                    var sr = Math.Sin(widget.Rotation * deg2Rad);
+                    var cr = Math.Cos(widget.Rotation * deg2Rad);
+                    // see PdfReference 1.7, Chapter 8.3.3 (Common Transformations)
+                    // TODO: Is this always correct ? I had only the chance to test this with a 90 degree rotation...
+                    form.PdfForm.Elements.SetMatrix(PdfFormXObject.Keys.Matrix, new XMatrix(cr, sr, -sr, cr, xRect.Width, 0));
+                    if (widget.Rotation == 90 || widget.Rotation == 270)
+                        xRect = new XRect(0, 0, rect.Height, rect.Width);
+                }
+
                 using (var gfx = XGraphics.FromForm(form))
                 {
-                    var text = Text;
-                    if (MaxLength > 0)
-                        text = text.Substring(0, Math.Min(Text.Length, MaxLength));
-                    var format = TextAlign == TextAlignment.Left 
-                        ? XStringFormats.CenterLeft 
-                        : TextAlign == TextAlignment.Center 
-                            ? XStringFormats.Center 
-                            : XStringFormats.CenterRight;
-                    if (MultiLine)
-                        format.LineAlignment = XLineAlignment.Near;
-                    if (text.Length > 0)
-                    {
-                        if (widget.Rotation != 0 && (widget.Flags & PdfAnnotationFlags.NoRotate) == 0)
-                        {
-                            // I could not get this to work using gfx.Rotate/Translate Methods...
-                            const double deg2Rad = 0.01745329251994329576923690768489;  // PI/180
-                            var sr = Math.Sin(widget.Rotation * deg2Rad);
-                            var cr = Math.Cos(widget.Rotation * deg2Rad);
-                            // see PdfReference 1.7, Chapter 8.3.3 (Common Transformations)
-                            // TODO: Is this always correct ? I had only the chance to test this with a 90 degree rotation...
-                            form.PdfForm.Elements.SetMatrix(PdfFormXObject.Keys.Matrix, new XMatrix(cr, sr, -sr, cr, xRect.Width, 0));
-                            if (widget.Rotation == 90 || widget.Rotation == 270)
-                                xRect = new XRect(0, 0, rect.Height, rect.Width);
-                        }
-                        gfx.IntersectClip(xRect);
-                        if (!widget.BackColor.IsEmpty)
-                            gfx.DrawRectangle(new XSolidBrush(widget.BackColor), xRect);
-                        if (!widget.BorderColor.IsEmpty)
-                            gfx.DrawRectangle(new XPen(widget.BorderColor), xRect);
-
-                        if (Combined && MaxLength > 0)
-                        {
-                            var combWidth = xRect.Width / MaxLength;
-                            var cBrush = new XSolidBrush(ForeColor);
-                            var count = Math.Min(text.Length, MaxLength);
-                            for (var ci = 0; ci < count; ci++)
-                            {
-                                var cRect = new XRect(ci * combWidth, 0, combWidth, xRect.Height);
-                                gfx.DrawString(text[ci].ToString(), Font, new XSolidBrush(ForeColor), cRect, XStringFormats.BaseLineCenter);
-                            }
-                        }
-                        else
-                        {
-                            // for Multiline fields, we use XTextFormatter to handle line-breaks and a fixed TextFormat (only TopLeft is supported)
-                            if (MultiLine)
-                            {
-                                var tf = new XTextFormatter(gfx);
-                                tf.DrawString(text, Font, new XSolidBrush(ForeColor), xRect, XStringFormats.TopLeft);
-                            }
-                            else
-                                gfx.DrawString(text, Font, new XSolidBrush(ForeColor), xRect, format);
-                        }
-                    }
+                    gfx.IntersectClip(xRect);
+                    Owner.AcroForm?.FieldRenderer.TextFieldRenderer.Render(this, widget, gfx, xRect);
                 }
                 form.DrawingFinished();
-
                 SetXFormFont(form);
 
                 // Get existing or create new appearance dictionary.
@@ -203,9 +165,7 @@ namespace PdfSharp.Pdf.AcroForms
                     ap = new PdfDictionary(_document);
                     widget.Elements[PdfAnnotation.Keys.AP] = ap;
                 }
-                widget.Elements.SetName(PdfAnnotation.Keys.AS, "/N");   // set appearance state
 
-                // Set XRef to normal state
                 ap.Elements["/N"] = form.PdfForm.Reference;
 
                 var xobj = form.PdfForm;
@@ -235,69 +195,6 @@ namespace PdfSharp.Pdf.AcroForms
         {
             base.PrepareForSave();
             RenderAppearance();
-        }
-
-        internal override void Flatten()
-        {
-            base.Flatten();
-
-            if (Font is null)
-                return;
-
-            var text = Text;
-            if (MaxLength > 0)
-                text = text.Substring(0, Math.Min(Text.Length, MaxLength));
-            if (text.Length > 0)
-            {
-                Debug.WriteLine(String.Format("Rendering Field {0} ({1}) -> {2}", FullyQualifiedName, ObjectID, text));
-
-                for (var i = 0; i < Annotations.Elements.Count; i++)
-                {
-                    var widget = Annotations.Elements[i];
-                    var rect = widget.Rectangle;
-                    if (widget.Page != null && !rect.IsEmpty)
-                    {
-                        using (var gfx = XGraphics.FromPdfPage(widget.Page))
-                        {
-                            // Note: Page origin [0,0] is bottom left !
-                            if (text.Length > 0)
-                            {
-                                var xRect = new XRect(rect.X1, widget.Page.Height.Point - rect.Y2, rect.Width, rect.Height);
-                                if (widget.Rotation != 0 && (widget.Flags & PdfAnnotationFlags.NoRotate) == 0)
-                                {
-                                    gfx.RotateAtTransform(-widget.Rotation, xRect.TopLeft);
-                                    if (widget.Rotation == 90 || widget.Rotation == 270)
-                                        xRect = new XRect(rect.X1 - rect.Height, widget.Page.Height.Point - rect.Y2, xRect.Height, xRect.Width);
-                                }
-                                gfx.IntersectClip(xRect);
-                                if (Combined && MaxLength > 0)
-                                {
-                                    var combWidth = xRect.Width / MaxLength;
-                                    var cBrush = new XSolidBrush(ForeColor);
-                                    var count = Math.Min(text.Length, MaxLength);
-                                    for (var ci = 0; ci < count; ci++)
-                                    {
-                                        var cRect = new XRect(ci * combWidth + xRect.Left, xRect.Y, combWidth, xRect.Height);
-                                        gfx.DrawString(text[ci].ToString(), Font, new XSolidBrush(ForeColor), cRect, XStringFormats.Center);
-                                    }
-                                }
-                                else
-                                {
-                                    var format = TextAlign == TextAlignment.Left ? XStringFormats.CenterLeft : TextAlign == TextAlignment.Center ? XStringFormats.Center : XStringFormats.CenterRight;
-                                    // for Multiline fields, we use XTextFormatter to handle line-breaks and a fixed TextFormat (only TopLeft is supported)
-                                    if (MultiLine)
-                                    {
-                                        var tf = new XTextFormatter(gfx);
-                                        tf.DrawString(text, Font, new XSolidBrush(ForeColor), xRect, XStringFormats.TopLeft);
-                                    }
-                                    else
-                                        gfx.DrawString(text, Font, new XSolidBrush(ForeColor), xRect, format);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
         }
 
         /// <summary>

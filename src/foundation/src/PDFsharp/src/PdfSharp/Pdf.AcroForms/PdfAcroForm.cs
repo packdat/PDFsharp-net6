@@ -1,6 +1,7 @@
 // PDFsharp - A .NET library for processing PDF
 // See the LICENSE file in the solution root for more information.
 
+using PdfSharp.Pdf.AcroForms.Rendering;
 using PdfSharp.Pdf.Advanced;
 using PdfSharp.Pdf.Internal;
 
@@ -65,6 +66,18 @@ namespace PdfSharp.Pdf.AcroForms
             return Resources!;
         }
 
+        private PdfAcroFieldRenderer? fieldRenderer;
+        /// <summary>
+        /// Gets the <see cref="PdfAcroFieldRenderer"/> used to render <see cref="PdfAcroField"/>s
+        /// </summary>
+        public PdfAcroFieldRenderer FieldRenderer
+        {
+            get
+            {
+                fieldRenderer ??= new PdfAcroFieldRenderer();
+                return fieldRenderer;
+            }
+        }
 
         internal override void PrepareForSave()
         {

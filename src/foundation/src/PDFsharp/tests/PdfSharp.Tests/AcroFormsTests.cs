@@ -177,6 +177,33 @@ namespace PdfSharp.Tests
         }
 
         [Fact]
+        public void CanFlattenCreatedForm()
+        {
+            CanCreateNewForm();     // create the form
+
+            // required for now (when using the CORE lib)
+            GlobalFontSettings.FontResolver = new DocumentFontResolver();
+
+            using var fs = File.OpenRead(Path.Combine(Path.GetTempPath(), "CreatedForm.pdf"));
+            var inputDocument = PdfReader.Open(fs, PdfDocumentOpenMode.Import);
+
+            // import into new document
+            var copiedDocument = new PdfDocument();
+            foreach (var page in inputDocument.Pages)
+                copiedDocument.AddPage(page);
+            copiedDocument.ImportAcroForm(inputDocument.AcroForm!);
+
+            copiedDocument.AcroForm!.Flatten();
+            copiedDocument.AcroForm.Should().BeNull();
+            copiedDocument.Pages[0].Annotations.Count.Should().Be(0);
+
+            using var fsOut = File.Create(Path.Combine(Path.GetTempPath(), "CreatedForm.flattened.pdf"));
+            copiedDocument.Save(fsOut);
+
+            // don't know what to assert here, have to check with "real" eyes
+        }
+
+        [Fact]
         public void CanCreateNewForm()
         {
             // test some special characters
@@ -206,6 +233,7 @@ namespace PdfSharp.Tests
             // Text fields
             var firstNameField = acroForm.AddTextField(field =>
             {
+                // Note: Chromium-based browsers (ie. Edge/Chrome) do not render fields without a name
                 field.Name = "FirstName";
                 field.Font = textFont;
                 field.ForeColor = XColors.DarkRed;
@@ -321,7 +349,7 @@ namespace PdfSharp.Tests
                 field.Font = textFont;
                 field.AddAnnotation(annot =>
                 {
-                    annot.PlaceOnPage(page1, new PdfRectangle(new XRect(x + 100, y, 100, 16)));
+                    annot.PlaceOnPage(page1, new PdfRectangle(new XRect(x + 100, y, 100, 20)));
                 });
             });
 
@@ -336,7 +364,25 @@ namespace PdfSharp.Tests
                 field.Font = textFont;
                 field.AddAnnotation(annot =>
                 {
-                    annot.PlaceOnPage(page1, new PdfRectangle(new XRect(x + 100, y, 100, 80)));
+                    annot.PlaceOnPage(page1, new PdfRectangle(new XRect(x + 100, y, 100, 5 * textFont.Height)));
+                });
+            });
+
+            y += 100;
+            acroForm.AddPushButtonField(button =>
+            {
+                button.Name = "SubmitButton";
+                button.Caption = "Submit";
+                button.Font = textFont;
+                button.AddAnnotation(annot =>
+                {
+                    // TODO: these properties should be part of the field and propagated down to the annotations
+                    annot.Highlighting = Pdf.Annotations.PdfWidgetAnnotation.HighlightingMode.Invert;
+                    annot.BorderColor = XColors.Gray;
+                    annot.BackColor = XColors.LightBlue;
+                    annot.Border.Width = 2;
+                    annot.Border.BorderStyle = Pdf.Annotations.enums.PdfAnnotationBorderStyle.Solid;
+                    annot.PlaceOnPage(page1, new PdfRectangle(new XRect(x, y, 100, 20)));
                 });
             });
             // TODO: Signature fields
@@ -350,11 +396,12 @@ namespace PdfSharp.Tests
             document = PdfReader.Open(filePath, PdfDocumentOpenMode.Modify);
             var fields = GetAllFields(document);
 
-            fields.Count.Should().Be(9);
+            fields.Count.Should().Be(10);
             fields.Should().Contain(field =>
                 field.FullyQualifiedName == "FirstName"
                 && field.GetType() == typeof(PdfTextField)
                 && ((PdfTextField)field).Text == firstNameValue
+                && field.ForeColor == XColors.DarkRed
                 && field.Annotations.Elements.Count == 2
                 && field.Annotations.Elements[1].BorderColor == XColors.Green
                 && field.Annotations.Elements[1].BackColor == XColors.DarkGray);
@@ -407,6 +454,16 @@ namespace PdfSharp.Tests
                 && ((PdfListBoxField)field).Options.SequenceEqual(new[] { "Blue", "Red", "Green", "Black", "White" })
                 && ((PdfString)((PdfListBoxField)field).Value).Value == "Red"
                 && field.Annotations.Elements.Count == 1);
+            fields.Should().Contain(field =>
+                field.FullyQualifiedName == "SubmitButton"
+                && field.GetType() == typeof(PdfPushButtonField)
+                && ((PdfPushButtonField)field).Caption == "Submit"
+                && field.Annotations.Elements.Count == 1
+                && field.Annotations.Elements[0].Border.Width == 2
+                && field.Annotations.Elements[0].Border.BorderStyle == Pdf.Annotations.enums.PdfAnnotationBorderStyle.Solid
+                && field.Annotations.Elements[0].Highlighting == Pdf.Annotations.PdfWidgetAnnotation.HighlightingMode.Invert
+                && field.Annotations.Elements[0].BorderColor == XColors.Gray
+                && field.Annotations.Elements[0].BackColor == XColors.LightBlue);
         }
 
         [Theory]

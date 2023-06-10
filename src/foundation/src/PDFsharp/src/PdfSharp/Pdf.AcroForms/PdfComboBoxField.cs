@@ -46,7 +46,7 @@ namespace PdfSharp.Pdf.AcroForms
             }
         }
 
-        void RenderAppearance()
+        protected override void RenderAppearance()
         {
             if (Font is null)
                 return;
@@ -66,30 +66,14 @@ namespace PdfSharp.Pdf.AcroForms
                 var form = new XForm(_document, xRect);
                 using (var gfx = XGraphics.FromForm(form))
                 {
-                    if (widget.BackColor != XColor.Empty)
-                        gfx.DrawRectangle(new XSolidBrush(widget.BackColor), xRect);
-                    // Draw Border
-                    if (!widget.BorderColor.IsEmpty)
-                        gfx.DrawRectangle(new XPen(widget.BorderColor), xRect);
-
-                    var index = SelectedIndex;
-                    if (index > 0)
-                    {
-                        var text = ValueInOptArray(index, false);
-                        if (!String.IsNullOrEmpty(text))
-                        {
-                            var format = TextAlign == TextAlignment.Left ? XStringFormats.CenterLeft : TextAlign == TextAlignment.Center ? XStringFormats.Center : XStringFormats.CenterRight;
-                            gfx.DrawString(text, Font, new XSolidBrush(ForeColor), xRect, format);
-                        }
-                    }
+                    gfx.IntersectClip(xRect);
+                    Owner.AcroForm?.FieldRenderer.ComboBoxFieldRenderer.Render(this, widget, gfx, xRect);
                 }
                 form.DrawingFinished();
-
                 SetXFormFont(form);
 
-                var ap = new PdfDictionary(this._document);
+                var ap = new PdfDictionary(Owner);
                 widget.Elements[PdfAnnotation.Keys.AP] = ap;
-                widget.Elements.SetName(PdfAnnotation.Keys.AS, "/N");   // set appearance state
                 // Set XRef to normal state
                 ap.Elements["/N"] = form.PdfForm.Reference;
 
@@ -97,44 +81,6 @@ namespace PdfSharp.Pdf.AcroForms
                 var s = xobj.Stream.ToString();
                 s = "/Tx BMC\n" + s + "\nEMC";
                 xobj.Stream.Value = new RawEncoding().GetBytes(s);
-            }
-        }
-
-        internal override void Flatten()
-        {
-            base.Flatten();
-
-            if (Font is null)
-                return;
-
-            var index = SelectedIndex;
-            if (index >= 0)
-            {
-                var text = ValueInOptArray(index, false);
-                if (text.Length > 0)
-                {
-                    for (var i = 0; i < Annotations.Elements.Count; i++)
-                    {
-                        var widget = Annotations.Elements[i];
-                        if (widget.Page != null)
-                        {
-                            var rect = widget.Rectangle;
-                            if (!rect.IsEmpty)
-                            {
-                                var format = TextAlign == TextAlignment.Left ? XStringFormats.CenterLeft : TextAlign == TextAlignment.Center ? XStringFormats.Center : XStringFormats.CenterRight;
-                                var xRect = new XRect(rect.X1, widget.Page.Height.Point - rect.Y2, rect.Width, rect.Height);
-                                using (var gfx = XGraphics.FromPdfPage(widget.Page))
-                                {
-                                    gfx.Save();
-                                    gfx.IntersectClip(xRect);
-                                    // Note: Page origin [0,0] is bottom left !
-                                    gfx.DrawString(text, Font, new XSolidBrush(ForeColor), xRect, format);
-                                    gfx.Restore();
-                                }
-                            }
-                        }
-                    }
-                }
             }
         }
 
