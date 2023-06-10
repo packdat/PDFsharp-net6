@@ -220,6 +220,8 @@ namespace PdfSharp.Pdf.Advanced
                     localForm.Elements[PdfAcroForm.Keys.Q] = remoteForm.Elements[PdfAcroForm.Keys.Q];
                 if (remoteForm.Elements.ContainsKey(PdfAcroForm.Keys.SigFlags))
                     localForm.Elements[PdfAcroForm.Keys.SigFlags] = remoteForm.Elements[PdfAcroForm.Keys.SigFlags];
+                if (remoteForm.Elements.ContainsKey(PdfAcroForm.Keys.XFA))
+                    localForm.Elements[PdfAcroForm.Keys.XFA] = ImportClosure(importedObjectTable, Owner, remoteForm.Elements.GetObject(PdfAcroForm.Keys.XFA)!);
             }
             // copy font-resources from the imported AcroForm to the local form
             var extResources = remoteForm.Elements.GetDictionary(PdfAcroForm.Keys.DR);
@@ -252,6 +254,7 @@ namespace PdfSharp.Pdf.Advanced
         private void ImportAcroField(PdfAcroForm localForm, PdfAcroField remoteField, PdfAcroField? parentField = null,
             Action<PdfAcroField, PdfAcroField>? fieldHandler = null)
         {
+            var importedObjectTable = Owner.FormTable.GetImportedObjectTable(remoteField.Owner);
             var annotationsImported = false;
 
             PdfAcroField importedField = remoteField.GetType().Name switch
@@ -298,6 +301,10 @@ namespace PdfSharp.Pdf.Advanced
                 nameof(PdfSignatureField) => localForm.AddSignatureField(signatureField =>
                 {
                     signatureField.Name = remoteField.Name;
+                    if (remoteField.Elements.ContainsKey(PdfSignatureField.Keys.Lock))
+                        signatureField.Elements[PdfSignatureField.Keys.Lock] = ImportClosure(importedObjectTable, Owner, remoteField.Elements.GetObject(PdfSignatureField.Keys.Lock)!);
+                    if (remoteField.Elements.ContainsKey(PdfSignatureField.Keys.SV))
+                        signatureField.Elements[PdfSignatureField.Keys.SV] = ImportClosure(importedObjectTable, Owner, remoteField.Elements.GetObject(PdfSignatureField.Keys.SV)!);
                     parentField?.AddChild(signatureField);
                 }),
                 nameof(PdfGenericField) => localForm.AddGenericField(genericField =>
@@ -311,6 +318,10 @@ namespace PdfSharp.Pdf.Advanced
                     textField.Name = remoteField.Name;
                     textField.MaxLength = externalTextField.MaxLength;
                     textField.Text = externalTextField.Text;
+                    if (remoteField.Elements.ContainsKey(PdfTextField.Keys.DS))
+                        textField.Elements[PdfTextField.Keys.DS] = remoteField.Elements[PdfTextField.Keys.DS];
+                    if (remoteField.Elements.ContainsKey(PdfTextField.Keys.RV))
+                        textField.Elements[PdfTextField.Keys.RV] = remoteField.Elements[PdfTextField.Keys.RV];
                     parentField?.AddChild(textField);
                 }),
                 nameof(PdfPushButtonField) => localForm.AddPushButtonField(pushButton =>
@@ -326,8 +337,12 @@ namespace PdfSharp.Pdf.Advanced
                 importedField.AlternateName = remoteField.AlternateName;
             if (!string.IsNullOrEmpty(importedField.MappingName))
                 importedField.MappingName = remoteField.MappingName;
-            if (remoteField.DefaultValue != null)
+            if (remoteField.DefaultValue != null && importedField is not PdfPushButtonField)
                 importedField.DefaultValue = remoteField.DefaultValue;
+            if (remoteField.Elements.ContainsKey(PdfAcroField.Keys.DA))
+                importedField.Elements[PdfAcroField.Keys.DA] = remoteField.Elements[PdfAcroField.Keys.DA];
+            if (remoteField.Elements.ContainsKey(PdfAcroField.Keys.AA))
+                importedField.Elements[PdfAcroField.Keys.AA] = ImportClosure(importedObjectTable, Owner, remoteField.Elements.GetObject(PdfAcroField.Keys.AA)!);
             importedField.SetFlags = remoteField.Flags;
             importedField.Font = remoteField.Font;
             importedField.DeterminedFontSize = remoteField.DeterminedFontSize;
@@ -357,6 +372,14 @@ namespace PdfSharp.Pdf.Advanced
                 {
                     annot.BackColor = remoteAnnot.BackColor;
                     annot.BorderColor = remoteAnnot.BorderColor;
+                    annot.Border = new PdfAnnotationBorder
+                    {
+                        BorderStyle = remoteAnnot.Border.BorderStyle,
+                        DashPattern = remoteAnnot.Border.DashPattern,
+                        HorizontalRadius = remoteAnnot.Border.HorizontalRadius,
+                        VerticalRadius = remoteAnnot.Border.VerticalRadius,
+                        Width = remoteAnnot.Border.Width
+                    };
                     annot.Color = remoteAnnot.Color;
                     annot.Flags = remoteAnnot.Flags;
                     annot.Opacity = remoteAnnot.Opacity;
@@ -366,6 +389,16 @@ namespace PdfSharp.Pdf.Advanced
                         annot.Elements[PdfAnnotation.Keys.AP] = ImportClosure(importedObjectTable, _document, remoteAnnot.Elements.GetObject(PdfAnnotation.Keys.AP)!);
                     if (remoteAnnot.Elements.ContainsKey(PdfAnnotation.Keys.AS))
                         annot.Elements[PdfAnnotation.Keys.AS] = remoteAnnot.Elements[PdfAnnotation.Keys.AS];
+                    if (remoteAnnot.Elements.ContainsKey(PdfAnnotation.Keys.NM))
+                        annot.Elements[PdfAnnotation.Keys.NM] = remoteAnnot.Elements[PdfAnnotation.Keys.NM];
+                    if (remoteAnnot.Elements.ContainsKey(PdfAnnotation.Keys.Contents))
+                        annot.Elements[PdfAnnotation.Keys.Contents] = remoteAnnot.Elements[PdfAnnotation.Keys.Contents];
+                    if (remoteAnnot.Elements.ContainsKey(PdfAnnotation.Keys.A))
+                        annot.Elements[PdfAnnotation.Keys.A] = ImportClosure(importedObjectTable, Owner, remoteAnnot.Elements.GetObject(PdfAnnotation.Keys.A)!);
+                    if (remoteAnnot.Elements.ContainsKey(PdfWidgetAnnotation.Keys.H))
+                        annot.Elements[PdfWidgetAnnotation.Keys.H] = remoteAnnot.Elements[PdfWidgetAnnotation.Keys.H];
+                    if (remoteAnnot.Elements.ContainsKey(PdfWidgetAnnotation.Keys.MK))
+                        annot.Elements[PdfWidgetAnnotation.Keys.MK] = ImportClosure(importedObjectTable, _document, remoteAnnot.Elements.GetObject(PdfWidgetAnnotation.Keys.MK)!);
                     if (remoteAnnot.Page != null && importedObjectTable.Contains(remoteAnnot.Page.ObjectID))
                     {
                         var localPage = importedObjectTable[remoteAnnot.Page.ObjectID]!.Value as PdfPage;

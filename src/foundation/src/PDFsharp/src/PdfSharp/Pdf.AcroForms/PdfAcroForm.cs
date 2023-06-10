@@ -324,6 +324,16 @@ namespace PdfSharp.Pdf.AcroForms
             public const string Q = "/Q";
 
             /// <summary>
+            /// (Optional; PDF 1.5) A stream or array containing an XFA resource,
+            /// whose format shall be described by the Data Package (XDP) Specification. (see the Bibliography).<br></br>
+            /// The value of this entry shall be either a stream representing the entire contents
+            /// of the XML Data Package or an array of text string and stream pairs
+            /// representing the individual packets comprising the XML Data Package.
+            /// </summary>
+            [KeyInfo(KeyType.ArrayOrDictionary | KeyType.Optional)]
+            public const string XFA = "/XFA";
+
+            /// <summary>
             /// Gets the KeysMeta for these keys.
             /// </summary>
             internal static DictionaryMeta Meta

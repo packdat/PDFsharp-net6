@@ -76,7 +76,8 @@ namespace PdfSharp.Pdf.AcroForms
             for (var idx = 0; idx < Annotations.Elements.Count; idx++)
             {
                 var widget = Annotations.Elements[idx];
-                if (widget == null)
+                // if widget already has an appearance, use that (imported field)
+                if (widget == null || widget.Elements.ContainsKey(PdfAnnotation.Keys.AP))
                     continue;
 
                 var rect = widget.Rectangle;
