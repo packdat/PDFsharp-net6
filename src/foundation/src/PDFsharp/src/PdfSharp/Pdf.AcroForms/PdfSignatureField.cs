@@ -28,6 +28,25 @@ namespace PdfSharp.Pdf.AcroForms
         public new class Keys : PdfAcroField.Keys
         {
             /// <summary>
+            /// (Optional; shall be an indirect reference; PDF 1.5) A signature field lock dictionary
+            /// that specifies a set of form fields that shall be locked when this signature field is signed.
+            /// </summary>
+            [KeyInfo(KeyType.Dictionary | KeyType.Optional)]
+            public const string Lock = "/Lock";
+
+            /// <summary>
+            /// (Optional; shall be an indirect reference; PDF 1.5) A seed value dictionary (see Table 234)
+            /// containing information that constrains the properties of a signature that is applied to this field.
+            /// </summary>
+            [KeyInfo(KeyType.Dictionary | KeyType.Optional)]
+            public const string SV = "/SV";
+
+            //
+            // NOTE: The following entries are not part of a Signature field.
+            // Rather, these are the key of a signature-dictionary (see PdfReference 1.7, Chapter 12.8)
+            //
+
+            /// <summary>
             /// (Optional) The type of PDF object that this dictionary describes; if present,
             /// must be Sig for a signature dictionary.
             /// </summary>

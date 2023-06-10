@@ -204,6 +204,18 @@ namespace PdfSharp.Pdf.AcroForms
         public new class Keys : PdfAcroField.Keys
         {
             /// <summary>
+            /// (Optional; PDF 1.5) A default style string, as described in 12.7.3.4, “Rich Text Strings.”
+            /// </summary>
+            [KeyInfo(KeyType.String | KeyType.Optional)]
+            public const string DS = "/DS";
+
+            /// <summary>
+            /// (Optional; PDF 1.5) A rich text string, as described in 12.7.3.4, “Rich Text Strings.”
+            /// </summary>
+            [KeyInfo(KeyType.String | KeyType.Optional)]
+            public const string RV = "/RV";
+
+            /// <summary>
             /// (Optional; inheritable) The maximum length of the field’s text, in characters.
             /// </summary>
             [KeyInfo(KeyType.Integer | KeyType.Optional)]
