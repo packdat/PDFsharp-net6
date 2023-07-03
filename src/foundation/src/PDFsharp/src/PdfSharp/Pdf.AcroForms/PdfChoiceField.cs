@@ -26,9 +26,9 @@ namespace PdfSharp.Pdf.AcroForms
 
         /// <summary>
         /// Gets the index of the specified string in the /Opt array or -1, if no such string exists.
+        /// </summary>
         /// <param name="value">Value, for which the index should be retrieved</param>
         /// <param name="useExportValue">true if value is the export value, false if value is the text shown in the UI</param>
-        /// </summary>
         protected int IndexInOptArray(string value, bool useExportValue)
         {
             var opt = Elements.GetArray(Keys.Opt);
@@ -62,9 +62,9 @@ namespace PdfSharp.Pdf.AcroForms
 
         /// <summary>
         /// Gets the value or the display text from the index in the /Opt array.
+        /// </summary>
         /// <param name="index">Index of the value that should be retrieved</param>
         /// <param name="useExportValue">true to get the export value, false to get the text shown in the UI</param>
-        /// </summary>
         internal string ValueInOptArray(int index, bool useExportValue)
         {
             var opt = Elements.GetArray(Keys.Opt);
@@ -72,7 +72,7 @@ namespace PdfSharp.Pdf.AcroForms
             {
                 int count = opt.Elements.Count;
                 if (index < 0 || index >= count)
-                    throw new ArgumentOutOfRangeException("index");
+                    throw new ArgumentOutOfRangeException(nameof(index));
 
                 PdfItem item = opt.Elements[index];
                 if (item is PdfString pdfString)

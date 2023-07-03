@@ -27,11 +27,13 @@ namespace PdfSharp.Pdf.AcroForms
             : base(dict)
         { }
 
-        [Obsolete("Using the 'Value' property of TextFields is not recommended. Use the 'Text' property instead.")]
-        public new PdfItem? Value
+        /// <summary>
+        /// Same as <see cref="Text"/> (which should be used instead)
+        /// </summary>
+        public new string Value
         {
-            get => base.Value;
-            set => base.Value = value;
+            get => Text;
+            set => Text = value;
         }
 
         /// <summary>
@@ -39,11 +41,13 @@ namespace PdfSharp.Pdf.AcroForms
         /// </summary>
         public string Text
         {
-            get { return Elements.GetString(Keys.V); }
+            get { return Elements.GetString(PdfAcroField.Keys.V); }
             set
             {
                 if (ReadOnly)
                     throw new InvalidOperationException("The field is read only.");
+                // TODO: check MaxLength ? (risky -> potential data-loss)
+
                 var isUnicodeText = (value ?? string.Empty).Any(c => c > 255);
                 if (isUnicodeText && BaseContentFontName is not null && (Font == null || Font.PdfOptions.FontEncoding != PdfFontEncoding.Unicode))
                 {

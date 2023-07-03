@@ -27,9 +27,17 @@ namespace PdfSharp.Pdf.AcroForms
         { }
 
         /// <summary>
+        /// Gets the name which represents the opposite of Off.
+        /// </summary>
+        public string? GetNonOffValue()
+        {
+            return GetNonOffValueInternal().TrimStart('/');
+        }
+
+        /// <summary>
         /// Gets the name which represents the opposite of /Off.
         /// </summary>
-        protected string? GetNonOffValue()
+        protected string GetNonOffValueInternal()
         {
             // Try to get the information from the appearance dictionary.
             // Just return the first key that is not /Off.
@@ -52,7 +60,7 @@ namespace PdfSharp.Pdf.AcroForms
                     }
                 }
             }
-            return null;
+            return "/Yes";
         }
 
         /// <summary>
@@ -113,7 +121,7 @@ namespace PdfSharp.Pdf.AcroForms
                         var apps = appearance.Elements.GetDictionary("/N");
                         if (apps != null)
                         {
-                            var appSel = apps.Elements.GetDictionary(GetNonOffValue() ?? "Yes");
+                            var appSel = apps.Elements.GetDictionary(GetNonOffValueInternal());
                             if (appSel != null)
                             {
                                 try

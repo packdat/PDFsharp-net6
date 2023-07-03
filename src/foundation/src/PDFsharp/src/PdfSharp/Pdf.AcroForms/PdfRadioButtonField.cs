@@ -40,13 +40,16 @@ namespace PdfSharp.Pdf.AcroForms
         /// </summary>
         public new string Value
         {
-            get { return (base.Value?.ToString() ?? string.Empty).TrimStart('/'); }
+            get { return (base.Value?.ToString() ?? "/Off").TrimStart('/'); }
             set
             {
                 if (!string.IsNullOrWhiteSpace(value))
                 {
-                    Elements.SetName(PdfAcroField.Keys.V, value);
                     var index = IndexInFieldValues(value);
+                    if (index < 0)
+                        throw new ArgumentException($"'{value}' is not a valid value for field '{FullyQualifiedName}'. Valid values are: [{string.Join(',', Options)}]");
+
+                    Elements.SetName(PdfAcroField.Keys.V, value);
                     SelectedIndex = index;
                 }
                 else
@@ -128,8 +131,10 @@ namespace PdfSharp.Pdf.AcroForms
                 var values = Options;
                 var count = values.Count;
                 if (value < -1 || value >= count)
-                    throw new ArgumentOutOfRangeException(nameof(value));
-                var name = value == -1 ? "/Off" : values.ElementAt(value);
+                    throw new ArgumentOutOfRangeException(nameof(value), value, 
+                        $"SelectedIndex for field '{FullyQualifiedName}' must be greater or equal to -1 and smaller than {Options.Count}");
+
+                var name = value == -1 ? "/Off" : '/' + values.ElementAt(value);
                 Elements.SetName(PdfAcroField.Keys.V, name);
                 // first, set all annotations to /Off
                 for (var i = 0; i < Annotations.Elements.Count; i++)
@@ -233,7 +238,7 @@ namespace PdfSharp.Pdf.AcroForms
         public PdfWidgetAnnotation AddAnnotation(string nameOfOnState, Action<PdfWidgetAnnotation> configure)
         {
             if (string.IsNullOrWhiteSpace(nameOfOnState))
-                throw new ArgumentNullException(nameof(nameOfOnState), "Name of state must not be null or empty");
+                throw new ArgumentNullException(nameof(nameOfOnState), "Name of 'On' state must not be null or empty");
 
             var annot = AddAnnotation(configure);
             CreateAppearance(annot, nameOfOnState);

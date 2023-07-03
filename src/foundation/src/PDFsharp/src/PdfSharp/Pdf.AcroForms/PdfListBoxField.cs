@@ -4,6 +4,7 @@
 using PdfSharp.Drawing;
 using PdfSharp.Pdf.Annotations;
 using PdfSharp.Pdf.Internal;
+using System;
 
 namespace PdfSharp.Pdf.AcroForms
 {
@@ -47,33 +48,39 @@ namespace PdfSharp.Pdf.AcroForms
         /// Gets or sets the value for this ListBox<br></br>
         /// Note: As a <see cref="PdfListBoxField"/> may have multiple values selected, it is recommended to use <see cref="SelectedIndices"/> instead
         /// </summary>
-        public override PdfItem? Value
+        public new IEnumerable<string> Value
         {
             get
             {
-                if (SelectedIndices.Any())
+                if (Elements.ContainsKey(PdfAcroField.Keys.V))
                 {
-                    var val = ValueInOptArray(SelectedIndices.ElementAt(0), true);
-                    if (String.IsNullOrEmpty(val))
-                        val = ValueInOptArray(SelectedIndices.ElementAt(0), false);
-                    if (!String.IsNullOrEmpty(val))
-                        return new PdfString(val);
+                    var val = Elements[PdfAcroField.Keys.V];
+                    if (val is PdfString valString)
+                        return new[] { valString.Value };
+                    if (val is PdfArray valArray)
+                    {
+                        return valArray.Elements.Select(v => (v?.ToString() ?? "").TrimStart('(').TrimEnd(')'));
+                    }
                 }
-                return null;
+                return Array.Empty<string>();
             }
             set
             {
-                base.Value = value;
-                if (value == null)
-                    SelectedIndices = Array.Empty<int>();
-                else
+                if (!value.Any())
                 {
-                    var indices = new List<int>();
-                    var index = IndexInOptArray(value.ToString()!, true);
-                    if (index >= 0)
-                        indices.Add(index);
-                    SelectedIndices = indices.ToArray();
+                    Elements.Remove(PdfAcroField.Keys.V);
+                    Elements.Remove(PdfChoiceField.Keys.I);
                 }
+                var indices = new List<int>();
+                foreach (var v in value)
+                {
+                    var index = IndexInOptArray(v, true);
+                    if (index < 0)
+                        throw new ArgumentException($"'{v}' is not a valid value for field '{FullyQualifiedName}'. Valid values are: [{string.Join(',', Options)}]");
+
+                    indices.Add(index);
+                }
+                SelectedIndices = indices;
             }
         }
 
@@ -85,49 +92,66 @@ namespace PdfSharp.Pdf.AcroForms
             get
             {
                 var result = new List<int>();
-                var ary = Elements.GetArray(PdfAcroField.Keys.V);       // /V takes precedence over /I
-                if (ary != null)
+                var value = Elements[PdfAcroField.Keys.V];
+                if (value is PdfString valString)
                 {
-                    for (var i = 0; i < ary.Elements.Count; i++)
-                    {
-                        int idx;
-                        var val = ary.Elements.GetString(i);
-                        if (val != null && (idx = IndexInOptArray(val, true)) >= 0)
-                            result.Add(idx);
-                    }
+                    result.Add(IndexInOptArray(valString.Value, true));
                 }
-                if (result.Count > 0)
-                    return result;
-
-                ary = Elements.GetArray(PdfChoiceField.Keys.I);
-                if (ary != null)
+                else
                 {
-                    foreach (var item in ary.Elements)
+                    var ary = Elements.GetArray(PdfAcroField.Keys.V);       // /V takes precedence over /I
+                    if (ary != null)
                     {
-                        if (item is PdfInteger pdfInt)
-                            result.Add(pdfInt.Value);
+                        for (var i = 0; i < ary.Elements.Count; i++)
+                        {
+                            int idx;
+                            var val = ary.Elements.GetString(i);
+                            if (val != null && (idx = IndexInOptArray(val, true)) >= 0)
+                                result.Add(idx);
+                        }
+                    }
+
+                    if (result.Count > 0)
+                        return result;
+
+                    ary = Elements.GetArray(PdfChoiceField.Keys.I);
+                    if (ary != null)
+                    {
+                        foreach (var item in ary.Elements)
+                        {
+                            if (item is PdfInteger pdfInt)
+                                result.Add(pdfInt.Value);
+                        }
                     }
                 }
                 return result;
             }
             set
             {
-                var indices = new PdfArray(_document);
-                var values = new PdfArray(_document);
-                foreach (var index in value)
+                if (value.Any(v => v < 0 || v >= Options.Count))
+                    throw new ArgumentOutOfRangeException($"At least one of the indices [{string.Join(',', value)}] is out of range. Valid values are in the range 0..{Options.Count - 1}");
+                
+                Elements.Remove(PdfChoiceField.Keys.I);
+                Elements.Remove(PdfAcroField.Keys.V);
+
+                var indexList = new List<int>(value);
+                if (indexList.Count > 0)
                 {
-                    indices.Elements.Add(new PdfInteger(index));
-                    values.Elements.Add(new PdfString(ValueInOptArray(index, true)));
-                }
-                if (indices.Elements.Count > 0)
-                {
-                    Elements.SetObject(PdfChoiceField.Keys.I, indices);
-                    Elements.SetObject(PdfAcroField.Keys.V, values);
-                }
-                else
-                {
-                    Elements.Remove(PdfChoiceField.Keys.I);
-                    Elements.Remove(PdfAcroField.Keys.V);
+                    indexList.Sort();
+                    var indices = new PdfArray(_document);
+                    var values = new PdfArray(_document);
+                    foreach (var index in indexList)
+                    {
+                        indices.Elements.Add(new PdfInteger(index));
+                        values.Elements.Add(new PdfString(ValueInOptArray(index, true)));
+                    }
+                    if (indexList.Count > 1)
+                    {
+                        Elements.SetObject(PdfChoiceField.Keys.I, indices);
+                        Elements.SetObject(PdfAcroField.Keys.V, values);
+                    }
+                    else
+                        Elements.SetString(PdfAcroField.Keys.V, ValueInOptArray(indexList[0], true));
                 }
             }
         }
