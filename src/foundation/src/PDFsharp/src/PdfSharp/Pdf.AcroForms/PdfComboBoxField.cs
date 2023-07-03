@@ -41,10 +41,42 @@ namespace PdfSharp.Pdf.AcroForms
             }
             set
             {
-                string key = ValueInOptArray(value, true);
-                Elements.SetString(PdfAcroField.Keys.V, key);
+                if (value >= 0)
+                {
+                    if (value >= Options.Count)
+                        throw new ArgumentOutOfRangeException(nameof(value), value, 
+                            $"SelectedIndex for field '{FullyQualifiedName}' must be smaller than {Options.Count}");
+
+                    string key = ValueInOptArray(value, true);
+                    Elements.SetString(PdfAcroField.Keys.V, key);
+                }
+                else
+                    Elements.SetString(PdfAcroField.Keys.V, string.Empty);
             }
         }
+
+        /// <summary>
+        /// Gets or sets the value of this field. This should be an item from the <see cref="PdfChoiceField.Options"/> list.<br></br>
+        /// </summary>
+        public new string Value
+        {
+            get { return (base.Value?.ToString() ?? string.Empty).TrimStart('(').TrimEnd(')'); }
+            set
+            {
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    var index = IndexInOptArray(value, true);
+                    if (index < 0)
+                        throw new ArgumentException($"'{value}' is not a valid value for field '{FullyQualifiedName}'. Valid values are: [{string.Join(',', Options)}]");
+                    
+                    Elements.SetString(PdfAcroField.Keys.V, index >= 0 ? value : string.Empty);
+                    SelectedIndex = index;
+                }
+                else
+                    SelectedIndex = -1;
+            }
+        }
+
 
         protected override void RenderAppearance()
         {

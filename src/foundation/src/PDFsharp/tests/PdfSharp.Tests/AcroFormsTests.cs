@@ -425,7 +425,8 @@ namespace PdfSharp.Tests
                 && ((PdfListBoxField)field).SelectedIndices.Count() == 1
                 && ((PdfListBoxField)field).SelectedIndices.Contains(1)
                 && ((PdfListBoxField)field).Options.SequenceEqual(new[] { "Blue", "Red", "Green", "Black", "White" })
-                && ((PdfString)((PdfListBoxField)field).Value!).Value == "Red"
+                && ((PdfListBoxField)field).Value.Count() == 1
+                && ((PdfListBoxField)field).Value.ElementAt(0) == "Red"
                 && field.Annotations.Elements.Count == 1);
             fields.Should().Contain(field =>
                 field.FullyQualifiedName == "SubmitButton"

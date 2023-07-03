@@ -25,6 +25,26 @@ namespace PdfSharp.Pdf.AcroForms
         { }
 
         /// <summary>
+        /// Gets or sets the value of this field. This should be either <b>Off</b> or 
+        /// the result of <see cref="PdfButtonField.GetNonOffValue"/> (typically <b>Yes</b>)
+        /// </summary>
+        public new string Value
+        {
+            get { return (base.Value?.ToString() ?? "Off").TrimStart('/'); }
+            set
+            {
+                if (value != null && value.Equals(GetNonOffValueInternal().TrimStart('/'), StringComparison.OrdinalIgnoreCase))
+                {
+                    Elements.SetName(PdfAcroField.Keys.V, value);
+                }
+                else if (value != "Off" && value != GetNonOffValueInternal())
+                    throw new ArgumentException($"'{value}' is not a valid value for field '{FullyQualifiedName}'. Valid values are either '/Off' or '{GetNonOffValueInternal()}'");
+                else
+                    Elements.SetName(PdfAcroField.Keys.V, "/Off");
+            }
+        }
+
+        /// <summary>
         /// Indicates whether the field is checked.
         /// </summary>
         public bool Checked
@@ -49,7 +69,7 @@ namespace PdfSharp.Pdf.AcroForms
             }
             set
             {
-                var name = value ? GetNonOffValue() ?? "/Yes" : "/Off";
+                var name = value ? GetNonOffValueInternal() : "/Off";
                 Elements.SetName(PdfAcroField.Keys.V, name);
             }
         }
@@ -65,7 +85,7 @@ namespace PdfSharp.Pdf.AcroForms
                 // existing/imported field ?
                 if (widget.Elements.ContainsKey(PdfAnnotation.Keys.AP))
                 {
-                    widget.Elements.SetName(PdfAnnotation.Keys.AS, Checked ? GetNonOffValue() ?? CheckedName : "/Off");
+                    widget.Elements.SetName(PdfAnnotation.Keys.AS, Checked ? GetNonOffValueInternal() : "/Off");
                 }
                 else    // newly created field
                 {
