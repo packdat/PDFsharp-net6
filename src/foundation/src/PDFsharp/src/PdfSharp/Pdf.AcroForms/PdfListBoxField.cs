@@ -46,7 +46,8 @@ namespace PdfSharp.Pdf.AcroForms
 
         /// <summary>
         /// Gets or sets the value for this ListBox<br></br>
-        /// Note: As a <see cref="PdfListBoxField"/> may have multiple values selected, it is recommended to use <see cref="SelectedIndices"/> instead
+        /// Note: As a <see cref="PdfListBoxField"/> may have multiple values selected,
+        /// this is an enumerable instead of a single value
         /// </summary>
         public new IEnumerable<string> Value
         {
@@ -66,10 +67,12 @@ namespace PdfSharp.Pdf.AcroForms
             }
             set
             {
-                if (!value.Any())
+                if (value == null || !value.Any())
                 {
                     Elements.Remove(PdfAcroField.Keys.V);
                     Elements.Remove(PdfChoiceField.Keys.I);
+                    if (value == null)
+                        return;
                 }
                 var indices = new List<int>();
                 foreach (var v in value)
@@ -128,13 +131,19 @@ namespace PdfSharp.Pdf.AcroForms
             }
             set
             {
+                if (value == null)
+                {
+                    Elements.Remove(PdfChoiceField.Keys.I);
+                    Elements.Remove(PdfAcroField.Keys.V);
+                    return;
+                }
                 if (value.Any(v => v < 0 || v >= Options.Count))
                     throw new ArgumentOutOfRangeException($"At least one of the indices [{string.Join(',', value)}] is out of range. Valid values are in the range 0..{Options.Count - 1}");
                 
                 Elements.Remove(PdfChoiceField.Keys.I);
                 Elements.Remove(PdfAcroField.Keys.V);
 
-                var indexList = new List<int>(value);
+                var indexList = new List<int>(value.Distinct());
                 if (indexList.Count > 0)
                 {
                     indexList.Sort();
@@ -170,6 +179,9 @@ namespace PdfSharp.Pdf.AcroForms
             }
         }
 
+        /// <summary>
+        /// Renders the appearance of this field
+        /// </summary>
         protected override void RenderAppearance()
         {
             if (Font is null)

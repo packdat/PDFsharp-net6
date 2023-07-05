@@ -4,8 +4,12 @@ using PdfSharp.Pdf.Annotations;
 namespace PdfSharp.Pdf.AcroForms.Rendering
 {
     /// <summary>
-    /// Renders a <see cref="PdfCheckBoxField"/>
+    /// Renders a <see cref="PdfCheckBoxField"/><br></br>
     /// </summary>
+    /// <remarks>
+    /// Inheritors should override the methods <see cref="RenderCheckedState(PdfCheckBoxField, PdfWidgetAnnotation, XGraphics, XRect)"/>
+    /// and <see cref="RenderUncheckedState(PdfCheckBoxField, PdfWidgetAnnotation, XGraphics, XRect)"/>
+    /// </remarks>
     public class PdfCheckBoxFieldRenderer
     {
         /// <summary>

@@ -168,6 +168,9 @@ namespace PdfSharp.Pdf.AcroForms
             return Options.IndexOf(value);
         }
 
+        /// <summary>
+        /// Renders the appearance of this field
+        /// </summary>
         protected override void RenderAppearance()
         {
             for (var i = 0; i < Annotations.Elements.Count; i++)

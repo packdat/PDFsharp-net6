@@ -1,0 +1,202 @@
+# PdfViewerPreferences
+
+Namespace: PdfSharp.Pdf
+
+Represents the PDF document viewer preferences dictionary.
+
+```csharp
+public sealed class PdfViewerPreferences : PdfDictionary, System.ICloneable, System.Collections.Generic.IEnumerable`1[[System.Collections.Generic.KeyValuePair`2[[System.String, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[PdfSharp.Pdf.PdfItem, PdfSharp, Version=0.1.2.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Collections.IEnumerable
+```
+
+Inheritance [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object) → [PdfItem](./pdfsharp.pdf.pdfitem) → [PdfObject](./pdfsharp.pdf.pdfobject) → [PdfDictionary](./pdfsharp.pdf.pdfdictionary) → [PdfViewerPreferences](./pdfsharp.pdf.pdfviewerpreferences)<br>
+Implements [ICloneable](https://docs.microsoft.com/en-us/dotnet/api/system.icloneable), [IEnumerable&lt;KeyValuePair&lt;String, PdfItem&gt;&gt;](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1), [IEnumerable](https://docs.microsoft.com/en-us/dotnet/api/system.collections.ienumerable)
+
+## Properties
+
+### **HideToolbar**
+
+Gets or sets a value indicating whether to hide the viewer application’s tool
+ bars when the document is active.
+
+```csharp
+public bool HideToolbar { get; set; }
+```
+
+#### Property Value
+
+[Boolean](https://docs.microsoft.com/en-us/dotnet/api/system.boolean)<br>
+
+### **HideMenubar**
+
+Gets or sets a value indicating whether to hide the viewer application’s
+ menu bar when the document is active.
+
+```csharp
+public bool HideMenubar { get; set; }
+```
+
+#### Property Value
+
+[Boolean](https://docs.microsoft.com/en-us/dotnet/api/system.boolean)<br>
+
+### **HideWindowUI**
+
+Gets or sets a value indicating whether to hide user interface elements in
+ the document’s window (such as scroll bars and navigation controls),
+ leaving only the document’s contents displayed.
+
+```csharp
+public bool HideWindowUI { get; set; }
+```
+
+#### Property Value
+
+[Boolean](https://docs.microsoft.com/en-us/dotnet/api/system.boolean)<br>
+
+### **FitWindow**
+
+Gets or sets a value indicating whether to resize the document’s window to
+ fit the size of the first displayed page.
+
+```csharp
+public bool FitWindow { get; set; }
+```
+
+#### Property Value
+
+[Boolean](https://docs.microsoft.com/en-us/dotnet/api/system.boolean)<br>
+
+### **CenterWindow**
+
+Gets or sets a value indicating whether to position the document’s window
+ in the center of the screen.
+
+```csharp
+public bool CenterWindow { get; set; }
+```
+
+#### Property Value
+
+[Boolean](https://docs.microsoft.com/en-us/dotnet/api/system.boolean)<br>
+
+### **DisplayDocTitle**
+
+Gets or sets a value indicating whether the window’s title bar
+ should display the document title taken from the Title entry of the document
+ information dictionary. If false, the title bar should instead display the name
+ of the PDF file containing the document.
+
+```csharp
+public bool DisplayDocTitle { get; set; }
+```
+
+#### Property Value
+
+[Boolean](https://docs.microsoft.com/en-us/dotnet/api/system.boolean)<br>
+
+### **Direction**
+
+The predominant reading order for text: LeftToRight or RightToLeft 
+ (including vertical writing systems, such as Chinese, Japanese, and Korean).
+ This entry has no direct effect on the document’s contents or page numbering
+ but can be used to determine the relative positioning of pages when displayed 
+ side by side or printed n-up. Default value: LeftToRight.
+
+```csharp
+public Nullable<PdfReadingDirection> Direction { get; set; }
+```
+
+#### Property Value
+
+[Nullable&lt;PdfReadingDirection&gt;](https://docs.microsoft.com/en-us/dotnet/api/system.nullable-1)<br>
+
+### **Elements**
+
+Gets the dictionary containing the elements of this dictionary.
+
+```csharp
+public DictionaryElements Elements { get; }
+```
+
+#### Property Value
+
+[DictionaryElements](./pdfsharp.pdf.pdfdictionary.dictionaryelements)<br>
+
+### **Stream**
+
+Gets or sets the PDF stream belonging to this dictionary. Returns null if the dictionary has
+ no stream. To create the stream, call the CreateStream function.
+
+```csharp
+public PdfStream Stream { get; set; }
+```
+
+#### Property Value
+
+[PdfStream](./pdfsharp.pdf.pdfdictionary.pdfstream)<br>
+
+### **Owner**
+
+Gets the PdfDocument this object belongs to.
+
+```csharp
+public PdfDocument Owner { get; }
+```
+
+#### Property Value
+
+[PdfDocument](./pdfsharp.pdf.pdfdocument)<br>
+
+### **IsIndirect**
+
+Indicates whether the object is an indirect object.
+
+```csharp
+public bool IsIndirect { get; }
+```
+
+#### Property Value
+
+[Boolean](https://docs.microsoft.com/en-us/dotnet/api/system.boolean)<br>
+
+### **Internals**
+
+Gets the PdfInternals object of this document, that grants access to some internal structures
+ which are not part of the public interface of PdfDocument.
+
+```csharp
+public PdfObjectInternals Internals { get; }
+```
+
+#### Property Value
+
+[PdfObjectInternals](./pdfsharp.pdf.advanced.pdfobjectinternals)<br>
+
+### **Reference**
+
+Gets the indirect reference of this object. If the value is null, this object is a direct object.
+
+```csharp
+public PdfReference Reference { get; internal set; }
+```
+
+#### Property Value
+
+[PdfReference](./pdfsharp.pdf.advanced.pdfreference)<br>
+
+### **ReferenceNotNull**
+
+Gets the indirect reference of this object. Throws if it is null.
+
+```csharp
+public PdfReference ReferenceNotNull { get; }
+```
+
+#### Property Value
+
+[PdfReference](./pdfsharp.pdf.advanced.pdfreference)<br>
+
+#### Exceptions
+
+[InvalidOperationException](https://docs.microsoft.com/en-us/dotnet/api/system.invalidoperationexception)<br>
+The indirect reference must be not null here.

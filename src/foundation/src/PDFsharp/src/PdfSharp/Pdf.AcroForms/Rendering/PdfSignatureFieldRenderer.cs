@@ -4,8 +4,12 @@ using PdfSharp.Pdf.Annotations;
 namespace PdfSharp.Pdf.AcroForms.Rendering
 {
     /// <summary>
-    /// Renders a <see cref="PdfSignatureField"/>
+    /// Renders a <see cref="PdfSignatureField"/><br></br>
+    /// The current implementation does not render anything.<br></br>
     /// </summary>
+    /// <remarks>
+    /// Inheritors should override the method <see cref="Render(PdfSignatureField, PdfWidgetAnnotation, XGraphics, XRect)"/>
+    /// </remarks>
     public class PdfSignatureFieldRenderer
     {
         /// <summary>

@@ -26,7 +26,7 @@ namespace PdfSharp.Pdf.AcroForms
 
         /// <summary>
         /// Gets or sets the value of this field. This should be either <b>Off</b> or 
-        /// the result of <see cref="PdfButtonField.GetNonOffValue"/> (typically <b>Yes</b>)
+        /// the result of <see cref="PdfButtonField.GetNonOffValue()"/> (typically <b>Yes</b>)
         /// </summary>
         public new string Value
         {
@@ -74,6 +74,9 @@ namespace PdfSharp.Pdf.AcroForms
             }
         }
 
+        /// <summary>
+        /// Renders the appearance of this field
+        /// </summary>
         protected override void RenderAppearance()
         {
             for (var i = 0; i < Annotations.Elements.Count; i++)

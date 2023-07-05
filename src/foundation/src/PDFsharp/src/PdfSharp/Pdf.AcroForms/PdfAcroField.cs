@@ -725,7 +725,8 @@ namespace PdfSharp.Pdf.AcroForms
         /// <summary>
         /// Gets a value indicating whether the specified font name is one of the predefined font-names for pdf documents
         /// </summary>
-        /// <param name="fontName"></param>
+        /// <param name="fontName">Name of the font to check</param>
+        /// <param name="fontStyle">Receives the font-style of the checked-font</param>
         /// <returns></returns>
         protected static bool IsStandardFont(string fontName, out XFontStyleEx fontStyle)
         {
