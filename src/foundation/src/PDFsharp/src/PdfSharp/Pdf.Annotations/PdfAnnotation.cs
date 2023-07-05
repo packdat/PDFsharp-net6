@@ -54,6 +54,9 @@ namespace PdfSharp.Pdf.Annotations
             Parent.Remove(this);
         }
 
+        /// <summary>
+        /// Gets or sets the border-properties of this Annotation
+        /// </summary>
         public PdfAnnotationBorder Border { get; set; } = new PdfAnnotationBorder();
 
         /// <summary>

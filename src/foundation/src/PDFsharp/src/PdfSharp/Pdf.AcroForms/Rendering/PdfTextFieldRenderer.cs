@@ -7,6 +7,9 @@ namespace PdfSharp.Pdf.AcroForms.Rendering
     /// <summary>
     /// Renders a <see cref="PdfTextField"/>
     /// </summary>
+    /// <remarks>
+    /// Inheritors should override the method <see cref="Render(PdfTextField, PdfWidgetAnnotation, XGraphics, XRect)"/>
+    /// </remarks>
     public class PdfTextFieldRenderer
     {
         /// <summary>

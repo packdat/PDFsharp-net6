@@ -4,8 +4,13 @@ using PdfSharp.Pdf.Annotations;
 namespace PdfSharp.Pdf.AcroForms.Rendering
 {
     /// <summary>
-    /// Renders a <see cref="PdfRadioButtonField"/>
+    /// Renders a <see cref="PdfRadioButtonField"/><br></br>
     /// </summary>
+    /// <remarks>
+    /// Inheritors should override the methods
+    /// <see cref="RenderCheckedState(PdfRadioButtonField, PdfWidgetAnnotation, XGraphics, XRect)"/> and
+    /// <see cref="RenderUncheckedState(PdfRadioButtonField, PdfWidgetAnnotation, XGraphics, XRect)"/>
+    /// </remarks>
     public class PdfRadioButtonFieldRenderer
     {
         /// <summary>

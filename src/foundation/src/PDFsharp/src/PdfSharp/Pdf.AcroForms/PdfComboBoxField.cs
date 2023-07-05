@@ -77,7 +77,9 @@ namespace PdfSharp.Pdf.AcroForms
             }
         }
 
-
+        /// <summary>
+        /// Renders the appearance of this field
+        /// </summary>
         protected override void RenderAppearance()
         {
             if (Font is null)

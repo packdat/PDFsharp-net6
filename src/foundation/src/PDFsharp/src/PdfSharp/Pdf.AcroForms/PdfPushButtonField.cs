@@ -60,6 +60,12 @@ namespace PdfSharp.Pdf.AcroForms
             }
         }
 
+        /// <summary>
+        /// Adds a new Annotation to this field.
+        /// </summary>
+        /// <param name="configure">A method that is used to configure the Annotation</param>
+        /// <returns>The created and configured Annotation</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         public override PdfWidgetAnnotation AddAnnotation(Action<PdfWidgetAnnotation> configure)
         {
             var annot = base.AddAnnotation(configure);
@@ -68,6 +74,9 @@ namespace PdfSharp.Pdf.AcroForms
             return annot;
         }
 
+        /// <summary>
+        /// Renders the appearance of this field
+        /// </summary>
         protected override void RenderAppearance()
         {
             if (Font is null)

@@ -5,6 +5,7 @@
     <LangVersion>11.0</LangVersion>
     <RootNamespace>PdfSharp</RootNamespace>
     <DefineConstants>CORE;NET_ZIP</DefineConstants>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
 
 	<ItemGroup>

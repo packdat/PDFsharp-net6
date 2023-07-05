@@ -5,8 +5,20 @@ using PdfSharp.Pdf.Internal;
 namespace PdfSharp.Pdf.AcroForms.Rendering
 {
     /// <summary>
-    /// Renders a <see cref="PdfPushButtonField"/>
+    /// Renders a <see cref="PdfPushButtonField"/><br></br>
+    /// The current implementation does not render the <b>Rollover-</b> and <b>Down-</b> states 
+    /// so the button will always appear in <b>Normal</b> state.<br></br>
     /// </summary>
+    /// <remarks>
+    /// Inheritors should override the methods <see cref="RenderNormalState(PdfPushButtonField, PdfWidgetAnnotation, XGraphics, XRect)"/>, 
+    /// <see cref="RenderRolloverState(PdfPushButtonField, PdfWidgetAnnotation, XGraphics, XRect)"/> and 
+    /// <see cref="RenderDownState(PdfPushButtonField, PdfWidgetAnnotation, XGraphics, XRect)"/><br></br><br></br>
+    /// It is allowed to throw a <see cref="NotImplementedException"/> in the methods
+    /// <see cref="RenderRolloverState(PdfPushButtonField, PdfWidgetAnnotation, XGraphics, XRect)"/> and 
+    /// <see cref="RenderDownState(PdfPushButtonField, PdfWidgetAnnotation, XGraphics, XRect)"/>,
+    /// only the implementation of <see cref="RenderNormalState(PdfPushButtonField, PdfWidgetAnnotation, XGraphics, XRect)"/> 
+    /// is mandatory.
+    /// </remarks>
     public class PdfPushButtonFieldRenderer
     {
         static XColor ShadeLight = XColors.White;

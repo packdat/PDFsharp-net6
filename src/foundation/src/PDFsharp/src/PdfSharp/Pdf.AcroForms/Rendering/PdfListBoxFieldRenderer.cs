@@ -4,8 +4,11 @@ using PdfSharp.Pdf.Annotations;
 namespace PdfSharp.Pdf.AcroForms.Rendering
 {
     /// <summary>
-    /// Renders a <see cref="PdfListBoxField"/>
+    /// Renders a <see cref="PdfListBoxField"/><br></br>
     /// </summary>
+    /// <remarks>
+    /// Inheritors should override the method <see cref="Render(PdfListBoxField, PdfWidgetAnnotation, XGraphics, XRect)"/>
+    /// </remarks>
     public class PdfListBoxFieldRenderer
     {
         /// <summary>
