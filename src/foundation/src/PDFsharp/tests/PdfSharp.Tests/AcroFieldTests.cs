@@ -11,6 +11,21 @@ namespace PdfSharp.Tests
     public class AcroFieldTests
     {
         [Fact]
+        public void Added_Fields_Are_Present()
+        {
+            var doc = new PdfDocument();
+            var acroForm = doc.GetOrCreateAcroForm();
+
+            acroForm.Should().NotBeNull();
+            acroForm.Fields.Elements.Count.Should().Be(0);
+            acroForm.AddTextField(field =>
+            {
+                field.Name = "text";
+            });
+            acroForm.Fields.Elements.Count.Should().Be(1);
+        }
+
+        [Fact]
         public void TextFieldValue()
         {
             var doc = CreateTestDocument();
@@ -208,9 +223,17 @@ namespace PdfSharp.Tests
                 listBoxField.SelectedIndices.Should().Equal(new[] { 0, 2 });
                 listBoxField.Value.Should().Equal(new[] { "Blue", "Green" });
 
+                listBoxField.Value = null!;
+                listBoxField.SelectedIndices.Should().BeEmpty();
+                listBoxField.Value.Should().BeEmpty();
+
                 listBoxField.Value = new[] { "Green" };
                 listBoxField.SelectedIndices.Should().Equal(new[] { 2 });
                 listBoxField.Value.Should().Equal(new[] { "Green" });
+
+                listBoxField.SelectedIndices = null!;
+                listBoxField.SelectedIndices.Should().BeEmpty();
+                listBoxField.Value.Should().BeEmpty();
 
                 Action act = () => listBoxField.SelectedIndices = new[] { 1, 10 };  // invalid index
                 act.Should().Throw<ArgumentOutOfRangeException>();
@@ -402,26 +425,9 @@ namespace PdfSharp.Tests
             return document;
         }
 
-        private static IList<PdfAcroField> GetAllFields(PdfDocument doc)
+        private static IEnumerable<PdfAcroField> GetAllFields(PdfDocument doc)
         {
-            var fields = new List<PdfAcroField>();
-            for (var i = 0; i < doc.AcroForm!.Fields.Elements.Count; i++)
-            {
-                var field = doc.AcroForm.Fields[i];
-                TraverseFields(field, ref fields);
-            }
-            return fields;
-        }
-
-        private static void TraverseFields(PdfAcroField parentField, ref List<PdfAcroField> fieldList)
-        {
-            fieldList.Add(parentField);
-            for (var i = 0; i < parentField.Fields.Elements.Count; i++)
-            {
-                var field = parentField.Fields[i];
-                if (!string.IsNullOrEmpty(field.Name))
-                    TraverseFields(field, ref fieldList);
-            }
+            return doc.AcroForm?.GetAllFields() ?? Array.Empty<PdfAcroField>();
         }
     }
 }

@@ -27,7 +27,8 @@ namespace PdfSharp.Pdf.AcroForms
         { }
 
         /// <summary>
-        /// Gets the fields collection of this form.
+        /// Gets the fields collection (i.e. the <b>root</b> fields) of this of this AcroForm.<br></br>
+        /// To retrieve <b>all</b> fields (including child-fields), use <see cref="GetAllFields"/>
         /// </summary>
         public PdfAcroField.PdfAcroFieldCollection Fields
         {
@@ -42,6 +43,34 @@ namespace PdfSharp.Pdf.AcroForms
             }
         }
         PdfAcroField.PdfAcroFieldCollection? _fields;
+
+        /// <summary>
+        /// Gets the flattened field-hierarchy of this AcroForm
+        /// </summary>
+        public IEnumerable<PdfAcroField> GetAllFields()
+        {
+            var fields = new List<PdfAcroField>();
+            if (_fields != null)
+            {
+                for (var i = 0; i < Fields.Elements.Count; i++)
+                {
+                    var field = Fields[i];
+                    TraverseFields(field, ref fields);
+                }
+            }
+            return fields;
+        }
+
+        private static void TraverseFields(PdfAcroField parentField, ref List<PdfAcroField> fieldList)
+        {
+            fieldList.Add(parentField);
+            for (var i = 0; i < parentField.Fields.Elements.Count; i++)
+            {
+                var field = parentField.Fields[i];
+                if (!string.IsNullOrEmpty(field.Name))
+                    TraverseFields(field, ref fieldList);
+            }
+        }
 
         internal PdfResources? Resources
         {
@@ -103,7 +132,7 @@ namespace PdfSharp.Pdf.AcroForms
         /// <summary>
         /// Flattens the AcroForm by rendering Field-contents directly onto the page
         /// </summary>
-        public void Flatten()
+        internal void Flatten()
         {
             for (var i = 0; i < Fields.Elements.Count; i++)
             {

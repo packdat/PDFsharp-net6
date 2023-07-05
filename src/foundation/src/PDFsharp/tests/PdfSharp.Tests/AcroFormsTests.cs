@@ -140,7 +140,7 @@ namespace PdfSharp.Tests
 
             // flatten the form. after that, AcroForm should be null and all annotations should be removed
             // (this is true for the tested document, other documents may contain annotations not related to Form-Fields)
-            copiedDocument.AcroForm.Flatten();
+            copiedDocument.FlattenAcroForm();
             copiedDocument.AcroForm.Should().BeNull();
             copiedDocument.Pages[0].Annotations.Count.Should().Be(0);
 
@@ -165,7 +165,7 @@ namespace PdfSharp.Tests
                 copiedDocument.AddPage(page);
             copiedDocument.ImportAcroForm(inputDocument.AcroForm!);
 
-            copiedDocument.AcroForm!.Flatten();
+            copiedDocument.FlattenAcroForm();
             copiedDocument.AcroForm.Should().BeNull();
             copiedDocument.Pages[0].Annotations.Count.Should().Be(0);
 
@@ -509,24 +509,7 @@ namespace PdfSharp.Tests
 
         private static IList<PdfAcroField> GetAllFields(PdfDocument doc)
         {
-            var fields = new List<PdfAcroField>();
-            for (var i = 0; i < doc.AcroForm.Fields.Elements.Count; i++)
-            {
-                var field = doc.AcroForm.Fields[i];
-                TraverseFields(field, ref fields);
-            }
-            return fields;
-        }
-
-        private static void TraverseFields(PdfAcroField parentField, ref List<PdfAcroField> fieldList)
-        {
-            fieldList.Add(parentField);
-            for (var i = 0; i < parentField.Fields.Elements.Count; i++)
-            {
-                var field = parentField.Fields[i];
-                if (!string.IsNullOrEmpty(field.Name))
-                    TraverseFields(field, ref fieldList);
-            }
+            return (doc.AcroForm?.GetAllFields() ?? Array.Empty<PdfAcroField>()).ToList();
         }
 
         /// <summary>
