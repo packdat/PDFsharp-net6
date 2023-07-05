@@ -652,6 +652,14 @@ namespace PdfSharp.Pdf
         /// <param name="remoteForm">The <see cref="AcroForm"/> to import</param>
         /// <param name="fieldHandler">A method that allows modifying a field after it was imported.<br></br>
         /// It receives the original (remote) field and the imported (local) field as parameters.</param>
+        /// <remarks>
+        /// While importing, the new fields may be renamed, if a field with the same name is already present.<br></br>
+        /// The new field receives a number-suffix in this case, starting at 2.<br></br>
+        /// i.e. if the new field has the name <b>myField</b> and there is already a field <b>myField</b> present,
+        /// the new field is renamed to <b>myField2</b>.<br></br>
+        /// If more fields with the same name are imported, the number-suffix will increase automatically.<br></br>
+        /// This is useful when merging multiple versions of the same document. (e.g.with different field-values)
+        /// </remarks>
         public void ImportAcroForm(PdfAcroForm remoteForm, Action<PdfAcroField, PdfAcroField>? fieldHandler = null)
         {
             Catalog.ImportAcroForm(remoteForm, fieldHandler);
@@ -820,7 +828,7 @@ namespace PdfSharp.Pdf
         /// Flattens the AcroField's widget annotations of this document.<br></br>
         /// Other annotations are unaffected.
         /// </summary>
-        public void Flatten()
+        public void FlattenAcroForm()
         {
             AcroForm?.Flatten();
         }
