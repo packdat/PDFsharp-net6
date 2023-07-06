@@ -190,6 +190,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{76BA9372-6
 	ProjectSection(SolutionItems) = preProject
 		docs\BoilerplateText.md = docs\BoilerplateText.md
 		docs\DevNotes.md = docs\DevNotes.md
+		docs\index.md = docs\index.md
 		docs\MakeNewReleaseNotes.md = docs\MakeNewReleaseNotes.md
 	EndProjectSection
 EndProject
@@ -209,7 +210,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PDFsharp.Features.Runner-wp
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ApiDoc", "ApiDoc", "{67EFDF44-478F-44E2-8189-55B0F37F02AA}"
 	ProjectSection(SolutionItems) = preProject
-		docs\ApiDoc\index.md = docs\ApiDoc\index.md
 		docs\ApiDoc\pdfsharp.biggustave.adler32checksum.md = docs\ApiDoc\pdfsharp.biggustave.adler32checksum.md
 		docs\ApiDoc\pdfsharp.biggustave.chunkheader.md = docs\ApiDoc\pdfsharp.biggustave.chunkheader.md
 		docs\ApiDoc\pdfsharp.biggustave.colortype.md = docs\ApiDoc\pdfsharp.biggustave.colortype.md
