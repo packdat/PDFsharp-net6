@@ -12,7 +12,7 @@ Notable changes:
 - The 14 standard-fonts defined in the Pdf-Specification are now embedded in the library.  
 There is a test-case (`RenderGlyphsOfStandardFonts`) that was used to inspect the fonts by rendering all glyphs into a Pdf (one for each font) [here](src/foundation/src/PDFsharp/tests/PdfSharp.Tests/BasicTests.cs).  
 These fonts are freely distributable as they are licenced under the [OFL License](src/foundation/src/PDFsharp/src/PdfSharp/Fonts/StandardFonts/OFL.txt).  
-To use them, utilize the new [DocumentFontResolver](https://packdat.github.io/PDFsharp-net6/ApiDoc/pdfsharp.fonts.documentfontresolver.md), e.g.
+To use them, utilize the new [DocumentFontResolver](https://packdat.github.io/PDFsharp-net6/ApiDoc/pdfsharp.fonts.documentfontresolver), e.g.
   ```csharp
   GlobalFontSettings.FontResolver = new DocumentFontResolver();
   var textFont = new XFont(StandardFontNames.Helvetica, 12, XFontStyleEx.Regular,
@@ -25,11 +25,11 @@ To use them, utilize the new [DocumentFontResolver](https://packdat.github.io/PD
 - Filling an existing Pdf does no longer result in unnecessarily adding a **Courier New** font to the document.
 This is possible thanks to the mentioned `DocumentFontResolver` which also resolves fonts in existing documents. (hence the name)
 - A new method was added to import AcroFields from existing documents.
-Check out `ImportAcroForm` [here](https://packdat.github.io/PDFsharp-net6/ApiDoc/pdfsharp.pdf.pdfdocument.md#importacroformpdfacroform-actionpdfacrofield-pdfacrofield)
+Check out `ImportAcroForm` [here](https://packdat.github.io/PDFsharp-net6/ApiDoc/pdfsharp.pdf.pdfdocument#importacroformpdfacroform-actionpdfacrofield-pdfacrofield)
 - An new method `GetOrCreateAcroForm` was added which allows creating new AcroForms.
-Check it out [here](https://packdat.github.io/PDFsharp-net6/ApiDoc/pdfsharp.pdf.pdfdocument.md#getorcreateacroform)
+Check it out [here](https://packdat.github.io/PDFsharp-net6/ApiDoc/pdfsharp.pdf.pdfdocument#getorcreateacroform)
 - New methods were added that allow creating new AcroForms from scratch.
-Check them out [here](https://packdat.github.io/PDFsharp-net6/ApiDoc/pdfsharp.pdf.acroforms.pdfacroform.md#addtextfieldactionpdftextfield)  
+Check them out [here](https://packdat.github.io/PDFsharp-net6/ApiDoc/pdfsharp.pdf.acroforms.pdfacroform#addtextfieldactionpdftextfield)  
 Example:
   ```csharp
   var document = new PdfDocument();
@@ -55,13 +55,13 @@ Example:
   ```
   See full example in method `CanCreateNewForm` [here](src/foundation/src/PDFsharp/tests/PdfSharp.Tests/AcroFormsTests.cs)
 - There is now a distinction between a *field* (which is only metadata regarding the Pdf-Specification) and it's *appearance* (which is the **visual** part of a field).  
-The *appearances* of AcroFields are defined by [PdfWidgetAnnotations](https://packdat.github.io/PDFsharp-net6/ApiDoc/pdfsharp.pdf.annotations.pdfwidgetannotation.md).  
+The *appearances* of AcroFields are defined by [PdfWidgetAnnotations](https://packdat.github.io/PDFsharp-net6/ApiDoc/pdfsharp.pdf.annotations.pdfwidgetannotation).  
 A field may have multiple annotations (e.g. a contract-number that is repeated on every page of a contract-document; each *visual* is a `PdfWidgetAnnotation` associated with the same `PdfAcroField`).  
 The annotations of fields can be retrieved by `PdfAcroField.Annotations`
 - Each field type has it's own *renderer* which is used to create the visual appearances for the fields.
 These renderers may be overridden by the user to customize the rendering.  
 (**Note**: Signature-fields are still on the to-do list.)  
-Check out [PdfAcroFieldRenderer](https://packdat.github.io/PDFsharp-net6/ApiDoc/pdfsharp.pdf.acroforms.rendering.pdfacrofieldrenderer.md) as a starting point.  
+Check out [PdfAcroFieldRenderer](https://packdat.github.io/PDFsharp-net6/ApiDoc/pdfsharp.pdf.acroforms.rendering.pdfacrofieldrenderer) as a starting point.  
 An instance of this class is available in `PdfAcroForm.FieldRenderer`  
 - `PdfAcroForm` has a new method `GetAllFields` for easily retrieving the complete field-hierarchy as a flattened collection.
 - AcroForms can be flattened by the new method `PdfDocument.FlattenAcroForm`  
