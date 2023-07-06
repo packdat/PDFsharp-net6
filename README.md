@@ -9,11 +9,14 @@ To view the changes in action, check out these tests:
 Auto-generated Api-documentation is available [here](docs/ApiDoc/index.md)  
 
 Notable changes:
-- The 14 standard-fonts defined in the Pdf-Specification are now embedded in the library.
+- The 14 standard-fonts defined in the Pdf-Specification are now embedded in the library.  
+There is a test-case (`RenderGlyphsOfStandardFonts`) that was used to inspect the fonts by rendering all glyphs into a Pdf (one for each font) [here](src/foundation/src/PDFsharp/tests/PdfSharp.Tests/BasicTests.cs).  
+These fonts are freely distributable as they are licenced under the [OFL License](src/foundation/src/PDFsharp/src/PdfSharp/Fonts/StandardFonts/OFL.txt).  
 To use them, utilize the new [DocumentFontResolver](docs/ApiDoc/pdfsharp.fonts.documentfontresolver.md), e.g.
   ```csharp
   GlobalFontSettings.FontResolver = new DocumentFontResolver();
-  var textFont = new XFont(StandardFontNames.Helvetica, 12, XFontStyleEx.Regular, new XPdfFontOptions(PdfFontEncoding.Unicode, PdfFontEmbedding.Full));
+  var textFont = new XFont(StandardFontNames.Helvetica, 12, XFontStyleEx.Regular,
+    new XPdfFontOptions(PdfFontEncoding.Unicode, PdfFontEmbedding.Full));
   ```
   Take note of the new *FontEmbedding* option **Full**.  
   This makes sure, the font is embedded **in full** and not just a subset thereof.  
