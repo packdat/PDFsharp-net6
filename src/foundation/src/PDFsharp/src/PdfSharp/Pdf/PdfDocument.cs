@@ -504,7 +504,7 @@ namespace PdfSharp.Pdf
         /// <returns>True, if Version was modified.</returns>
         public bool SetRequiredVersion(int requiredVersion)
         {
-            if (requiredVersion > Version)
+            if (CanModify && requiredVersion > Version)
             {
                 Version = requiredVersion;
                 return true;
