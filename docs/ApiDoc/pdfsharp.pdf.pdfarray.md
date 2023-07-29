@@ -5,7 +5,7 @@ Namespace: PdfSharp.Pdf
 Represents a PDF array object.
 
 ```csharp
-public class PdfArray : PdfObject, System.ICloneable, System.Collections.Generic.IEnumerable`1[[PdfSharp.Pdf.PdfItem, PdfSharp, Version=0.1.2.0, Culture=neutral, PublicKeyToken=null]], System.Collections.IEnumerable
+public class PdfArray : PdfObject, System.ICloneable, System.Collections.Generic.IEnumerable`1[[PdfSharp.Pdf.PdfItem, PdfSharp, Version=0.1.3.0, Culture=neutral, PublicKeyToken=null]], System.Collections.IEnumerable
 ```
 
 Inheritance [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object) → [PdfItem](./pdfsharp.pdf.pdfitem) → [PdfObject](./pdfsharp.pdf.pdfobject) → [PdfArray](./pdfsharp.pdf.pdfarray)<br>

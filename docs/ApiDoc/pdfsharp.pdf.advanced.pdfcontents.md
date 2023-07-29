@@ -5,7 +5,7 @@ Namespace: PdfSharp.Pdf.Advanced
 Represents an array of PDF content streams of a page.
 
 ```csharp
-public sealed class PdfContents : PdfSharp.Pdf.PdfArray, System.ICloneable, System.Collections.Generic.IEnumerable`1[[PdfSharp.Pdf.PdfItem, PdfSharp, Version=0.1.2.0, Culture=neutral, PublicKeyToken=null]], System.Collections.IEnumerable
+public sealed class PdfContents : PdfSharp.Pdf.PdfArray, System.ICloneable, System.Collections.Generic.IEnumerable`1[[PdfSharp.Pdf.PdfItem, PdfSharp, Version=0.1.3.0, Culture=neutral, PublicKeyToken=null]], System.Collections.IEnumerable
 ```
 
 Inheritance [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object) → [PdfItem](./pdfsharp.pdf.pdfitem) → [PdfObject](./pdfsharp.pdf.pdfobject) → [PdfArray](./pdfsharp.pdf.pdfarray) → [PdfContents](./pdfsharp.pdf.advanced.pdfcontents)<br>

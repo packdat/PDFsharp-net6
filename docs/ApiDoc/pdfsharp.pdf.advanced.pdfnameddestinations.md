@@ -1,17 +1,29 @@
-# PdfSecurityHandler
+# PdfNamedDestinations
 
-Namespace: PdfSharp.Pdf.Security
+Namespace: PdfSharp.Pdf.Advanced
 
-Represents the base of all security handlers.
+Represents named destinations as specified by the document catalog's /Dest entry
 
 ```csharp
-public abstract class PdfSecurityHandler : PdfSharp.Pdf.PdfDictionary, System.ICloneable, System.Collections.Generic.IEnumerable`1[[System.Collections.Generic.KeyValuePair`2[[System.String, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[PdfSharp.Pdf.PdfItem, PdfSharp, Version=0.1.3.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Collections.IEnumerable
+public sealed class PdfNamedDestinations : PdfSharp.Pdf.PdfDictionary, System.ICloneable, System.Collections.Generic.IEnumerable`1[[System.Collections.Generic.KeyValuePair`2[[System.String, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[PdfSharp.Pdf.PdfItem, PdfSharp, Version=0.1.3.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Collections.IEnumerable
 ```
 
-Inheritance [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object) → [PdfItem](./pdfsharp.pdf.pdfitem) → [PdfObject](./pdfsharp.pdf.pdfobject) → [PdfDictionary](./pdfsharp.pdf.pdfdictionary) → [PdfSecurityHandler](./pdfsharp.pdf.security.pdfsecurityhandler)<br>
+Inheritance [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object) → [PdfItem](./pdfsharp.pdf.pdfitem) → [PdfObject](./pdfsharp.pdf.pdfobject) → [PdfDictionary](./pdfsharp.pdf.pdfdictionary) → [PdfNamedDestinations](./pdfsharp.pdf.advanced.pdfnameddestinations)<br>
 Implements [ICloneable](https://docs.microsoft.com/en-us/dotnet/api/system.icloneable), [IEnumerable&lt;KeyValuePair&lt;String, PdfItem&gt;&gt;](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1), [IEnumerable](https://docs.microsoft.com/en-us/dotnet/api/system.collections.ienumerable)
 
 ## Properties
+
+### **Names**
+
+Gets all the destination-names
+
+```csharp
+public IEnumerable<string> Names { get; }
+```
+
+#### Property Value
+
+[IEnumerable&lt;String&gt;](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1)<br>
 
 ### **Elements**
 
@@ -103,3 +115,42 @@ public PdfReference ReferenceNotNull { get; }
 
 [InvalidOperationException](https://docs.microsoft.com/en-us/dotnet/api/system.invalidoperationexception)<br>
 The indirect reference must be not null here.
+
+## Methods
+
+### **Contains(String)**
+
+Determines whether a destination with the specified name exist
+
+```csharp
+public bool Contains(string name)
+```
+
+#### Parameters
+
+`name` [String](https://docs.microsoft.com/en-us/dotnet/api/system.string)<br>
+The name to search for
+
+#### Returns
+
+[Boolean](https://docs.microsoft.com/en-us/dotnet/api/system.boolean)<br>
+true, if name is found, false otherwise
+
+### **GetDestination(String)**
+
+Gets the destination with the specified name
+
+```csharp
+public PdfArray GetDestination(string name)
+```
+
+#### Parameters
+
+`name` [String](https://docs.microsoft.com/en-us/dotnet/api/system.string)<br>
+The name of the destination
+
+#### Returns
+
+[PdfArray](./pdfsharp.pdf.pdfarray)<br>
+A [PdfArray](./pdfsharp.pdf.pdfarray) representing the destination
+ or null if  does not exist

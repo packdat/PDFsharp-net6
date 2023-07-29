@@ -5,13 +5,25 @@ Namespace: PdfSharp.Pdf.AcroForms
 Represents the list box field.
 
 ```csharp
-public sealed class PdfListBoxField : PdfChoiceField, System.ICloneable, System.Collections.Generic.IEnumerable`1[[System.Collections.Generic.KeyValuePair`2[[System.String, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[PdfSharp.Pdf.PdfItem, PdfSharp, Version=0.1.2.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Collections.IEnumerable
+public sealed class PdfListBoxField : PdfChoiceField, System.ICloneable, System.Collections.Generic.IEnumerable`1[[System.Collections.Generic.KeyValuePair`2[[System.String, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[PdfSharp.Pdf.PdfItem, PdfSharp, Version=0.1.3.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Collections.IEnumerable
 ```
 
 Inheritance [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object) → [PdfItem](./pdfsharp.pdf.pdfitem) → [PdfObject](./pdfsharp.pdf.pdfobject) → [PdfDictionary](./pdfsharp.pdf.pdfdictionary) → [PdfAcroField](./pdfsharp.pdf.acroforms.pdfacrofield) → [PdfChoiceField](./pdfsharp.pdf.acroforms.pdfchoicefield) → [PdfListBoxField](./pdfsharp.pdf.acroforms.pdflistboxfield)<br>
 Implements [ICloneable](https://docs.microsoft.com/en-us/dotnet/api/system.icloneable), [IEnumerable&lt;KeyValuePair&lt;String, PdfItem&gt;&gt;](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1), [IEnumerable](https://docs.microsoft.com/en-us/dotnet/api/system.collections.ienumerable)
 
 ## Properties
+
+### **SelectedIndices**
+
+Gets or sets the Indices of the selected items of this Field
+
+```csharp
+public IEnumerable<int> SelectedIndices { get; set; }
+```
+
+#### Property Value
+
+[IEnumerable&lt;Int32&gt;](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1)<br>
 
 ### **HighlightColor**
 
@@ -50,18 +62,6 @@ public IEnumerable<string> Value { get; set; }
 #### Property Value
 
 [IEnumerable&lt;String&gt;](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1)<br>
-
-### **SelectedIndices**
-
-Gets or sets the Indices of the selected items of this Field
-
-```csharp
-public IEnumerable<int> SelectedIndices { get; set; }
-```
-
-#### Property Value
-
-[IEnumerable&lt;Int32&gt;](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1)<br>
 
 ### **TopIndex**
 

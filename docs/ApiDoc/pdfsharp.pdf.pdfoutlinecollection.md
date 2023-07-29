@@ -5,7 +5,7 @@ Namespace: PdfSharp.Pdf
 Represents a collection of outlines.
 
 ```csharp
-public class PdfOutlineCollection : PdfObject, System.ICloneable, System.Collections.Generic.ICollection`1[[PdfSharp.Pdf.PdfOutline, PdfSharp, Version=0.1.2.0, Culture=neutral, PublicKeyToken=null]], System.Collections.Generic.IEnumerable`1[[PdfSharp.Pdf.PdfOutline, PdfSharp, Version=0.1.2.0, Culture=neutral, PublicKeyToken=null]], System.Collections.IEnumerable, System.Collections.Generic.IList`1[[PdfSharp.Pdf.PdfOutline, PdfSharp, Version=0.1.2.0, Culture=neutral, PublicKeyToken=null]]
+public class PdfOutlineCollection : PdfObject, System.ICloneable, System.Collections.Generic.ICollection`1[[PdfSharp.Pdf.PdfOutline, PdfSharp, Version=0.1.3.0, Culture=neutral, PublicKeyToken=null]], System.Collections.Generic.IEnumerable`1[[PdfSharp.Pdf.PdfOutline, PdfSharp, Version=0.1.3.0, Culture=neutral, PublicKeyToken=null]], System.Collections.IEnumerable, System.Collections.Generic.IList`1[[PdfSharp.Pdf.PdfOutline, PdfSharp, Version=0.1.3.0, Culture=neutral, PublicKeyToken=null]]
 ```
 
 Inheritance [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object) → [PdfItem](./pdfsharp.pdf.pdfitem) → [PdfObject](./pdfsharp.pdf.pdfobject) → [PdfOutlineCollection](./pdfsharp.pdf.pdfoutlinecollection)<br>

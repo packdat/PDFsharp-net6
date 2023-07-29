@@ -462,6 +462,8 @@
 
 [PdfNamedDestinationParameters](./ApiDoc/pdfsharp.pdf.advanced.pdfnameddestinationparameters)
 
+[PdfNamedDestinations](./ApiDoc/pdfsharp.pdf.advanced.pdfnameddestinations)
+
 [PdfNameDictionary](./ApiDoc/pdfsharp.pdf.advanced.pdfnamedictionary)
 
 [PdfObjectInternals](./ApiDoc/pdfsharp.pdf.advanced.pdfobjectinternals)
@@ -629,3 +631,23 @@
 [PdfStructureTreeRoot](./ApiDoc/pdfsharp.pdf.structure.pdfstructuretreeroot)
 
 [PdfTableAttributes](./ApiDoc/pdfsharp.pdf.structure.pdftableattributes)
+
+## PdfSharp.UniversalAccessibility
+
+[PdfBlockLevelElementTag](./ApiDoc/pdfsharp.universalaccessibility.pdfblocklevelelementtag)
+
+[PdfGroupingElementTag](./ApiDoc/pdfsharp.universalaccessibility.pdfgroupingelementtag)
+
+[PdfIllustrationElementTag](./ApiDoc/pdfsharp.universalaccessibility.pdfillustrationelementtag)
+
+[PdfInlineLevelElementTag](./ApiDoc/pdfsharp.universalaccessibility.pdfinlinelevelelementtag)
+
+[PdfRendererExtensions](./ApiDoc/pdfsharp.universalaccessibility.pdfrendererextensions)
+
+[StructureBuilder](./ApiDoc/pdfsharp.universalaccessibility.structurebuilder)
+
+[UAManager](./ApiDoc/pdfsharp.universalaccessibility.uamanager)
+
+## PdfSharp.UniversalAccessibility.Drawing
+
+[XGraphicsExtensions](./ApiDoc/pdfsharp.universalaccessibility.drawing.xgraphicsextensions)

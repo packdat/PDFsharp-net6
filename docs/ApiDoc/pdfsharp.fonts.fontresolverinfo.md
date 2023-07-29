@@ -27,7 +27,7 @@ public string FaceName { get; }
 
 ### **MustSimulateBold**
 
-Indicates whether bold must be simulated. Bold simulation is not implemented in PDFsharp. BUG really?
+Indicates whether bold must be simulated.
 
 ```csharp
 public bool MustSimulateBold { get; }

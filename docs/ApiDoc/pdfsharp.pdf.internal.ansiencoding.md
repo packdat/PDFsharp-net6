@@ -2,6 +2,12 @@
 
 Namespace: PdfSharp.Pdf.Internal
 
+#### Caution
+
+Use CodePagesEncodingProvider.Instance.GetEncoding(1252)
+
+---
+
 An encoder for PDF AnsiEncoding.
 
 ```csharp

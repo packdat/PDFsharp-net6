@@ -5,7 +5,7 @@ Namespace: PdfSharp.Pdf
 Represents a name tree node.
 
 ```csharp
-public sealed class PdfNameTreeNode : PdfDictionary, System.ICloneable, System.Collections.Generic.IEnumerable`1[[System.Collections.Generic.KeyValuePair`2[[System.String, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[PdfSharp.Pdf.PdfItem, PdfSharp, Version=0.1.2.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Collections.IEnumerable
+public sealed class PdfNameTreeNode : PdfDictionary, System.ICloneable, System.Collections.Generic.IEnumerable`1[[System.Collections.Generic.KeyValuePair`2[[System.String, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[PdfSharp.Pdf.PdfItem, PdfSharp, Version=0.1.3.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Collections.IEnumerable
 ```
 
 Inheritance [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object) → [PdfItem](./pdfsharp.pdf.pdfitem) → [PdfObject](./pdfsharp.pdf.pdfobject) → [PdfDictionary](./pdfsharp.pdf.pdfdictionary) → [PdfNameTreeNode](./pdfsharp.pdf.pdfnametreenode)<br>
@@ -13,12 +13,24 @@ Implements [ICloneable](https://docs.microsoft.com/en-us/dotnet/api/system.iclon
 
 ## Properties
 
+### **Parent**
+
+Gets the parent of this node or null if this is the root-node
+
+```csharp
+public PdfNameTreeNode Parent { get; set; }
+```
+
+#### Property Value
+
+[PdfNameTreeNode](./pdfsharp.pdf.pdfnametreenode)<br>
+
 ### **IsRoot**
 
 Gets a value indicating whether this instance is a root node.
 
 ```csharp
-public bool IsRoot { get; private set; }
+public bool IsRoot { get; }
 ```
 
 #### Property Value
@@ -48,6 +60,28 @@ public int NamesCount { get; }
 #### Property Value
 
 [Int32](https://docs.microsoft.com/en-us/dotnet/api/system.int32)<br>
+
+### **NamesCountTotal**
+
+Get the number of names in this node including all children
+
+```csharp
+public int NamesCountTotal { get; }
+```
+
+#### Property Value
+
+[Int32](https://docs.microsoft.com/en-us/dotnet/api/system.int32)<br>
+
+### **Kids**
+
+```csharp
+public IEnumerable<PdfNameTreeNode> Kids { get; }
+```
+
+#### Property Value
+
+[IEnumerable&lt;PdfNameTreeNode&gt;](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1)<br>
 
 ### **LeastKey**
 
@@ -174,19 +208,84 @@ Initializes a new instance of the [PdfNameTreeNode](./pdfsharp.pdf.pdfnametreeno
 public PdfNameTreeNode()
 ```
 
-### **PdfNameTreeNode(Boolean)**
+### **PdfNameTreeNode(PdfDictionary)**
 
 Initializes a new instance of the [PdfNameTreeNode](./pdfsharp.pdf.pdfnametreenode) class.
 
 ```csharp
-public PdfNameTreeNode(bool isRoot)
+public PdfNameTreeNode(PdfDictionary dict)
 ```
 
 #### Parameters
 
-`isRoot` [Boolean](https://docs.microsoft.com/en-us/dotnet/api/system.boolean)<br>
+`dict` [PdfDictionary](./pdfsharp.pdf.pdfdictionary)<br>
 
 ## Methods
+
+### **GetNames(Boolean)**
+
+Gets the list of names this node contains
+
+```csharp
+public IReadOnlyList<string> GetNames(bool includeKids)
+```
+
+#### Parameters
+
+`includeKids` [Boolean](https://docs.microsoft.com/en-us/dotnet/api/system.boolean)<br>
+Specifies whether the names of the kids should also be returned
+
+#### Returns
+
+[IReadOnlyList&lt;String&gt;](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.ireadonlylist-1)<br>
+The list of names this node contains
+
+**Remarks:**
+
+Note: When kids are included, the names are not guaranteed to be sorted
+
+### **ContainsName(String, Boolean)**
+
+Determines whether this node contains the specified
+
+```csharp
+public bool ContainsName(string name, bool includeKids)
+```
+
+#### Parameters
+
+`name` [String](https://docs.microsoft.com/en-us/dotnet/api/system.string)<br>
+The name to search for
+
+`includeKids` [Boolean](https://docs.microsoft.com/en-us/dotnet/api/system.boolean)<br>
+Specifies whether the kids should also be searched
+
+#### Returns
+
+[Boolean](https://docs.microsoft.com/en-us/dotnet/api/system.boolean)<br>
+true, if this node contains , false otherwise
+
+### **GetValue(String, Boolean)**
+
+Get the value of the item with the specified .<br>
+ If the value represents a reference, the referenced value is returned.
+
+```csharp
+public PdfItem GetValue(string name, bool includeKids)
+```
+
+#### Parameters
+
+`name` [String](https://docs.microsoft.com/en-us/dotnet/api/system.string)<br>
+The name whose value should be retrieved
+
+`includeKids` [Boolean](https://docs.microsoft.com/en-us/dotnet/api/system.boolean)<br>
+Specifies whether the kids should also be searched
+
+#### Returns
+
+[PdfItem](./pdfsharp.pdf.pdfitem)<br>
+The value for  when found, otwerwise null
 
 ### **AddKid(PdfNameTreeNode)**
 

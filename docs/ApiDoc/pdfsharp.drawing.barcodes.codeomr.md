@@ -173,7 +173,7 @@ public CodeDirection Direction { get; set; }
 
 ### **CodeOmr(String, XSize, CodeDirection)**
 
-initializes a new OmrCode with the given data.
+Initializes a new OmrCode with the given data.
 
 ```csharp
 public CodeOmr(string text, XSize size, CodeDirection direction)

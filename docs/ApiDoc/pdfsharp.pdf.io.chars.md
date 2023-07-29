@@ -100,12 +100,12 @@ The space character.
 public static char SP;
 ```
 
-### **QuoteDbl**
+### **QuoteDouble**
 
 The double quote character.
 
 ```csharp
-public static char QuoteDbl;
+public static char QuoteDouble;
 ```
 
 ### **QuoteSingle**

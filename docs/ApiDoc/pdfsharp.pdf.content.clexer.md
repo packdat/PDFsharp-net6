@@ -51,6 +51,8 @@ public int ContLength { get; }
 
 ### **Position**
 
+Gets or sets the position in the content.
+
 ```csharp
 public int Position { get; set; }
 ```
@@ -138,6 +140,8 @@ public CSymbol ScanName()
 
 ### **ScanDictionary()**
 
+Scans the dictionary.
+
 ```csharp
 protected CSymbol ScanDictionary()
 ```
@@ -172,6 +176,8 @@ public CSymbol ScanOperator()
 
 ### **ScanLiteralString()**
 
+Scans a literal string.
+
 ```csharp
 public CSymbol ScanLiteralString()
 ```
@@ -181,6 +187,8 @@ public CSymbol ScanLiteralString()
 [CSymbol](./pdfsharp.pdf.content.csymbol)<br>
 
 ### **ScanHexadecimalString()**
+
+Scans a hexadecimal string.
 
 ```csharp
 public CSymbol ScanHexadecimalString()

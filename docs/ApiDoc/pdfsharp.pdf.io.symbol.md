@@ -2,7 +2,7 @@
 
 Namespace: PdfSharp.Pdf.IO
 
-Terminal symbols recognized by lexer.
+PDF Terminal symbols recognized by lexer.
 
 ```csharp
 public enum Symbol

@@ -60,24 +60,6 @@ public CodeDirection Direction { get; set; }
 
 [CodeDirection](./pdfsharp.drawing.barcodes.codedirection)<br>
 
-## Constructors
-
-### **CodeBase(String, XSize, CodeDirection)**
-
-Initializes a new instance of the [CodeBase](./pdfsharp.drawing.barcodes.codebase) class.
-
-```csharp
-public CodeBase(string text, XSize size, CodeDirection direction)
-```
-
-#### Parameters
-
-`text` [String](https://docs.microsoft.com/en-us/dotnet/api/system.string)<br>
-
-`size` [XSize](./pdfsharp.drawing.xsize)<br>
-
-`direction` [CodeDirection](./pdfsharp.drawing.barcodes.codedirection)<br>
-
 ## Methods
 
 ### **CheckCode(String)**

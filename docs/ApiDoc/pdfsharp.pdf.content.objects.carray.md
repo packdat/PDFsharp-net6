@@ -5,7 +5,7 @@ Namespace: PdfSharp.Pdf.Content.Objects
 Represents an array of objects in a PDF content stream.
 
 ```csharp
-public class CArray : CSequence, System.ICloneable, System.Collections.Generic.IList`1[[PdfSharp.Pdf.Content.Objects.CObject, PdfSharp, Version=0.1.2.0, Culture=neutral, PublicKeyToken=null]], System.Collections.Generic.ICollection`1[[PdfSharp.Pdf.Content.Objects.CObject, PdfSharp, Version=0.1.2.0, Culture=neutral, PublicKeyToken=null]], System.Collections.Generic.IEnumerable`1[[PdfSharp.Pdf.Content.Objects.CObject, PdfSharp, Version=0.1.2.0, Culture=neutral, PublicKeyToken=null]], System.Collections.IEnumerable
+public class CArray : CSequence, System.ICloneable, System.Collections.Generic.IList`1[[PdfSharp.Pdf.Content.Objects.CObject, PdfSharp, Version=0.1.3.0, Culture=neutral, PublicKeyToken=null]], System.Collections.Generic.ICollection`1[[PdfSharp.Pdf.Content.Objects.CObject, PdfSharp, Version=0.1.3.0, Culture=neutral, PublicKeyToken=null]], System.Collections.Generic.IEnumerable`1[[PdfSharp.Pdf.Content.Objects.CObject, PdfSharp, Version=0.1.3.0, Culture=neutral, PublicKeyToken=null]], System.Collections.IEnumerable
 ```
 
 Inheritance [Object](https://docs.microsoft.com/en-us/dotnet/api/system.object) → [CObject](./pdfsharp.pdf.content.objects.cobject) → [CSequence](./pdfsharp.pdf.content.objects.csequence) → [CArray](./pdfsharp.pdf.content.objects.carray)<br>
