@@ -50,7 +50,7 @@ namespace PdfSharp.Pdf.AcroForms
         public IEnumerable<PdfAcroField> GetAllFields()
         {
             var fields = new List<PdfAcroField>();
-            if (_fields != null)
+            if (Fields != null)
             {
                 for (var i = 0; i < Fields.Elements.Count; i++)
                 {
@@ -273,7 +273,7 @@ namespace PdfSharp.Pdf.AcroForms
 
         private T AddToFieldList<T>(T field, Action<T> configure) where T: PdfAcroField
         {
-            _document._irefTable.Add(field);
+            _document.IrefTable.Add(field);
             configure(field);
             if (field.Parent == null)
             {

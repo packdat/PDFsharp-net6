@@ -51,7 +51,7 @@ namespace PdfSharp.Pdf.AcroForms.Rendering
                 var count = Math.Min(text.Length, field.MaxLength);
                 for (var ci = 0; ci < count; ci++)
                 {
-                    var cRect = new XRect(ci * combWidth, 0, combWidth, rect.Height);
+                    var cRect = new XRect(ci * combWidth, 0, combWidth, 0); // height must be 0 for BaseLine
                     gfx.DrawString(text[ci].ToString(), field.Font, cBrush, cRect, XStringFormats.BaseLineCenter);
                 }
             }
