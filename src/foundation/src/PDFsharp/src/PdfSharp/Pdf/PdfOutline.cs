@@ -9,6 +9,9 @@ using PdfSharp.Pdf.Actions;
 using PdfSharp.Pdf.Advanced;
 using PdfSharp.Pdf.IO;
 using PdfSharp.Pdf.Internal;
+using PdfSharp.Internal;
+using System.Collections.Generic;
+using System;
 
 namespace PdfSharp.Pdf
 {
@@ -323,7 +326,7 @@ namespace PdfSharp.Pdf
             var a = Elements.GetValue(Keys.A);
             Debug.Assert(dest == null || a == null, "Either destination or goto action.");
 
-            PdfArray? destArray = null;
+            PdfArray? destArray;
             if (dest != null)
             {
                 destArray = dest as PdfArray;
@@ -350,9 +353,37 @@ namespace PdfSharp.Pdf
                         Elements.Add(Keys.Dest, destArray);
                         SplitDestinationPage(destArray);
                     }
+                    else if (dest is PdfString namedDestination)
+                    {
+                        // look in Destinations and name-tree
+                        if (Owner.Catalog.Destinations.Contains(namedDestination.Value))
+                        {
+                            destArray = Owner.Catalog.Destinations.GetDestination(namedDestination.Value);
+                        }
+                        else if (Owner.Catalog.Names.NameTree != null)
+                        {
+                            var item = Owner.Catalog.Names.NameTree.GetValue(namedDestination.Value, true);
+                            // from PdfReference 1.7, Chapter 12.3.2.3 (Named Destinations):
+                            // "...value is either an array defining the destination, ...
+                            // or a dictionary with a D entry whose value is such an array."
+                            if (item is PdfDictionary itemDict)
+                            {
+                                destArray = itemDict.Elements.GetArray(PdfGoToAction.Keys.D);
+                            }
+                            else
+                                destArray = item as PdfArray;
+                        }
+                        if (destArray != null)
+                        {
+                            // Replace Action with /Dest entry.
+                            Elements.Remove(Keys.A);
+                            Elements.Add(Keys.Dest, destArray);
+                            SplitDestinationPage(destArray);
+                        }
+                    }
                     else
                     {
-                        throw new Exception("Destination Array expected.");
+                        throw new Exception("Destination Array or Name expected.");
                     }
                 }
                 else
@@ -370,9 +401,6 @@ namespace PdfSharp.Pdf
 
         void SplitDestinationPage(PdfArray destination)  // Reference: 8.2  Destination syntax / Page 582
         {
-            // ReSharper disable HeuristicUnreachableCode
-#pragma warning disable 162
-
             // The destination page may not yet have been transformed to PdfPage.
             var destPage = (PdfDictionary)((PdfReference)destination.Elements[0]).Value;
             if (destPage is not PdfPage page)
@@ -381,7 +409,7 @@ namespace PdfSharp.Pdf
             DestinationPage = page;
             if (destination.Elements[1] is PdfName type)
             {
-                PageDestinationType = (PdfPageDestinationType)Enum.Parse(typeof(PdfPageDestinationType), type.Value.Substring(1), true);
+                PageDestinationType = (PdfPageDestinationType)Enum.Parse(typeof(PdfPageDestinationType), type.Value.AsSpan(1), true);
                 switch (PageDestinationType)
                 {
                     // [page /XYZ left top zoom] -- left, top, and zoom can be null.
@@ -431,12 +459,9 @@ namespace PdfSharp.Pdf
                         break;
 
                     default:
-                        throw new ArgumentOutOfRangeException();
+                        throw new ArgumentOutOfRangeException("Invalid page destination " + PageDestinationType);
                 }
             }
-
-#pragma warning restore 162
-            // ReSharper restore HeuristicUnreachableCode
         }
 
         void InitializeChildren()
@@ -536,7 +561,7 @@ namespace PdfSharp.Pdf
 
         PdfArray CreateDestArray()
         {
-            PdfArray? dest = null;
+            PdfArray? dest;
             switch (PageDestinationType)
             {
                 // [page /XYZ left top zoom]
@@ -596,7 +621,7 @@ namespace PdfSharp.Pdf
         /// <summary>
         /// Format double.
         /// </summary>
-        string Fd(double value)
+        static string Fd(double value)
         {
             if (Double.IsNaN(value))
                 throw new InvalidOperationException("Value is not a valid Double.");
@@ -608,7 +633,7 @@ namespace PdfSharp.Pdf
         /// <summary>
         /// Format nullable double.
         /// </summary>
-        string Fd(double? value)
+        static string Fd(double? value)
         {
             return value.HasValue ? value.Value.ToString("#.##", CultureInfo.InvariantCulture) : "null";
         }
@@ -636,9 +661,9 @@ namespace PdfSharp.Pdf
         }
 
 #if DEBUG
-        string FilterUnicode(string text)
+        static string FilterUnicode(string text)
         {
-            StringBuilder result = new StringBuilder();
+            StringBuilder result = new();
             foreach (char ch in text)
                 result.Append((uint)ch < 256 ? (ch != '\r' && ch != '\n' ? ch : ' ') : '?');
             return result.ToString();

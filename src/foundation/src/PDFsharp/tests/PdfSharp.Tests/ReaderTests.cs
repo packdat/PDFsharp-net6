@@ -299,6 +299,15 @@ namespace PdfSharp.Tests
             VerifyPdfCanBeImported(filePath);
         }
 
+        [Fact]
+        public void Issue8()
+        {
+            var doc = PdfReader.Open("C:\\Temp\\TestPdf\\empira-net6-issue #8.pdf", PdfDocumentOpenMode.Import);
+            var count = doc.Outlines.Count;
+            output.WriteLine($"Count: {count}");
+        }
+
+
         private bool VerifyPdfCanBeImported(string filePath)
         {
             try
