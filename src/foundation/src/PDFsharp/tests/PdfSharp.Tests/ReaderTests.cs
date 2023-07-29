@@ -317,6 +317,9 @@ namespace PdfSharp.Tests
             try
             {
                 var document = PdfReader.Open(filePath, PdfDocumentOpenMode.Import);
+                var fieldCount = document.AcroForm?.Fields.Count;
+                var outlineCount = document.Outlines.Count;
+                var pageCount = document.PageCount;
                 var documentCopy = new PdfDocument();
                 foreach (var page in document.Pages)
                 {

@@ -183,8 +183,6 @@ namespace PdfSharp.Pdf.Security
 
         private string _ownerPassword = "";
 
-        private bool skipObjectStreams;
-
         /// <summary>
         /// Gets or sets the user access permission represented as an integer in the P key.
         /// </summary>

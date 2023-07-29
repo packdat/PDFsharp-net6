@@ -47,8 +47,8 @@ namespace PdfSharp.Tests
         [Fact]
         public void NullOrEmptyShouldBeReturnedUnchanged()
         {
-            string text = null;
-            text = text.AddIncrementalSuffix();
+            string? text = null;
+            text = text!.AddIncrementalSuffix();
             text.Should().BeNull();
 
             text = string.Empty;

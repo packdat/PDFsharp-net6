@@ -69,7 +69,7 @@ namespace PdfSharp.Tests
                 var inputDocument = PdfReader.Open(fs, PdfDocumentOpenMode.Import);
                 foreach (var page in inputDocument.Pages)
                     copiedDocument.AddPage(page);
-                copiedDocument.ImportAcroForm(inputDocument.AcroForm);
+                copiedDocument.ImportAcroForm(inputDocument.AcroForm!);
                 importedFields.AddRange(GetAllFields(inputDocument));
             }
             var fieldsInCopiedDocument = GetAllFields(copiedDocument);
@@ -100,13 +100,13 @@ namespace PdfSharp.Tests
                 var inputDocument = PdfReader.Open(fs, PdfDocumentOpenMode.Import);
                 foreach (var page in inputDocument.Pages)
                     copiedDocument.AddPage(page);
-                copiedDocument.ImportAcroForm(inputDocument.AcroForm);
+                copiedDocument.ImportAcroForm(inputDocument.AcroForm!);
                 importedFields.AddRange(GetAllFields(inputDocument));
             }
             var fieldsInCopiedDocument = GetAllFields(copiedDocument);
             fieldsInCopiedDocument.Count.Should().Be(importedFields.Count);
             // root field names should be distinct
-            var rootNames = copiedDocument.AcroForm.Fields.Names;
+            var rootNames = copiedDocument.AcroForm!.Fields.Names;
             rootNames.Distinct().Count().Should().Be(rootNames.Length);
 
             FillFields(fieldsInCopiedDocument);
@@ -132,7 +132,7 @@ namespace PdfSharp.Tests
             var copiedDocument = new PdfDocument();
             foreach (var page in inputDocument.Pages)
                 copiedDocument.AddPage(page);
-            copiedDocument.ImportAcroForm(inputDocument.AcroForm);
+            copiedDocument.ImportAcroForm(inputDocument.AcroForm!);
 
             var fieldsInCopiedDocument = GetAllFields(copiedDocument);
             // fill all fields
