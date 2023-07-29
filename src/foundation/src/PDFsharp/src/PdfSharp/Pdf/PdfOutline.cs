@@ -156,9 +156,9 @@ namespace PdfSharp.Pdf
         /// <summary>
         /// Gets or sets the destination page.
         /// </summary>
-        public PdfPage DestinationPage
+        public PdfPage? DestinationPage
         {
-            get => _destinationPage ?? NRT.ThrowOnNull<PdfPage>();
+            get => _destinationPage;
             set => _destinationPage = value;
         }
         PdfPage? _destinationPage;
@@ -334,6 +334,10 @@ namespace PdfSharp.Pdf
                 {
                     SplitDestinationPage(destArray);
                 }
+                else if (dest is PdfString namedDestination)
+                {
+                    HandleNamedDestination(namedDestination.Value);
+                }
                 else
                 {
                     Debug.Assert(false, "See what to do when this happened.");
@@ -345,6 +349,8 @@ namespace PdfSharp.Pdf
                 if (a is PdfDictionary action && action.Elements.GetName(PdfAction.Keys.S) == "/GoTo")
                 {
                     dest = action.Elements[PdfGoToAction.Keys.D];
+                    if (dest is PdfReference destRef)
+                        dest = destRef.Value;
                     destArray = dest as PdfArray;
                     if (destArray != null)
                     {
@@ -355,31 +361,7 @@ namespace PdfSharp.Pdf
                     }
                     else if (dest is PdfString namedDestination)
                     {
-                        // look in Destinations and name-tree
-                        if (Owner.Catalog.Destinations.Contains(namedDestination.Value))
-                        {
-                            destArray = Owner.Catalog.Destinations.GetDestination(namedDestination.Value);
-                        }
-                        else if (Owner.Catalog.Names.NameTree != null)
-                        {
-                            var item = Owner.Catalog.Names.NameTree.GetValue(namedDestination.Value, true);
-                            // from PdfReference 1.7, Chapter 12.3.2.3 (Named Destinations):
-                            // "...value is either an array defining the destination, ...
-                            // or a dictionary with a D entry whose value is such an array."
-                            if (item is PdfDictionary itemDict)
-                            {
-                                destArray = itemDict.Elements.GetArray(PdfGoToAction.Keys.D);
-                            }
-                            else
-                                destArray = item as PdfArray;
-                        }
-                        if (destArray != null)
-                        {
-                            // Replace Action with /Dest entry.
-                            Elements.Remove(Keys.A);
-                            Elements.Add(Keys.Dest, destArray);
-                            SplitDestinationPage(destArray);
-                        }
+                        HandleNamedDestination(namedDestination.Value);
                     }
                     else
                     {
@@ -388,7 +370,8 @@ namespace PdfSharp.Pdf
                 }
                 else
                 {
-                    Debug.Assert(false, "See what to do when this happened.");
+                    // may be a GoToR or GoToE action (12.6.4.1)
+                    //Debug.Assert(false, "See what to do when this happened.");
                 }
             }
             else
@@ -397,6 +380,37 @@ namespace PdfSharp.Pdf
             }
 
             InitializeChildren();
+        }
+
+        void HandleNamedDestination(string namedDestination)
+        {
+            PdfArray? destArray = null;
+            // look in Destinations and name-tree
+            if (Owner.Catalog.Destinations.Contains(namedDestination))
+            {
+                destArray = Owner.Catalog.Destinations.GetDestination(namedDestination);
+            }
+            else if (Owner.Catalog.Names.NameTree != null)
+            {
+                var item = Owner.Catalog.Names.NameTree.GetValue(namedDestination, true);
+                // from PdfReference 1.7, Chapter 12.3.2.3 (Named Destinations):
+                // "...value is either an array defining the destination, ...
+                // or a dictionary with a D entry whose value is such an array."
+                if (item is PdfDictionary itemDict)
+                {
+                    destArray = itemDict.Elements.GetArray(PdfGoToAction.Keys.D);
+                }
+                else
+                    destArray = item as PdfArray;
+            }
+            if (destArray != null)
+            {
+                // Replace Action with /Dest entry.
+                Elements.Remove(Keys.A);
+                Elements.Remove(Keys.Dest);
+                Elements.Add(Keys.Dest, destArray);
+                SplitDestinationPage(destArray);
+            }
         }
 
         void SplitDestinationPage(PdfArray destination)  // Reference: 8.2  Destination syntax / Page 582
@@ -523,7 +537,7 @@ namespace PdfSharp.Pdf
 
                     // Has destination?
                     if (DestinationPage != null)
-                        Elements[Keys.Dest] = CreateDestArray();
+                        Elements[Keys.Dest] = CreateDestArray(DestinationPage);
 
                     // Not the first element?
                     if (index > 0)
@@ -559,7 +573,7 @@ namespace PdfSharp.Pdf
             }
         }
 
-        PdfArray CreateDestArray()
+        PdfArray CreateDestArray(PdfPage destinationPage)
         {
             PdfArray? dest;
             switch (PageDestinationType)
@@ -567,53 +581,53 @@ namespace PdfSharp.Pdf
                 // [page /XYZ left top zoom]
                 case PdfPageDestinationType.Xyz:
                     dest = new PdfArray(Owner,
-                        DestinationPage.ReferenceNotNull, new PdfLiteral(String.Format("/XYZ {0} {1} {2}", Fd(Left), Fd(Top), Fd(Zoom))));
+                        destinationPage.ReferenceNotNull, new PdfLiteral(String.Format("/XYZ {0} {1} {2}", Fd(Left), Fd(Top), Fd(Zoom))));
                     break;
 
                 // [page /Fit]
                 case PdfPageDestinationType.Fit:
                     dest = new PdfArray(Owner,
-                        DestinationPage.ReferenceNotNull, new PdfLiteral("/Fit"));
+                        destinationPage.ReferenceNotNull, new PdfLiteral("/Fit"));
                     break;
 
                 // [page /FitH top]
                 case PdfPageDestinationType.FitH:
                     dest = new PdfArray(Owner,
-                        DestinationPage.ReferenceNotNull, new PdfLiteral(String.Format("/FitH {0}", Fd(Top))));
+                        destinationPage.ReferenceNotNull, new PdfLiteral(String.Format("/FitH {0}", Fd(Top))));
                     break;
 
                 // [page /FitV left]
                 case PdfPageDestinationType.FitV:
                     dest = new PdfArray(Owner,
-                        DestinationPage.ReferenceNotNull, new PdfLiteral(String.Format("/FitV {0}", Fd(Left))));
+                        destinationPage.ReferenceNotNull, new PdfLiteral(String.Format("/FitV {0}", Fd(Left))));
                     break;
 
                 // [page /FitR left bottom right top]
                 case PdfPageDestinationType.FitR:
                     dest = new PdfArray(Owner,
-                        DestinationPage.ReferenceNotNull, new PdfLiteral(String.Format("/FitR {0} {1} {2} {3}", Fd(Left), Fd(Bottom), Fd(Right), Fd(Top))));
+                        destinationPage.ReferenceNotNull, new PdfLiteral(String.Format("/FitR {0} {1} {2} {3}", Fd(Left), Fd(Bottom), Fd(Right), Fd(Top))));
                     break;
 
                 // [page /FitB]
                 case PdfPageDestinationType.FitB:
                     dest = new PdfArray(Owner,
-                        DestinationPage.ReferenceNotNull, new PdfLiteral("/FitB"));
+                        destinationPage.ReferenceNotNull, new PdfLiteral("/FitB"));
                     break;
 
                 // [page /FitBH top]
                 case PdfPageDestinationType.FitBH:
                     dest = new PdfArray(Owner,
-                        DestinationPage.ReferenceNotNull, new PdfLiteral(String.Format("/FitBH {0}", Fd(Top))));
+                        destinationPage.ReferenceNotNull, new PdfLiteral(String.Format("/FitBH {0}", Fd(Top))));
                     break;
 
                 // [page /FitBV left]
                 case PdfPageDestinationType.FitBV:
                     dest = new PdfArray(Owner,
-                        DestinationPage.ReferenceNotNull, new PdfLiteral(String.Format("/FitBV {0}", Fd(Left))));
+                        destinationPage.ReferenceNotNull, new PdfLiteral(String.Format("/FitBV {0}", Fd(Left))));
                     break;
 
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    throw new ArgumentOutOfRangeException("Unknown destination type " + PageDestinationType);
             }
             return dest;
         }
