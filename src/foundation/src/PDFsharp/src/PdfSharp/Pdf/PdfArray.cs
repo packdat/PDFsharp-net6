@@ -222,24 +222,9 @@ namespace PdfSharp.Pdf
                     throw new ArgumentOutOfRangeException(nameof(index), index, PSSR.IndexOutOfRange);
 
                 object obj = this[index];
-                //object? obj = GetObject(index); // TODO Do this for all conversions! 2023-06-21
-                if (obj is PdfReference reference)
-                {
-                    //Debug.Assert(false, "Check why this is not PdfRealObject or PdfIntegerObject.");
-#if DEBUG
-                    GetType();
-#endif
 
-                    // ReSharper disable once RedundantCast
-                    obj = (object)reference.Value switch
-                    {
-                        PdfReal real => real,
-                        PdfInteger integer => integer,
-                        PdfRealObject realObject => realObject,
-                        PdfIntegerObject integerObject => integerObject,
-                        _ => throw new InvalidCastException("GetReal: Referenced object is not a number.")
-                    };
-                }
+                if (obj is PdfReference reference)
+                    obj = reference.Value;
 
                 return obj switch
                 {
