@@ -237,7 +237,8 @@
         <Compile Include="..\PdfSharp\Pdf.Advanced\PdfImageTable.cs" Link="Pdf.Advanced\PdfImageTable.cs" />
         <Compile Include="..\PdfSharp\Pdf.Advanced\PdfImportedObjectTable.cs" Link="Pdf.Advanced\PdfImportedObjectTable.cs" />
         <Compile Include="..\PdfSharp\Pdf.Advanced\PdfInternals.cs" Link="Pdf.Advanced\PdfInternals.cs" />
-        <Compile Include="..\PdfSharp\Pdf.Advanced\PdfNamedDestinationParameters.cs" Link="Pdf.Advanced\PdfNamedDestinationParameters.cs" />
+		<Compile Include="..\PdfSharp\Pdf.Advanced\PdfNamedDestinations.cs" Link="Pdf.Advanced\PdfNamedDestinations.cs" />
+		<Compile Include="..\PdfSharp\Pdf.Advanced\PdfNamedDestinationParameters.cs" Link="Pdf.Advanced\PdfNamedDestinationParameters.cs" />
         <Compile Include="..\PdfSharp\Pdf.Advanced\PdfNameDictionary.cs" Link="Pdf.Advanced\PdfNameDictionary.cs" />
         <Compile Include="..\PdfSharp\Pdf.Advanced\PdfObjectInternals.cs" Link="Pdf.Advanced\PdfObjectInternals.cs" />
         <Compile Include="..\PdfSharp\Pdf.Advanced\PdfObjectStream.cs" Link="Pdf.Advanced\PdfObjectStream.cs" />
