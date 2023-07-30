@@ -199,7 +199,8 @@
 		<Compile Include="..\PdfSharp\Pdf.AcroForms\Rendering\PdfSignatureFieldRenderer.cs" Link="Pdf.AcroForms\Rendering\PdfSignatureFieldRenderer.cs" />
 		<Compile Include="..\PdfSharp\Pdf.AcroForms\Rendering\PdfTextFieldRenderer.cs" Link="Pdf.AcroForms\Rendering\PdfTextFieldRenderer.cs" />
 		<Compile Include="..\PdfSharp\Pdf.AcroForms\PdfAcroField.cs" Link="Pdf.AcroForms\PdfAcroField.cs" />
-        <Compile Include="..\PdfSharp\Pdf.AcroForms\PdfAcroForm.cs" Link="Pdf.AcroForms\PdfAcroForm.cs" />
+		<Compile Include="..\PdfSharp\Pdf.AcroForms\PdfAcroForm.cs" Link="Pdf.AcroForms\PdfAcroForm.cs" />
+		<Compile Include="..\PdfSharp\Pdf.AcroForms\PdfAcroFormImporter.cs" Link="Pdf.AcroForms\PdfAcroFormImporter.cs" />
         <Compile Include="..\PdfSharp\Pdf.AcroForms\PdfButtonField.cs" Link="Pdf.AcroForms\PdfButtonField.cs" />
         <Compile Include="..\PdfSharp\Pdf.AcroForms\PdfCheckBoxField.cs" Link="Pdf.AcroForms\PdfCheckBoxField.cs" />
         <Compile Include="..\PdfSharp\Pdf.AcroForms\PdfChoiceField.cs" Link="Pdf.AcroForms\PdfChoiceField.cs" />

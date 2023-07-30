@@ -664,7 +664,8 @@ namespace PdfSharp.Pdf
         /// </remarks>
         public void ImportAcroForm(PdfAcroForm remoteForm, Action<PdfAcroField, PdfAcroField>? fieldHandler = null)
         {
-            Catalog.ImportAcroForm(remoteForm, fieldHandler);
+            var importer = new PdfAcroFormImporter(this);
+            importer.ImportAcroForm(remoteForm, fieldHandler);
         }
 
         /// <summary>
