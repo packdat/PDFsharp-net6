@@ -655,7 +655,7 @@ namespace PdfSharp.Pdf.IO
         /// <summary>
         /// Reads the next symbol that must be the specified one.
         /// </summary>
-        Symbol ReadSymbol(Symbol symbol)
+        internal Symbol ReadSymbol(Symbol symbol)
         {
             if (symbol == Symbol.EndStream)
             {
@@ -1199,7 +1199,7 @@ namespace PdfSharp.Pdf.IO
         /// <summary>
         /// Reads cross reference stream(s).
         /// </summary>
-        PdfTrailer ReadXRefStream(PdfCrossReferenceTable xrefTable)
+        internal PdfTrailer ReadXRefStream(PdfCrossReferenceTable xrefTable)
         {
             // Read cross reference stream.
             //Debug.Assert(_lexer.Symbol == Symbol.Integer);

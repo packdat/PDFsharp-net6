@@ -257,9 +257,16 @@ namespace PdfSharp.Pdf.IO
                     throw new InvalidOperationException(PSSR.InvalidPdf);
 
                 document.IrefTable.IsUnderConstruction = true;
-                Parser parser = new Parser(document);
+                var parser = new Parser(document);
                 // Read all trailers or cross-reference streams, but no objects.
-                document.Trailer = parser.ReadTrailer();
+                try
+                {
+                    document.Trailer = parser.ReadTrailer();
+                }
+                catch
+                {
+                    document.Trailer = PdfTrailer.Rebuild(document, stream, parser);
+                }
                 if (document.Trailer == null)
                     ParserDiagnostics.ThrowParserException("Invalid PDF file: no trailer found."); // TODO L10N using PSSR.
 
