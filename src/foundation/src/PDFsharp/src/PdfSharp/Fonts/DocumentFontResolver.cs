@@ -10,8 +10,23 @@ namespace PdfSharp.Fonts
     /// </summary>
     public class DocumentFontResolver : IFontResolver
     {
+        private static readonly Dictionary<string, byte[]> localFonts = new();
+
         private readonly PdfDocument? document;
         private readonly PdfAcroField? acroField;
+
+        /// <summary>
+        /// Registers a new font
+        /// </summary>
+        /// <param name="fontName">The name of the font</param>
+        /// <param name="fontData">The font-data</param>
+        /// <param name="isBold">Specifies, whether the font is bold</param>
+        /// <param name="isItalic">Specifies, whether the font is italic</param>
+        public static void Register(string fontName, byte[] fontData, bool isBold = false, bool isItalic = false)
+        {
+            var localName = MakeLocalName(fontName, isBold, isItalic);
+            localFonts[localName] = fontData;
+        }
 
         /// <summary>
         /// Creates a new instance of the <see cref="DocumentFontResolver"/>
@@ -56,8 +71,26 @@ namespace PdfSharp.Fonts
             return result.Item2;
         }
 
+        private static string MakeLocalName(string fontName, bool isBold, Boolean isItalic)
+        {
+            var localName = fontName;
+            if (isBold || isItalic)
+            {
+                localName += "+";
+                if (isBold)
+                    localName += "b";
+                if (isItalic)
+                    localName += "i";
+            }
+            return localName;
+        }
+
         private Tuple<byte[]?, FontResolverInfo?> Resolve(string fontName, bool isBold, bool isItalic)
         {
+            var localName = MakeLocalName(fontName, isBold, isItalic);
+            if (localFonts.TryGetValue(localName, out var localData))
+                return new Tuple<byte[]?, FontResolverInfo?>(localData, new FontResolverInfo(fontName, isBold, isItalic));
+
             var data = StandardFontData.GetFontData(fontName);
             if (data != null)
             {
@@ -104,8 +137,7 @@ namespace PdfSharp.Fonts
                         // may be a Type0 Font, dig a bit deeper
                         foreach (var key in fontList.Elements.Keys)
                         {
-                            var value = fontList.Elements.GetObject(key) as PdfDictionary;
-                            if (value != null)
+                            if (fontList.Elements.GetObject(key) is PdfDictionary value)
                             {
                                 var baseFont = value.Elements.GetName(PdfType0Font.Keys.BaseFont);
                                 if (baseFont == fontName)

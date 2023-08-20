@@ -197,5 +197,70 @@ namespace PdfSharp.Tests
                 document.Save(outFileName);
             }
         }
+
+        [Theory]
+        [InlineData(@"C:\Assets\Fonts\Fira_Code_v6.2\ttf\FiraCode-Bold.ttf")]
+        [InlineData(@"C:\Assets\Fonts\Fira_Code_v6.2\ttf\FiraCode-Light.ttf")]
+        [InlineData(@"C:\Assets\Fonts\Fira_Code_v6.2\ttf\FiraCode-Medium.ttf")]
+        [InlineData(@"C:\Assets\Fonts\Fira_Code_v6.2\ttf\FiraCode-Regular.ttf")]
+        [InlineData(@"C:\Assets\Fonts\Fira_Code_v6.2\ttf\FiraCode-Retina.ttf")]
+        [InlineData(@"C:\Assets\Fonts\Fira_Code_v6.2\ttf\FiraCode-SemiBold.ttf")]
+        public void RenderFontGlyphs(string fontPath)
+        {
+            File.Exists(fontPath).Should().BeTrue();
+
+            var fontName = Path.GetFileNameWithoutExtension(fontPath);
+
+            DocumentFontResolver.Register(fontName, File.ReadAllBytes(fontPath));
+            GlobalFontSettings.FontResolver = new DocumentFontResolver();
+
+            using var document = new PdfDocument();
+
+            var renderFont = new XFont(fontName, 16);
+            var helveticaFont = new XFont("Helvetica", 12);
+            var headerFont = new XFont("Helvetica", 36);
+            var brush = new XSolidBrush(XColors.Black);
+            var left = 60.0;
+            var top = 60.0;
+            var bottom = 60.0;
+            var gapX = 80.0;
+            var gapY = 20.0;
+            var x = left;
+            var y = top;
+            var page = document.AddPage();
+            var gfx = XGraphics.FromPdfPage(page);
+            gfx.DrawString(fontName, headerFont, brush, x, y);
+            y += 50;
+            var glyphList = renderFont.GetGlyphList();
+            if (glyphList.Any())
+            {
+                for (var i = 0; i < glyphList.Count; i++)
+                {
+                    var c = glyphList[i];
+                    gfx.DrawString(((int)c).ToString("X"), helveticaFont, brush, x, y);
+                    gfx.DrawString(c.ToString(), renderFont, brush, x + 40, y);
+                    x += gapX;
+                    if (x + gapX >= page.Width.Point)
+                    {
+                        x = left;
+                        y += gapY;
+                        if (y >= page.Height.Point - bottom)
+                        {
+                            gfx.Dispose();
+                            page = document.AddPage();
+                            gfx = XGraphics.FromPdfPage(page);
+                            x = left;
+                            y = top;
+                        }
+                    }
+                }
+                gfx.Dispose();
+            }
+            else
+                output.WriteLine($"Font {fontName} has no glyphs");
+
+            var outFileName = Path.Combine(Path.GetTempPath(), $"FontGlyphs_{fontName}.pdf");
+            document.Save(outFileName);
+        }
     }
 }
