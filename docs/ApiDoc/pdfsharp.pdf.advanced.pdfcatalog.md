@@ -193,18 +193,6 @@ public PdfCatalog(PdfDocument document)
 
 ## Methods
 
-### **ImportAcroForm(PdfAcroForm, Action&lt;PdfAcroField, PdfAcroField&gt;)**
-
-```csharp
-internal void ImportAcroForm(PdfAcroForm remoteForm, Action<PdfAcroField, PdfAcroField> fieldHandler)
-```
-
-#### Parameters
-
-`remoteForm` [PdfAcroForm](./pdfsharp.pdf.acroforms.pdfacroform)<br>
-
-`fieldHandler` [Action&lt;PdfAcroField, PdfAcroField&gt;](https://docs.microsoft.com/en-us/dotnet/api/system.action-2)<br>
-
 ### **PrepareForSave()**
 
 Dispatches PrepareForSave to the objects that need it.

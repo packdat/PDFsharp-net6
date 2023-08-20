@@ -27,6 +27,28 @@ public DocumentFontResolver(PdfDocument document)
 
 ## Methods
 
+### **Register(String, Byte[], Boolean, Boolean)**
+
+Registers a new font
+
+```csharp
+public static void Register(string fontName, Byte[] fontData, bool isBold, bool isItalic)
+```
+
+#### Parameters
+
+`fontName` [String](https://docs.microsoft.com/en-us/dotnet/api/system.string)<br>
+The name of the font
+
+`fontData` [Byte[]](https://docs.microsoft.com/en-us/dotnet/api/system.byte)<br>
+The font-data
+
+`isBold` [Boolean](https://docs.microsoft.com/en-us/dotnet/api/system.boolean)<br>
+Specifies, whether the font is bold
+
+`isItalic` [Boolean](https://docs.microsoft.com/en-us/dotnet/api/system.boolean)<br>
+Specifies, whether the font is italic
+
 ### **GetFont(String)**
 
 Gets the data for the specified font.

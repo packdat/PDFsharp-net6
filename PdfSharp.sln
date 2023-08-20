@@ -192,6 +192,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{76BA9372-6
 		docs\DevNotes.md = docs\DevNotes.md
 		docs\index.md = docs\index.md
 		docs\MakeNewReleaseNotes.md = docs\MakeNewReleaseNotes.md
+		docs\UpdateApiDoc.ps1 = docs\UpdateApiDoc.ps1
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{A1AE894D-9061-44F0-8268-328AC41F403A}"
