@@ -152,6 +152,29 @@ namespace PdfSharp.Pdf.IO
         /// </summary>
         public byte[] ReadStream(int length)
         {
+            var pos = MoveToStartOfStream();
+            _pdfStream.Position = pos;
+            byte[] bytes = new byte[length];
+            int read = _pdfStream.Read(bytes, 0, length);
+            Debug.Assert(read == length);
+            // With corrupted files, read could be different from length.
+            if (bytes.Length != read)
+            {
+                Array.Resize(ref bytes, read);
+            }
+
+            // Synchronize idxChar etc.
+            Position = pos + read;
+            return bytes;
+        }
+
+        /// <summary>
+        /// Moves to the first byte of a stream.<br></br>
+        /// The current position is expected be be located right after the "stream" keyword.
+        /// </summary>
+        /// <returns></returns>
+        internal int MoveToStartOfStream()
+        {
             int pos;
 
             // Skip illegal blanks behind «stream».
@@ -168,20 +191,45 @@ namespace PdfSharp.Pdf.IO
             }
             else
                 pos = _idxChar + 1;
+            return pos;
+        }
 
-            _pdfStream.Position = pos;
-            byte[] bytes = new byte[length];
-            int read = _pdfStream.Read(bytes, 0, length);
-            Debug.Assert(read == length);
-            // With corrupted files, read could be different from length.
-            if (bytes.Length != read)
+        /// <summary>
+        /// Scans the input stream for the specified marker.<br></br>
+        /// Returns the bytes from the current position up to the start of the marker or the end of the stream.<br></br>
+        /// The position of the input-stream is the byte right after the marker (if found) or the end of the stream.
+        /// </summary>
+        /// <param name="marker">The marker to scan for</param>
+        /// <param name="markerFound">Receives a boolean that indicates whether the marker was found</param>
+        /// <returns></returns>
+        internal byte[] ScanUntilMarker(byte[] marker, out bool markerFound)
+        {
+            markerFound = false;
+            var result = new List<byte>();
+            while (true)
             {
-                Array.Resize(ref bytes, read);
+                var markerIndex = 0;
+                while (_currChar != Chars.EOF && _currChar != marker[markerIndex])
+                {
+                    result.Add((byte)_currChar);
+                    ScanNextChar(false);
+                }
+                while (_currChar != Chars.EOF && markerIndex < marker.Length && _currChar == marker[markerIndex])
+                {
+                    markerIndex++;
+                    ScanNextChar(false);
+                }
+                if (_currChar == Chars.EOF || markerIndex == marker.Length)
+                {
+                    if (markerIndex == marker.Length)
+                        markerFound = true;
+                    break;
+                }
+                // only part of the marker was found, add to result and continue
+                result.AddRange(marker.Take(markerIndex));
             }
 
-            // Synchronize idxChar etc.
-            Position = pos + read;
-            return bytes;
+            return result.ToArray();
         }
 
         /// <summary>

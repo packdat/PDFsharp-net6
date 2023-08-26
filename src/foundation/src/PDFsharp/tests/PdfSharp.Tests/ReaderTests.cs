@@ -293,7 +293,8 @@ namespace PdfSharp.Tests
         // PNG-Decoder skipped:
         //[InlineData(@"c:\Temp\TestPdf\16E_0721_Neuaufnahmeantrag_ENG_CMYK_A4_Web_barrierefrei.pdf")]
         // Invalid trailer
-        [InlineData(@"c:\temp\TestPdf\issue #70.pdf")]
+        //[InlineData(@"c:\temp\TestPdf\issue #70.pdf")]
+        [InlineData(@"c:\temp\TestPdf\issue #29.pdf")]
         public void TestSingleFile(string filePath)
         {
             File.Exists(filePath).Should().BeTrue("File should exist");

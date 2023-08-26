@@ -274,6 +274,7 @@ namespace PdfSharp.Pdf.IO
 #if true_
                 ReadStream(dict);
 #else
+                var startOfStream = _lexer.Position;
                 int length = GetStreamLength(dict!); // NRT HACK
                 byte[] bytes = _lexer.ReadStream(length);
 #if true_
@@ -301,9 +302,22 @@ namespace PdfSharp.Pdf.IO
                 End: ;
                 }
 #endif
-                var stream = new PdfDictionary.PdfStream(bytes, dict ?? NRT.ThrowOnNull<PdfDictionary>());
+                var stream = new PdfStream(bytes, dict ?? NRT.ThrowOnNull<PdfDictionary>());
+                try
+                {
+                    ReadSymbol(Symbol.EndStream);
+                }
+                catch (PdfReaderException)
+                {
+                    // stream length may be incorrect, scan byte by byte up to the "endstream" keyword
+                    _lexer.Position = startOfStream;
+                    _lexer.Position = _lexer.MoveToStartOfStream();
+                    bytes = _lexer.ScanUntilMarker(PdfEncoders.RawEncoding.GetBytes("\nendstream"), out var markerFound);
+                    if (!markerFound)
+                        throw;
+                    stream = new PdfStream(bytes, dict);
+                }
                 dict.Stream = stream;
-                ReadSymbol(Symbol.EndStream);
                 symbol = ScanNextToken();
 #endif
             }
