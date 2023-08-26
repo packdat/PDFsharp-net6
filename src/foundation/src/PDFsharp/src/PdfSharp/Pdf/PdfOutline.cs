@@ -338,6 +338,10 @@ namespace PdfSharp.Pdf
                 {
                     HandleNamedDestination(namedDestination.Value);
                 }
+                else if (dest is PdfName destinationName)
+                {
+                    HandleNamedDestination(destinationName.Value);
+                }
                 else
                 {
                     Debug.Assert(false, "See what to do when this happened.");
@@ -362,6 +366,10 @@ namespace PdfSharp.Pdf
                     else if (dest is PdfString namedDestination)
                     {
                         HandleNamedDestination(namedDestination.Value);
+                    }
+                    else if (dest is PdfName destinationName)
+                    {
+                        HandleNamedDestination(destinationName.Value);
                     }
                     else
                     {
