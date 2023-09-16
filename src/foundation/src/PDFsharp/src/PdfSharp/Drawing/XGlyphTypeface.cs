@@ -52,7 +52,7 @@ namespace PdfSharp.Drawing
             FontFamily = fontFamily;
             FontSource = fontSource;
 
-            Fontface = OpenTypeFontface.CetOrCreateFrom(fontSource);
+            Fontface = OpenTypeFontface.GetOrCreateFrom(fontSource);
             Debug.Assert(ReferenceEquals(FontSource.Fontface, Fontface));
 
             StyleSimulations = styleSimulations;
@@ -67,7 +67,7 @@ namespace PdfSharp.Drawing
             FontFamily = fontFamily;
             FontSource = fontSource;
 
-            Fontface = OpenTypeFontface.CetOrCreateFrom(fontSource);
+            Fontface = OpenTypeFontface.GetOrCreateFrom(fontSource);
             Debug.Assert(ReferenceEquals(FontSource.Fontface, Fontface));
 
             _gdiFont = gdiFont;
@@ -105,7 +105,7 @@ namespace PdfSharp.Drawing
             FontSource = fontSource;
             StyleSimulations = styleSimulations;
 
-            Fontface = OpenTypeFontface.CetOrCreateFrom(fontSource);
+            Fontface = OpenTypeFontface.GetOrCreateFrom(fontSource);
             Debug.Assert(ReferenceEquals(FontSource.Fontface, Fontface));
 
             WpfTypeface = wpfTypeface;

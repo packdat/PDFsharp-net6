@@ -81,7 +81,7 @@ namespace PdfSharp.Fonts.OpenType
             _fullFaceName = name.FullFontName;
         }
 
-        public static OpenTypeFontface CetOrCreateFrom(XFontSource fontSource)
+        public static OpenTypeFontface GetOrCreateFrom(XFontSource fontSource)
         {
             if (OpenTypeFontfaceCache.TryGetFontface(fontSource.Key, out var fontface))
                 return fontface;
