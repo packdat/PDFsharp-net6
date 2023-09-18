@@ -758,12 +758,16 @@ namespace PdfSharp.Drawing
             => Invariant($"font=('{Name}' {Size:0.##})");
 
         /// <summary>
-        /// Gets the list of characters supported by this font
+        /// Gets the list of characters supported by this font.<br></br>
         /// </summary>
         /// <returns>The list of characters supported by this font</returns>
-        public IList<char> GetGlyphList()
+        /// <remarks>
+        /// The returned list may return surrogates and/or surrogate pairs, so calling applications
+        /// should use <see cref="char.ConvertFromUtf32(int)"/> to convert such values to a valid string.
+        /// </remarks>
+        public IList<int> GetGlyphList()
         {
-            return GlyphTypeface.Fontface.cmap.cmap4.GetGlyphList();
+            return GlyphTypeface.Fontface.cmap.GetGlyphList();
         }
     }
 }

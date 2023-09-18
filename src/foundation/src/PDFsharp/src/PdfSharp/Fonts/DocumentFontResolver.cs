@@ -1,4 +1,6 @@
-﻿using PdfSharp.Fonts.StandardFonts;
+﻿using PdfSharp.Drawing;
+using PdfSharp.Fonts.OpenType;
+using PdfSharp.Fonts.StandardFonts;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.AcroForms;
 using PdfSharp.Pdf.Advanced;
@@ -26,6 +28,14 @@ namespace PdfSharp.Fonts
         {
             var localName = MakeLocalName(fontName, isBold, isItalic);
             localFonts[localName] = fontData;
+            // get the name stored in the font itself
+            var fontSource = XFontSource.GetOrCreateFrom(fontData);
+            var typeFace = OpenTypeFontface.GetOrCreateFrom(fontSource);
+            if (!string.IsNullOrEmpty(typeFace.FullFaceName))
+            {
+                localName = MakeLocalName(typeFace.FullFaceName, isBold, isItalic);
+                localFonts[localName] = fontData;
+            }    
         }
 
         /// <summary>
@@ -65,13 +75,13 @@ namespace PdfSharp.Fonts
         /// <param name="isBold"></param>
         /// <param name="isItalic"></param>
         /// <returns>A <see cref="FontResolverInfo"/> or null, if no font with the specified name could be found</returns>
-        public FontResolverInfo? ResolveTypeface(string familyName, Boolean isBold, Boolean isItalic)
+        public FontResolverInfo? ResolveTypeface(string familyName, bool isBold, bool isItalic)
         {
             var result = Resolve(familyName, isBold, isItalic);
             return result.Item2;
         }
 
-        private static string MakeLocalName(string fontName, bool isBold, Boolean isItalic)
+        private static string MakeLocalName(string fontName, bool isBold, bool isItalic)
         {
             var localName = fontName;
             if (isBold || isItalic)

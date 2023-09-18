@@ -117,8 +117,8 @@ namespace PdfSharp.Tests
 
         /// <summary>
         /// PdfReference 1.7, Chapter 7.3.4.3 states:<br></br>
-        /// If the final digit of a hexadecimal string is missing � that is, if there is an 
-        /// odd number of digits � the final digit shall be assumed to be 0. 
+        /// If the final digit of a hexadecimal string is missing — that is, if there is an 
+        /// odd number of digits — the final digit shall be assumed to be 0. 
         /// </summary>
         [Theory]
         [InlineData("<7465787420> Tj")]  // this works
@@ -171,8 +171,9 @@ namespace PdfSharp.Tests
                     for (var i = 0; i < glyphList.Count; i++)
                     {
                         var c = glyphList[i];
-                        gfx.DrawString(((int)c).ToString("X"), helveticaFont, brush, x, y);
-                        gfx.DrawString(c.ToString(), stdFont, brush, x + 40, y);
+                        var s = char.ConvertFromUtf32(c);
+                        gfx.DrawString(c.ToString("X"), helveticaFont, brush, x, y);
+                        gfx.DrawString(s, stdFont, brush, x + 40, y);
                         x += gapX;
                         if (x + gapX >= page.Width.Point)
                         {
@@ -199,12 +200,51 @@ namespace PdfSharp.Tests
         }
 
         [Theory]
-        [InlineData(@"C:\Assets\Fonts\Fira_Code_v6.2\ttf\FiraCode-Bold.ttf")]
-        [InlineData(@"C:\Assets\Fonts\Fira_Code_v6.2\ttf\FiraCode-Light.ttf")]
-        [InlineData(@"C:\Assets\Fonts\Fira_Code_v6.2\ttf\FiraCode-Medium.ttf")]
-        [InlineData(@"C:\Assets\Fonts\Fira_Code_v6.2\ttf\FiraCode-Regular.ttf")]
-        [InlineData(@"C:\Assets\Fonts\Fira_Code_v6.2\ttf\FiraCode-Retina.ttf")]
-        [InlineData(@"C:\Assets\Fonts\Fira_Code_v6.2\ttf\FiraCode-SemiBold.ttf")]
+        [InlineData(@"C:\Windows\Fonts\seguiemj.ttf")]
+        public void RenderEmojis(string fontPath)
+        {
+            File.Exists(fontPath).Should().BeTrue();
+
+            var fontName = Path.GetFileNameWithoutExtension(fontPath);
+
+            DocumentFontResolver.Register(fontName, File.ReadAllBytes(fontPath));
+            GlobalFontSettings.FontResolver = new DocumentFontResolver();
+
+            using var document = new PdfDocument();
+
+            //var renderFont = new XFont(fontName, 20, XFontStyleEx.Regular, new XPdfFontOptions(PdfFontEncoding.Unicode, PdfFontEmbedding.Full));
+            var renderFont = new XFont(fontName, 20);
+            var brush = new XSolidBrush(XColors.Black);
+            var left = 60.0;
+            var top = 60.0;
+            var gapY = 40.0;
+            var x = left;
+            var y = top;
+            var page = document.AddPage();
+            var gfx = XGraphics.FromPdfPage(page);
+
+            gfx.DrawString("XxX😢XxX😢XxX😢XxX", renderFont, brush, x, y);
+            y += gapY;
+            gfx.DrawString("XxX 😞 XxX", renderFont, brush, x, y);
+            y += gapY;
+            gfx.DrawString("XxX 🤣 XxX", renderFont, brush, x, y);
+            y += gapY;
+            gfx.DrawString("XxX🤣😞😢XxX", renderFont, brush, x, y);
+
+            gfx.Dispose();
+
+            var outFileName = Path.Combine(Path.GetTempPath(), "emojis.pdf");
+            document.Save(outFileName);
+        }
+
+        [Theory]
+        //[InlineData(@"C:\Assets\Fonts\Fira_Code_v6.2\ttf\FiraCode-Bold.ttf")]
+        //[InlineData(@"C:\Assets\Fonts\Fira_Code_v6.2\ttf\FiraCode-Light.ttf")]
+        //[InlineData(@"C:\Assets\Fonts\Fira_Code_v6.2\ttf\FiraCode-Medium.ttf")]
+        //[InlineData(@"C:\Assets\Fonts\Fira_Code_v6.2\ttf\FiraCode-Regular.ttf")]
+        //[InlineData(@"C:\Assets\Fonts\Fira_Code_v6.2\ttf\FiraCode-Retina.ttf")]
+        //[InlineData(@"C:\Assets\Fonts\Fira_Code_v6.2\ttf\FiraCode-SemiBold.ttf")]
+        [InlineData(@"C:\Windows\Fonts\seguiemj.ttf")]  // Segoe UI Emoji font
         public void RenderFontGlyphs(string fontPath)
         {
             File.Exists(fontPath).Should().BeTrue();
@@ -223,22 +263,25 @@ namespace PdfSharp.Tests
             var left = 60.0;
             var top = 60.0;
             var bottom = 60.0;
-            var gapX = 80.0;
+            var gapX = 120.0;
             var gapY = 20.0;
             var x = left;
             var y = top;
             var page = document.AddPage();
             var gfx = XGraphics.FromPdfPage(page);
-            gfx.DrawString(fontName, headerFont, brush, x, y);
+            var fullFontName = renderFont.Descriptor.FontFace.FullFaceName;
+            gfx.DrawString(fullFontName, headerFont, brush, x, y);
             y += 50;
+
             var glyphList = renderFont.GetGlyphList();
             if (glyphList.Any())
             {
                 for (var i = 0; i < glyphList.Count; i++)
                 {
                     var c = glyphList[i];
-                    gfx.DrawString(((int)c).ToString("X"), helveticaFont, brush, x, y);
-                    gfx.DrawString(c.ToString(), renderFont, brush, x + 40, y);
+                    gfx.DrawString(c.ToString("X4"), helveticaFont, brush, x, y);
+                    var s = char.ConvertFromUtf32(c);
+                    gfx.DrawString(s, renderFont, brush, x + 80, y);
                     x += gapX;
                     if (x + gapX >= page.Width.Point)
                     {

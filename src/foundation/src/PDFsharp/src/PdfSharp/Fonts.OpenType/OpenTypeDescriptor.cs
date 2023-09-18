@@ -303,6 +303,61 @@ namespace PdfSharp.Fonts.OpenType
         }
 
         /// <summary>
+        /// Maps a Unicode to the index of the corresponding glyph while handling character-surrogates.
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public int CharCodeToGlyphIndex(string text, ref int index)
+        {
+            if (FontFace.cmap.cmap12 == null)
+                return CharCodeToGlyphIndex(text[index]);
+            if (index + 1 >= text.Length)
+                return CharCodeToGlyphIndex(text[index]);
+
+            if (!char.IsSurrogate(text, index)
+                && !char.IsHighSurrogate(text, index)
+                && !char.IsSurrogatePair(text, index))
+                return CharCodeToGlyphIndex(text[index]);
+
+            var value = char.ConvertToUtf32(text, index);
+
+            var converted = BitConverter.ToUInt32(BitConverter.GetBytes(value), 0);
+            var cmap = FontFace.cmap.cmap12;
+
+            int seg;
+            for (seg = 0; seg < cmap.groups.Length; seg++)
+            {
+                if (value <= cmap.groups[seg].endCharCode)
+                    break;
+            }
+            Debug.Assert(seg < cmap.groups.Length);
+
+            if (value < cmap.groups[seg].startCharCode)
+                return 0;
+            
+            index++;
+
+            return (int)(cmap.groups[seg].startGlyphID + converted - cmap.groups[seg].startCharCode);
+        }
+
+        /// <summary>
+        /// Gets the color-record of the glyph with the specified id
+        /// </summary>
+        /// <param name="glyphId"></param>
+        /// <returns>The color-record for the specified glyph or null, if the specified glyph has no color record</returns>
+        public ColrTable.GlyphRecord? GetColorRecord(int glyphId)
+        {
+            // both tables are required according to the spec
+            // ref: https://learn.microsoft.com/en-us/typography/opentype/spec/colr
+            if (FontFace.cpal != null && FontFace.colr != null)
+            {
+                return FontFace.colr.GetLayers(glyphId);
+            }
+            return null;
+        }
+
+        /// <summary>
         /// Converts the width of a glyph identified by its index to PDF design units.
         /// </summary>
         public int GlyphIndexToPdfWidth(int glyphIndex)
