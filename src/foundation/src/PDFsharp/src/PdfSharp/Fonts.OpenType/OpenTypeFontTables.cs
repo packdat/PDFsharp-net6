@@ -126,7 +126,7 @@ namespace PdfSharp.Fonts.OpenType
                     break;
                 for (var c = start; c <= end; c++)
                 {
-                    glyphList.Add((int)c);
+                    glyphList.Add(c);
                 }
             }
             return glyphList;

@@ -605,7 +605,7 @@ namespace PdfSharp.Drawing.Pdf
                             else
                             {
                                 // rest of the layers are rendered on top of the first layer
-                                AppendFormatArgs("{0:" + format2 + "} {1:" + format2 + "} Td {2} Tj\n", 0, 0, text);
+                                AppendFormatArgs("0 0 Td {0} Tj\n", text);
                             }
                             sb.Length = 0;
                         }
