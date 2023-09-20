@@ -113,9 +113,9 @@ namespace PdfSharp.Fonts.OpenType
             }
         }
 
-        internal List<int> GetGlyphList()
+        internal List<int> GetSupportedCharacters()
         {
-            var glyphList = new List<int>();
+            var characterList = new List<int>();
 
             int segCount = segCountX2 / 2;
             for (var i = 0; i < segCount; i++)
@@ -126,10 +126,11 @@ namespace PdfSharp.Fonts.OpenType
                     break;
                 for (var c = start; c <= end; c++)
                 {
-                    glyphList.Add(c);
+                    characterList.Add(c);
                 }
             }
-            return glyphList;
+            characterList.Sort();   // just in case
+            return characterList;
         }
     }
 
@@ -193,9 +194,9 @@ namespace PdfSharp.Fonts.OpenType
             }
         }
 
-        public List<int> GetGlyphList()
+        public List<int> GetSupportedCharacters()
         {
-            var glyphList = new List<int>();
+            var characterList = new List<int>();
 
             foreach (var group in groups)
             {
@@ -203,10 +204,11 @@ namespace PdfSharp.Fonts.OpenType
                 var end = group.endCharCode;
                 for (var c = start; c <= end; c++)
                 {
-                    glyphList.Add((int)c);
+                    characterList.Add((int)c);
                 }
             }
-            return glyphList;
+            characterList.Sort();   // just in case
+            return characterList;
         }
     }
 
@@ -295,9 +297,9 @@ namespace PdfSharp.Fonts.OpenType
             }
         }
 
-        internal IList<int> GetGlyphList()
+        internal IReadOnlyList<int> GetSupportedCharacters()
         {
-            return cmap12?.GetGlyphList() ?? cmap4?.GetGlyphList() ?? emptyGlyphs;
+            return cmap12?.GetSupportedCharacters() ?? cmap4?.GetSupportedCharacters() ?? emptyGlyphs;
         }
 
         private static readonly List<int> emptyGlyphs = new();

@@ -383,15 +383,20 @@ public double GetHeight(XGraphics graphics)
 
 [Double](https://docs.microsoft.com/en-us/dotnet/api/system.double)<br>
 
-### **GetGlyphList()**
+### **GetSupportedCharacters()**
 
-Gets the list of characters supported by this font
+Gets the sorted list of characters supported by this font.<br>
 
 ```csharp
-public IList<char> GetGlyphList()
+public IReadOnlyList<int> GetSupportedCharacters()
 ```
 
 #### Returns
 
-[IList&lt;Char&gt;](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.ilist-1)<br>
-The list of characters supported by this font
+[IReadOnlyList&lt;Int32&gt;](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.ireadonlylist-1)<br>
+The list of characters supported by this font, sorted in ascending order
+
+**Remarks:**
+
+The returned list may contain surrogates and/or surrogate pairs, so calling applications
+ should use [Char.ConvertFromUtf32(Int32)](https://docs.microsoft.com/en-us/dotnet/api/system.char.convertfromutf32) to convert such values to a valid string.

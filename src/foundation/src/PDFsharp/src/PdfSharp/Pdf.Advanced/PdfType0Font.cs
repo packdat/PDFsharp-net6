@@ -113,11 +113,11 @@ namespace PdfSharp.Pdf.Advanced
             {
                 if ((_fontOptions.FontEmbedding & PdfFontEmbedding.Full) == PdfFontEmbedding.Full)
                 {
-                    var glyphList = descriptor.FontFace.cmap.GetGlyphList();
+                    var characterList = descriptor.FontFace.cmap.GetSupportedCharacters();
                     var sb = new StringBuilder();
-                    foreach (var glyph in glyphList)
+                    foreach (var c in characterList)
                     {
-                        sb.Append(char.ConvertFromUtf32(glyph));
+                        sb.Append(char.ConvertFromUtf32(c));
                     }
                     var charString = sb.ToString();
                     _cmapInfo.AddChars(charString);

@@ -165,12 +165,12 @@ namespace PdfSharp.Tests
                 var gfx = XGraphics.FromPdfPage(page);
                 gfx.DrawString(fontName, headerFont, brush, x, y);
                 y += 50;
-                var glyphList = stdFont.GetGlyphList();
-                if (glyphList.Any())
+                var characterList = stdFont.GetSupportedCharacters();
+                if (characterList.Any())
                 {
-                    for (var i = 0; i < glyphList.Count; i++)
+                    for (var i = 0; i < characterList.Count; i++)
                     {
-                        var c = glyphList[i];
+                        var c = characterList[i];
                         var s = char.ConvertFromUtf32(c);
                         gfx.DrawString(c.ToString("X"), helveticaFont, brush, x, y);
                         gfx.DrawString(s, stdFont, brush, x + 40, y);
@@ -273,12 +273,12 @@ namespace PdfSharp.Tests
             gfx.DrawString(fullFontName, headerFont, brush, x, y);
             y += 50;
 
-            var glyphList = renderFont.GetGlyphList();
-            if (glyphList.Any())
+            var characterList = renderFont.GetSupportedCharacters();
+            if (characterList.Any())
             {
-                for (var i = 0; i < glyphList.Count; i++)
+                for (var i = 0; i < characterList.Count; i++)
                 {
-                    var c = glyphList[i];
+                    var c = characterList[i];
                     gfx.DrawString(c.ToString("X4"), helveticaFont, brush, x, y);
                     var s = char.ConvertFromUtf32(c);
                     gfx.DrawString(s, renderFont, brush, x + 80, y);
