@@ -3,6 +3,7 @@
 
 #define VERBOSE_
 
+using PdfSharp.Drawing;
 using System.Text;
 
 using Fixed = System.Int32;
@@ -263,7 +264,7 @@ namespace PdfSharp.Fonts.OpenType
                     int currentPosition = _fontData.Position;
 
                     // Just read Windows stuff.
-                    if (platformId == PlatformId.Win && 
+                    if (platformId == PlatformId.Win &&
                         (encodingId == WinEncodingId.Symbol || encodingId == WinEncodingId.UnicodeUSC_2
                         || encodingId == WinEncodingId.UnicodeUSC_4))
                     {
@@ -325,14 +326,6 @@ namespace PdfSharp.Fonts.OpenType
             public ushort paletteIndex;
         }
 
-        class GlyphRecordComparer : IComparer<GlyphRecord>
-        {
-            public Fixed Compare(GlyphRecord x, GlyphRecord y)
-            {
-                return x.glyphId.CompareTo(y.glyphId);
-            }
-        }
-
         public ushort version;
         // version 0 tables start
         public ushort numBaseGlyphRecords;
@@ -343,6 +336,8 @@ namespace PdfSharp.Fonts.OpenType
 
         public GlyphRecord[] baseGlyphRecords = Array.Empty<GlyphRecord>();
         public LayerRecord[] layerRecords = Array.Empty<LayerRecord>();
+        // helper array that contains just the glyphIds for the baseGlyphRecords
+        private int[] glyphRecordsHelperArray = Array.Empty<int>();
 
         public ColrTable(OpenTypeFontface fontData)
             : base(fontData, Tag)
@@ -352,9 +347,7 @@ namespace PdfSharp.Fonts.OpenType
 
         public GlyphRecord? GetLayers(int glyphId)
         {
-            var index = Array.BinarySearch(baseGlyphRecords,
-                new GlyphRecord { glyphId = (ushort)glyphId },
-                new GlyphRecordComparer());
+            var index = Array.BinarySearch(glyphRecordsHelperArray, glyphId);
             if (index >= 0)
             {
                 return baseGlyphRecords[index];
@@ -376,17 +369,20 @@ namespace PdfSharp.Fonts.OpenType
                 numLayerRecords = fontData.ReadUShort();
 
                 baseGlyphRecords = new GlyphRecord[numBaseGlyphRecords];
+                glyphRecordsHelperArray = new int[numBaseGlyphRecords];
                 layerRecords = new LayerRecord[numLayerRecords];
 
                 fontData.Position = tableStart + (int)baseGlyphRecordsOffset;
                 for (var i = 0; i < numBaseGlyphRecords; i++)
                 {
+                    var glyphId = fontData.ReadUShort();
                     baseGlyphRecords[i] = new GlyphRecord
                     {
-                        glyphId = fontData.ReadUShort(),
+                        glyphId = glyphId,
                         firstLayerIndex = fontData.ReadUShort(),
                         numLayers = fontData.ReadUShort()
                     };
+                    glyphRecordsHelperArray[i] = glyphId;
                 }
                 fontData.Position = tableStart + (int)layerRecordsOffset;
                 for (var i = 0; i < numLayerRecords; i++)
@@ -413,21 +409,13 @@ namespace PdfSharp.Fonts.OpenType
     {
         public const string Tag = TableTagNames.CPAL;
 
-        internal struct ColorRecord
-        {
-            public byte blue;
-            public byte green;
-            public byte red;
-            public byte alpha;
-        }
-
         public ushort version;
         public ushort numPaletteEntries;
         public ushort numPalettes;
         public ushort numColorRecords;
         public uint colorRecordsArrayOffset;
         public ushort[] colorRecordIndices = Array.Empty<ushort>();
-        public ColorRecord[] colorRecords = Array.Empty<ColorRecord>();
+        public XColor[] colorRecords = Array.Empty<XColor>();
 
         public CpalTable(OpenTypeFontface fontData)
             : base(fontData, Tag)
@@ -452,16 +440,14 @@ namespace PdfSharp.Fonts.OpenType
                 {
                     colorRecordIndices[i] = fontData.ReadUShort();
                 }
-                colorRecords = new ColorRecord[numColorRecords];
+                colorRecords = new XColor[numColorRecords];
                 for (int i = 0; i < numColorRecords; i++)
                 {
-                    colorRecords[i] = new ColorRecord
-                    {
-                        blue = fontData.ReadByte(),
-                        green = fontData.ReadByte(),
-                        red = fontData.ReadByte(),
-                        alpha = fontData.ReadByte()
-                    };
+                    var blue = fontData.ReadByte();
+                    var green = fontData.ReadByte();
+                    var red = fontData.ReadByte();
+                    var alpha = fontData.ReadByte();
+                    colorRecords[i] = XColor.FromArgb(alpha, red, green, blue);
                 }
             }
             catch (Exception ex)
