@@ -571,7 +571,7 @@ namespace PdfSharp.Pdf.AcroForms
                         // no appearance found, use some default
                         ContentFontName = "/Helv";
                         BaseContentFontName = "/Helvetica";
-                        Font = new XFont("Arial", DetermineFontSize());
+                        Font = new XFont("Arial", 10);
                         return;
                     }
                 }
@@ -663,10 +663,6 @@ namespace PdfSharp.Pdf.AcroForms
                     }
                 }
                 BaseContentFontName = fontName;
-                if (fontSize < 1.0)
-                {
-                    fontSize = DetermineFontSize();
-                }
                 DeterminedFontSize = fontSize;
                 // When the field's font is one of the standard fonts, use WinAnsiEncoding, as that seems to work best with the tested documents
                 var systemFontName = BaseContentFontName.TrimStart('/');
@@ -702,24 +698,6 @@ namespace PdfSharp.Pdf.AcroForms
                     font = new XFont(BaseContentFontName.TrimStart('/'), Math.Max(1.0, fontSize));     // Avoid Exception, if size is zero
                 }
             }
-        }
-
-        private double DetermineFontSize()
-        {
-            var fontSize = 10.0;
-            for (var a = 0; a < Annotations.Elements.Count; a++)
-            {
-                var widget = Annotations.Elements[a];
-                if (widget != null && !widget.Rectangle.IsEmpty)
-                {
-                    var refValue = widget.Rotation == 0 || widget.Rotation == 180 || (widget.Flags & PdfAnnotationFlags.NoRotate) != 0 ? widget.Rectangle.Height : widget.Rectangle.Width;
-                    if (this is not PdfTextField field || !field.MultiLine)
-                        fontSize = refValue * 0.8;
-                    if (fontSize > 1.0)
-                        break;
-                }
-            }
-            return fontSize;
         }
 
         /// <summary>
