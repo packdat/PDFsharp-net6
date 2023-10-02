@@ -342,6 +342,7 @@ namespace PdfSharp.Tests
             });
 
             y += 100;
+            // PushButton fields
             acroForm.AddPushButtonField(button =>
             {
                 button.Name = "SubmitButton";
@@ -358,7 +359,21 @@ namespace PdfSharp.Tests
                     annot.PlaceOnPage(page1, new PdfRectangle(new XRect(x, y, 100, 20)));
                 });
             });
-            // TODO: Signature fields
+
+            y += 40;
+            // Signature fields
+            acroForm.AddSignatureField(field =>
+            {
+                field.Name = "Signature";
+                field.AddAnnotation(annot =>
+                {
+                    annot.BackColor = XColors.White;
+                    annot.BorderColor = XColors.Gray;
+                    annot.Border.Width = 1;
+                    annot.Border.BorderStyle = Pdf.Annotations.enums.PdfAnnotationBorderStyle.Solid;
+                    annot.PlaceOnPage(page1, new PdfRectangle(new XRect(x, y, 160, 60)));
+                });
+            });
 
             var filePath = Path.Combine(Path.GetTempPath(), "CreatedForm.pdf");
             using var fsOut = File.Create(filePath);
@@ -369,7 +384,7 @@ namespace PdfSharp.Tests
             document = PdfReader.Open(filePath, PdfDocumentOpenMode.Modify);
             var fields = GetAllFields(document);
 
-            fields.Count.Should().Be(10);
+            fields.Count.Should().Be(11);
             fields.Should().Contain(field =>
                 field.FullyQualifiedName == "FirstName"
                 && field.GetType() == typeof(PdfTextField)
@@ -438,6 +453,31 @@ namespace PdfSharp.Tests
                 && field.Annotations.Elements[0].Highlighting == Pdf.Annotations.PdfWidgetAnnotation.HighlightingMode.Invert
                 && field.Annotations.Elements[0].BorderColor == XColors.Gray
                 && field.Annotations.Elements[0].BackColor == XColors.LightBlue);
+        }
+
+        [Fact]
+        public void CanDeleteFields()
+        {
+            CanCreateNewForm();
+
+            var filePath = Path.Combine(Path.GetTempPath(), "CreatedForm.pdf");
+            var document = PdfReader.Open(filePath, PdfDocumentOpenMode.Modify);
+            var startFields = document.AcroForm!.GetAllFields().ToList();
+            var startAnnotsCount = document.Pages[0].Annotations.Elements.Count;
+            foreach (var field in startFields)
+            {
+                if (field is PdfPushButtonField)
+                    field.Remove();
+                if (field is PdfSignatureField)
+                    field.Remove();
+            }
+            var endFields = document.AcroForm!.GetAllFields().ToList();
+            var endAnnotsCount = document.Pages[0].Annotations.Elements.Count;
+            endFields.Count.Should().Be(startFields.Count - 2);
+            endAnnotsCount.Should().Be(startAnnotsCount - 2);
+
+            filePath = Path.Combine(Path.GetTempPath(), "CreatedForm-removed.pdf");
+            document.Save(filePath);
         }
 
         [Theory]

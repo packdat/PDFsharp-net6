@@ -44,7 +44,13 @@ namespace PdfSharp.Pdf.AcroForms
                 string name = Elements.GetString(Keys.T);
                 return name;
             }
-            set { Elements.SetString(Keys.T, value); }
+            set
+            {
+                //if (value.Contains('.'))
+                //    throw new ArgumentException("Field-names should not contain dots (.)", nameof(value));
+                Debug.Assert(!value.Contains('.'), "Field-names should not contain dots (.)");
+                Elements.SetString(Keys.T, value);
+            }
         }
 
         /// <summary>
@@ -545,13 +551,79 @@ namespace PdfSharp.Pdf.AcroForms
         }
 
         /// <summary>
+        /// Removed the specified annotation from this field
+        /// </summary>
+        /// <param name="annotation">The annotation to remove</param>
+        /// <returns>true, if the annotation was removed, false otherwise</returns>
+        public bool RemoveAnnotation(PdfWidgetAnnotation annotation)
+        {
+            if (annotation == null)
+                return false;
+            Debug.Assert(Annotations.Elements.IndexOf(annotation) >= 0, "Annotation is not part of this field");
+
+            var kids = Elements.GetArray(Keys.Kids);
+            if (kids != null)
+            {
+                for (var i = 0; i < kids.Elements.Count; i++)
+                {
+                    var kid = kids.Elements.GetObject(i);
+                    if (kid != null && kid.ObjectID == annotation.ObjectID)
+                    {
+                        kids.Elements.RemoveAt(i--);
+                    }
+                }
+            }
+            var removed = Annotations.Elements.Remove(annotation);
+            if (removed)
+                annotation.Page?.Annotations.Remove(annotation);
+            // re-create updated annotations the next time the "Annotations"-Property is accessed
+            _annotations = null;
+
+            return removed;
+        }
+
+        /// <summary>
         /// Adds the specified <see cref="PdfAcroField"/> to the list of child-fields of this field
         /// </summary>
         /// <param name="childField"></param>
         public void AddChild(PdfAcroField childField)
         {
+            var existingField = Fields.GetValue(childField.Name);
+            if (existingField != null)
+                throw new InvalidOperationException($"Field '{Name}' already has a child-field named '{childField.Name}'");
             Fields.Elements.Add(childField);
             childField.Parent = this;
+        }
+
+        /// <summary>
+        /// Removes this field, all child-fields and associated annotations from the document
+        /// </summary>
+        public void Remove()
+        {
+            var annots = Annotations.Elements.ToArray();
+            foreach (var annot in annots)
+                RemoveAnnotation(annot);
+
+            // delete childs
+            for (var i = 0; i < Fields.Count; i++)
+            {
+                var child = Fields[i];
+                child.Remove();
+            }
+            Fields.Elements.Clear();
+
+            var fieldsList = new[] { Parent?.Fields, Owner.AcroForm?.Fields };
+            foreach (var fields in fieldsList)
+            {
+                for (var i = 0; i < fields?.Elements.Count; i++)
+                {
+                    var kid = fields.Elements.GetObject(i);
+                    if (kid != null && kid.ObjectID == ObjectID)
+                    {
+                        fields.Elements.RemoveAt(i--);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -779,24 +851,6 @@ namespace PdfSharp.Pdf.AcroForms
             // handle annotations
             foreach (var annot in Annotations.Elements)
                 annot.PrepareForSave();
-        }
-
-        internal void RemoveAnnotation(PdfWidgetAnnotation widget)
-        {
-            var kids = Elements.GetArray(Keys.Kids);
-            if (kids != null)
-            {
-                for (var i = 0; i < kids.Elements.Count; i++)
-                {
-                    var kid = kids.Elements.GetObject(i);
-                    if (kid != null && kid.ObjectID == widget.ObjectID)
-                    {
-                        kids.Elements.RemoveAt(i);
-                        return;
-                    }
-                }
-            }
-            Annotations.Elements.Remove(widget);
         }
 
         internal virtual void Flatten()
