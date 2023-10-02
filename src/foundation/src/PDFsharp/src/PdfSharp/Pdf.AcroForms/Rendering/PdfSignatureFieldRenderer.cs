@@ -21,7 +21,18 @@ namespace PdfSharp.Pdf.AcroForms.Rendering
         /// <param name="rect">The <see cref="XRect"/> spcifying the position and dimensions of the field</param>
         public virtual void Render(PdfSignatureField field, PdfWidgetAnnotation widget, XGraphics gfx, XRect rect)
         {
+            const double pad = 4.0;
 
+            if (!widget.BackColor.IsEmpty)
+                gfx.DrawRectangle(new XSolidBrush(widget.BackColor), rect);
+            if (!widget.BorderColor.IsEmpty && widget.Border.Width > 0)
+            {
+                gfx.DrawRectangle(new XPen(widget.BorderColor, widget.Border.Width), rect);
+                rect.Inflate(-widget.Border.Width, -widget.Border.Width);
+            }
+
+            var linePen = new XPen(XColors.Black, 1.0);
+            gfx.DrawLine(linePen, rect.Left + pad, rect.Bottom - pad, rect.Right - pad, rect.Bottom - pad);
         }
     }
 }
