@@ -115,7 +115,7 @@ namespace PdfSharp.Pdf.Annotations
                     }
                 }
                 return pageRef != null && pageRef.Value is PdfDictionary
-                    ? pageRef.Value as PdfPage
+                    ? Owner.Pages.FindPage(pageRef.ObjectID)
                     : null;
             }
             set
