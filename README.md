@@ -60,7 +60,6 @@ A field may have multiple annotations (e.g. a contract-number that is repeated o
 The annotations of fields can be retrieved by `PdfAcroField.Annotations`
 - Each field type has it's own *renderer* which is used to create the visual appearances for the fields.
 These renderers may be overridden by the user to customize the rendering.  
-(**Note**: Signature-fields are still on the to-do list.)  
 Check out [PdfAcroFieldRenderer](https://packdat.github.io/PDFsharp-net6/ApiDoc/pdfsharp.pdf.acroforms.rendering.pdfacrofieldrenderer) as a starting point.  
 An instance of this class is available in `PdfAcroForm.FieldRenderer`  
 - `PdfAcroForm` has a new method `GetAllFields` for easily retrieving the complete field-hierarchy as a flattened collection.
@@ -73,7 +72,6 @@ An instance of this class is available in `PdfAcroForm.FieldRenderer`
 <br>
 
 As i have little to no experience regarding `PdfSignatureFields` i would be greatful, if anyone could provide ideas (or better yet: **code**) that would make working with these kind of fields more user-friendly.  
-I'm also looking for ideas/code for rendering these fields.  
 
 <br>
 <br>

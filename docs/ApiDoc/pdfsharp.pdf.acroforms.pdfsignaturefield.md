@@ -338,3 +338,19 @@ public PdfReference ReferenceNotNull { get; }
 
 [InvalidOperationException](https://docs.microsoft.com/en-us/dotnet/api/system.invalidoperationexception)<br>
 The indirect reference must be not null here.
+
+## Methods
+
+### **RenderAppearance()**
+
+Renders the appearance of this field
+
+```csharp
+protected void RenderAppearance()
+```
+
+### **PrepareForSave()**
+
+```csharp
+internal void PrepareForSave()
+```

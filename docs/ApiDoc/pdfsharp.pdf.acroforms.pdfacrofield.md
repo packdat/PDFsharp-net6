@@ -415,6 +415,24 @@ The created and configured Annotation
 
 [ArgumentNullException](https://docs.microsoft.com/en-us/dotnet/api/system.argumentnullexception)<br>
 
+### **RemoveAnnotation(PdfWidgetAnnotation)**
+
+Removed the specified annotation from this field
+
+```csharp
+public bool RemoveAnnotation(PdfWidgetAnnotation annotation)
+```
+
+#### Parameters
+
+`annotation` [PdfWidgetAnnotation](./pdfsharp.pdf.annotations.pdfwidgetannotation)<br>
+The annotation to remove
+
+#### Returns
+
+[Boolean](https://docs.microsoft.com/en-us/dotnet/api/system.boolean)<br>
+true, if the annotation was removed, false otherwise
+
 ### **AddChild(PdfAcroField)**
 
 Adds the specified [PdfAcroField](./pdfsharp.pdf.acroforms.pdfacrofield) to the list of child-fields of this field
@@ -426,6 +444,14 @@ public void AddChild(PdfAcroField childField)
 #### Parameters
 
 `childField` [PdfAcroField](./pdfsharp.pdf.acroforms.pdfacrofield)<br>
+
+### **Delete()**
+
+Deletes this field, all child-fields and associated annotations from the document
+
+```csharp
+public void Delete()
+```
 
 ### **DetermineAppearance()**
 
@@ -484,16 +510,6 @@ protected void SetXFormFont(XForm form)
 ```csharp
 internal void PrepareForSave()
 ```
-
-### **RemoveAnnotation(PdfWidgetAnnotation)**
-
-```csharp
-internal void RemoveAnnotation(PdfWidgetAnnotation widget)
-```
-
-#### Parameters
-
-`widget` [PdfWidgetAnnotation](./pdfsharp.pdf.annotations.pdfwidgetannotation)<br>
 
 ### **Flatten()**
 
