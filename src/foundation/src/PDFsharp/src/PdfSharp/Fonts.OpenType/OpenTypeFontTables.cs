@@ -1010,6 +1010,7 @@ namespace PdfSharp.Fonts.OpenType
             Italic = 1 << 0,
             Bold = 1 << 5,
             Regular = 1 << 6,
+            UseTypoMetrics = 1 << 7,
         }
 
         public ushort version;
@@ -1117,6 +1118,14 @@ namespace PdfSharp.Fonts.OpenType
         public bool IsBold => (fsSelection & (ushort)FontSelectionFlags.Bold) != 0;
 
         public bool IsItalic => (fsSelection & (ushort)FontSelectionFlags.Italic) != 0;
+
+        /// <summary>
+        /// If true, it is strongly recommended that applications use 
+        /// OS/2.sTypoAscender - OS/2.sTypoDescender + OS/2.sTypoLineGap 
+        /// as the default line spacing for this font.<br></br>
+        /// If false, applications should use OS/2.usWinAscent and OS/2.usWinDescent for default line metrics.
+        /// </summary>
+        public bool UseTypoMetrics => (fsSelection & (ushort)FontSelectionFlags.UseTypoMetrics) != 0;
     }
 
     /// <summary>

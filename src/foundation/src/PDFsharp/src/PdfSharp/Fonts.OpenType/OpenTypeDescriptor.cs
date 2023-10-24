@@ -117,7 +117,7 @@ namespace PdfSharp.Fonts.OpenType
             bool os2SeemsToBeEmpty = FontFace.os2.sTypoAscender == 0 && FontFace.os2.sTypoDescender == 0 && FontFace.os2.sTypoLineGap == 0;
             //Debug.Assert(!os2SeemsToBeEmpty); // Are there fonts without OS/2 table?
 
-            bool dontUseWinLineMetrics = (FontFace.os2.fsSelection & 128) != 0;
+            bool dontUseWinLineMetrics = FontFace.os2.UseTypoMetrics;
             if (!os2SeemsToBeEmpty && dontUseWinLineMetrics)
             {
                 // Comment from WPF: The font specifies that the sTypoAscender, sTypoDescender, and sTypoLineGap fields are valid and
