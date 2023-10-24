@@ -79,6 +79,10 @@ namespace PdfSharp.Pdf.Advanced
                 GetType();
             }
 #endif
+            // there is no point in creating an empty CIDFont
+            if (_cmapInfo!.GlyphIndices.Count == 0)
+                return;
+
             // CID fonts must always be embedded. PDFsharp automatically embeds a subset.
             OpenTypeFontface? subSet = null;
             if (FontDescriptor._descriptor.FontFace.loca == null! ||
