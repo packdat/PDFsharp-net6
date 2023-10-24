@@ -281,7 +281,7 @@ namespace PdfSharp.Pdf.Annotations
             if (bs != null)
             {
                 if (bs.Elements.ContainsKey("/W"))
-                    Border.Width = Math.Max(0, bs.Elements.GetInteger("/W"));
+                    Border.Width = Math.Max(0.0, bs.Elements.GetReal("/W"));
                 if (bs.Elements.ContainsKey("/S"))
                 {
                     var styleName = bs.Elements.GetName("/S");
@@ -314,19 +314,34 @@ namespace PdfSharp.Pdf.Annotations
             if (Elements.ContainsKey(Keys.Border))
             {
                 var borderArray = Elements.GetArray(Keys.Border);
-                var hRadius = 0;
-                var vRadius = 0;
-                var width = 0;
+                var hRadius = 0.0;
+                var vRadius = 0.0;
+                var width = 0.0;
                 int[]? dashPattern = null;
                 for (var i = 0; i < borderArray?.Elements.Count; i++)
                 {
                     var val = borderArray.Elements[i];
-                    if (i == 0 && val is PdfInteger hItem)
-                        hRadius += hItem.Value;
-                    if (i == 1 && val is PdfInteger vItem)
-                        vRadius = vItem.Value;
-                    if (i == 2 && val is PdfInteger widthItem)
-                        width = widthItem.Value;
+                    if (i == 0)
+                    {
+                        if (val is PdfInteger hItem)
+                            hRadius += hItem.Value;
+                        else if (val is PdfReal hRealItem)
+                            hRadius += hRealItem.Value;
+                    }
+                    if (i == 1)
+                    {
+                        if (val is PdfInteger vItem)
+                            vRadius = vItem.Value;
+                        else if (val is PdfReal vRealItem)
+                            vRadius += vRealItem.Value;
+                    }
+                    if (i == 2)
+                    {
+                        if (val is PdfInteger widthItem)
+                            width = widthItem.Value;
+                        else if (val is PdfReal widthRealItem)
+                            width = widthRealItem.Value;
+                    }
                     if (i == 3 && val is PdfArray arrayItem)
                     {
                         var dash = new List<int>();

@@ -261,9 +261,9 @@ namespace PdfSharp.Pdf.Annotations
                 if (Border.HorizontalRadius > 0 || Border.VerticalRadius > 0)
                 {
                     var borderArray = new PdfArray(Owner);
-                    borderArray.Elements.Add(new PdfInteger(Border.HorizontalRadius));
-                    borderArray.Elements.Add(new PdfInteger(Border.VerticalRadius));
-                    borderArray.Elements.Add(new PdfInteger(Border.Width));
+                    borderArray.Elements.Add(new PdfReal(Border.HorizontalRadius));
+                    borderArray.Elements.Add(new PdfReal(Border.VerticalRadius));
+                    borderArray.Elements.Add(new PdfReal(Border.Width));
                     if (Border.DashPattern?.Length > 0)
                     {
                         var dashArray = new PdfArray(Owner);
@@ -277,7 +277,7 @@ namespace PdfSharp.Pdf.Annotations
                 else
                 {
                     var bs = new PdfDictionary(Owner);
-                    bs.Elements.Add("/W", new PdfInteger(Border.Width));
+                    bs.Elements.Add("/W", new PdfReal(Border.Width));
                     bs.Elements.Add("/S", new PdfName(Border.BorderStyle switch
                     {
                         PdfAnnotationBorderStyle.Solid => "/S",

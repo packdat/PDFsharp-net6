@@ -10,17 +10,17 @@ namespace PdfSharp.Pdf.Annotations
         /// <summary>
         /// The width of the border in points
         /// </summary>
-        public int Width { get; set; } = 1;
+        public double Width { get; set; } = 1;
 
         /// <summary>
         /// Horizontal radius of the border
         /// </summary>
-        public int HorizontalRadius { get; set; } = 0;
+        public double HorizontalRadius { get; set; } = 0;
 
         /// <summary>
         /// Vertical radius of the border
         /// </summary>
-        public int VerticalRadius { get; set; } = 0;
+        public double VerticalRadius { get; set; } = 0;
 
         /// <summary>
         /// The border-style
