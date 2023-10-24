@@ -65,6 +65,12 @@ namespace PdfSharp.Fonts.OpenType
             finally { Lock.ExitFontFactory(); }
         }
 
+        public static void Reset()
+        {
+            Singleton._fontfacesByCheckSum.Clear();
+            Singleton._fontfaceCache.Clear();
+        }
+
         /// <summary>
         /// Gets the singleton.
         /// </summary>

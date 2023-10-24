@@ -41,8 +41,7 @@ namespace PdfSharp.Fonts
                     if (ReferenceEquals(_fontResolver, value))
                         return;
 
-                    if (FontFactory.HasFontSources
-                        && !value.GetType().Namespace!.StartsWith("PdfSharp.")) // HACK to enable dynamically switching to DocumentFontResolver
+                    if (FontFactory.HasFontSources)
 #if DEBUG
                     {
 #if CORE
@@ -101,6 +100,7 @@ namespace PdfSharp.Fonts
             _fontResolver = null;
             GlyphTypefaceCache.Reset();
             FontFactory.Reset();
+            OpenTypeFontfaceCache.Reset();
         }
 
         /// <summary>
