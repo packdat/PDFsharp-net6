@@ -13,6 +13,8 @@ namespace PdfSharp.Fonts
     public class DocumentFontResolver : IFontResolver
     {
         private static readonly Dictionary<string, byte[]> localFonts = new();
+        private static readonly Dictionary<string, string> registeredFontFiles = new(StringComparer.OrdinalIgnoreCase);
+        private static string? fallbackFontName;
 
         private readonly PdfDocument? document;
         private readonly PdfAcroField? acroField;
@@ -29,13 +31,65 @@ namespace PdfSharp.Fonts
             var localName = MakeLocalName(fontName, isBold, isItalic);
             localFonts[localName] = fontData;
             // get the name stored in the font itself
-            var fontSource = XFontSource.GetOrCreateFrom(fontData);
-            var typeFace = OpenTypeFontface.GetOrCreateFrom(fontSource);
+            var fontSource = XFontSource.GetOrCreateFrom(fontData, false);
+            var typeFace = new OpenTypeFontface(fontSource);
             if (!string.IsNullOrEmpty(typeFace.FullFaceName))
             {
                 localName = MakeLocalName(typeFace.FullFaceName, isBold, isItalic);
                 localFonts[localName] = fontData;
             }    
+        }
+
+#if !WPF
+        /// <summary>
+        /// Registers all (TrueType)-fonts from the specified folder and all sub-folders.<br></br>
+        /// In an <see cref="XFont"/>, these fonts may be referenced by their filename or their full face-name.
+        /// </summary>
+        /// <param name="folderPath">The base path to load fonts from</param>
+        /// <returns>The number of fonts that were found</returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentException"></exception>
+        public static int RegisterFolder(string folderPath)
+        {
+            if (string.IsNullOrEmpty(folderPath))
+                throw new ArgumentNullException(nameof(folderPath), "Folder name may not be null or empty");
+            if (!Directory.Exists(folderPath))
+                throw new ArgumentException($"The folder {folderPath} does not exist", nameof(folderPath));
+
+            var fontFiles = Directory.GetFiles(folderPath, "*.ttf", SearchOption.AllDirectories);
+            var count = 0;
+            foreach (var file in fontFiles)
+            {
+                try
+                {
+                    var data = File.ReadAllBytes(file);
+                    // create Font-source without caching it
+                    var fontSource = XFontSource.GetOrCreateFrom(data, false);
+                    var font = new OpenTypeFontface(fontSource);
+                    var fileName = Path.GetFileNameWithoutExtension(file);
+                    registeredFontFiles[fileName] = file;
+                    registeredFontFiles[font.FullFaceName] = file;
+                    count++;
+                }
+                catch
+                {
+                }
+            }
+            return count;
+        }
+#endif
+
+        /// <summary>
+        /// Registers one of the <see cref="StandardFontNames"/> as the fallback font
+        /// </summary>
+        /// <param name="standardFontName"></param>
+        /// <exception cref="ArgumentException"></exception>
+        public static void RegisterFallbackFont(string standardFontName)
+        {
+            if (StandardFontData.IsStandardFont(standardFontName))
+                fallbackFontName = standardFontName;
+            else
+                throw new ArgumentException($"'{standardFontName}' is not one of the standard font names");
         }
 
         /// <summary>
@@ -65,6 +119,8 @@ namespace PdfSharp.Fonts
         public byte[]? GetFont(string faceName)
         {
             var result = Resolve(faceName, false, false);
+            if (result.Item1 == null && !string.IsNullOrEmpty(fallbackFontName))
+                result = Resolve(fallbackFontName, false, false);
             return result.Item1;
         }
 
@@ -78,21 +134,14 @@ namespace PdfSharp.Fonts
         public FontResolverInfo? ResolveTypeface(string familyName, bool isBold, bool isItalic)
         {
             var result = Resolve(familyName, isBold, isItalic);
+            if (result.Item2 == null && !string.IsNullOrEmpty(fallbackFontName))
+                result = Resolve(fallbackFontName, isBold, isItalic);
             return result.Item2;
         }
 
         private static string MakeLocalName(string fontName, bool isBold, bool isItalic)
         {
-            var localName = fontName;
-            if (isBold || isItalic)
-            {
-                localName += "+";
-                if (isBold)
-                    localName += "b";
-                if (isItalic)
-                    localName += "i";
-            }
-            return localName;
+            return XGlyphTypeface.ComputeKey(fontName, isBold, isItalic);
         }
 
         private Tuple<byte[]?, FontResolverInfo?> Resolve(string fontName, bool isBold, bool isItalic)
@@ -100,10 +149,15 @@ namespace PdfSharp.Fonts
             var localName = MakeLocalName(fontName, isBold, isItalic);
             if (localFonts.TryGetValue(localName, out var localData))
                 return new Tuple<byte[]?, FontResolverInfo?>(localData, new FontResolverInfo(fontName, isBold, isItalic));
-
+            if (registeredFontFiles.TryGetValue(fontName, out var fileName))
+            {
+                var fileData = File.ReadAllBytes(fileName);
+                return new Tuple<byte[]?, FontResolverInfo?>(fileData, new FontResolverInfo(fontName, isBold, isItalic));
+            }
             var data = StandardFontData.GetFontData(fontName);
             if (data != null)
             {
+                Register(fontName, data, isBold, isItalic);
                 return new Tuple<byte[]?, FontResolverInfo?>(data, new FontResolverInfo(fontName, isBold, isItalic));
             }
             if (document == null)
@@ -140,6 +194,11 @@ namespace PdfSharp.Fonts
                                 var fontData = fileRef?.Stream.UnfilteredValue;
                                 return new Tuple<byte[]?, FontResolverInfo?>(fontData, new FontResolverInfo(fontName.TrimStart('/'), isBold, isItalic));
                             }
+                            // font is not embedded. if we have a FontFamily, try to resolve that (it may be a registered font)
+                            var familyName = descriptor.Elements.GetString(PdfFontDescriptor.Keys.FontFamily);
+                            // try this only, if names differ (avoid stack overflow)
+                            if (!string.IsNullOrEmpty(familyName) && familyName != fontName)
+                                return Resolve(familyName.TrimStart('/'), isBold, isItalic);
                         }
                     }
                     else if (fontList != null)

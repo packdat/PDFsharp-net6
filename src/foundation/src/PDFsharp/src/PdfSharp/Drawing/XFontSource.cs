@@ -43,16 +43,18 @@ namespace PdfSharp.Drawing
 
         /// <summary>
         /// Gets an existing font source or creates a new one.
-        /// A new font source is cached in font factory.
         /// </summary>
-        public static XFontSource GetOrCreateFrom(byte[] bytes)
+        /// <param name="bytes">The bytes of the font</param>
+        /// <param name="cache">If <b>true</b>, a new font source is cached in font factory.</param>
+        public static XFontSource GetOrCreateFrom(byte[] bytes, bool cache = true)
         {
             ulong key = FontHelper.CalcChecksum(bytes);
             if (!FontFactory.TryGetFontSourceByKey(key, out var fontSource))
             {
                 fontSource = new XFontSource(bytes, key);
                 // Theoretically the font source could be created by a different thread in the meantime.
-                fontSource = FontFactory.CacheFontSource(fontSource);
+                if (cache)
+                    fontSource = FontFactory.CacheFontSource(fontSource);
             }
             return fontSource;
         }
