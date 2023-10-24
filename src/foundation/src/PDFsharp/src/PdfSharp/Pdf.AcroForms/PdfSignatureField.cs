@@ -41,7 +41,7 @@ namespace PdfSharp.Pdf.AcroForms
                     continue;
 
                 // ensure a minimum size of 1x1, otherwise an exception is thrown
-                var xRect = new XRect(0, 0, Math.Max(DeterminedFontSize, Math.Max(1.0, rect.Width)), Math.Max(DeterminedFontSize, Math.Max(1.0, rect.Height)));
+                var xRect = new XRect(0, 0, Math.Max(FontSizeForRendering, Math.Max(1.0, rect.Width)), Math.Max(FontSizeForRendering, Math.Max(1.0, rect.Height)));
                 var form = (widget.Rotation == 90 || widget.Rotation == 270) && (widget.Flags & PdfAnnotationFlags.NoRotate) == 0
                     ? new XForm(_document, rect.Height, rect.Width)
                     : new XForm(_document, xRect);

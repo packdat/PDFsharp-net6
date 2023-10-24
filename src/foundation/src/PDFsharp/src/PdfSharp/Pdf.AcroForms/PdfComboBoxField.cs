@@ -96,7 +96,7 @@ namespace PdfSharp.Pdf.AcroForms
                     continue;
 
                 // ensure a minimum size of 1x1, otherwise an exception is thrown
-                var xRect = new XRect(0, 0, Math.Max(DeterminedFontSize, Math.Max(1.0, rect.Width)), Math.Max(DeterminedFontSize, Math.Max(1.0, rect.Height)));
+                var xRect = new XRect(0, 0, Math.Max(FontSizeForRendering, Math.Max(1.0, rect.Width)), Math.Max(FontSizeForRendering, Math.Max(1.0, rect.Height)));
                 var form = new XForm(_document, xRect);
                 using (var gfx = XGraphics.FromForm(form))
                 {

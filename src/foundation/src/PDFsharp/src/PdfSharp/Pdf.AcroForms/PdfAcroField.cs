@@ -180,9 +180,16 @@ namespace PdfSharp.Pdf.AcroForms
         internal string? BaseContentFontName { get; set; }
 
         /// <summary>
-        /// Gets the font size that was obtained by analyzing the Fields' content-stream.
+        /// Gets the font size that was obtained by analyzing the Fields' content-stream.<br></br>
+        /// May be zero. This means, during rendering, the font-size should be calculated based on the height of the field.<br></br>
+        /// For rendering, use <see cref="FontSizeForRendering"/>
         /// </summary>
-        public double DeterminedFontSize { get; internal set; }
+        public double FontSize { get; internal set; }
+
+        /// <summary>
+        /// Gets the font-size that should be used for rendering
+        /// </summary>
+        public double FontSizeForRendering { get; internal set; }
 
         /// <summary>
         /// Gets or sets the foreground color of the field.
@@ -643,7 +650,7 @@ namespace PdfSharp.Pdf.AcroForms
                         // no appearance found, use some default
                         ContentFontName = "/Helv";
                         BaseContentFontName = "/Helvetica";
-                        Font = new XFont("Arial", 10);
+                        Font = new XFont("Arial", DetermineFontSize());
                         return;
                     }
                 }
@@ -652,7 +659,9 @@ namespace PdfSharp.Pdf.AcroForms
             }
             catch
             {
-                Font = new XFont("Arial", 10);
+                var fontName = GlobalFontSettings.FontResolver is DocumentFontResolver
+                    ? StandardFontNames.Helvetica : "Arial";
+                Font = new XFont(fontName, DetermineFontSize());
             }
         }
 
@@ -735,41 +744,78 @@ namespace PdfSharp.Pdf.AcroForms
                     }
                 }
                 BaseContentFontName = fontName;
-                DeterminedFontSize = fontSize;
-                // When the field's font is one of the standard fonts, use WinAnsiEncoding, as that seems to work best with the tested documents
+                FontSize = fontSize;
+                // determine font-size for rendering
+                if (fontSize < 1.0)
+                    FontSizeForRendering = DetermineFontSize();
+                else
+                    FontSizeForRendering = fontSize;
                 var systemFontName = BaseContentFontName.TrimStart('/');
                 XFontStyleEx fontStyle = XFontStyleEx.Regular;
-                if (fontIsPresentInDocument)// || IsStandardFont(BaseContentFontName, out systemFontName, out fontStyle))
+                if (fontIsPresentInDocument)
                 {
-                    var existingFontResolver = GlobalFontSettings.FontResolver;
                     try
                     {
-                        GlobalFontSettings.FontResolver = new DocumentFontResolver(this);
+                        var fontResolver = new DocumentFontResolver(this);
+                        var resolverInfo = fontResolver.ResolveTypeface(systemFontName,
+                            (fontStyle & XFontStyleEx.Bold) != 0, (fontStyle & XFontStyleEx.Italic) != 0);
+                        if (resolverInfo != null)
+                        {
+                            var fontData = fontResolver.GetFont(resolverInfo.FaceName);
+                            if (fontData != null)
+                            {
+                                var fontSource = XFontSource.GetOrCreateFrom(fontData);
+                                FontFactory.CacheFontSource(fontSource);
+                                systemFontName = fontSource.FontName;
+                            }
+                        }
                         font = new XFont
                         (
                             systemFontName!,
-                            Math.Max(1.0, fontSize),
+                            Math.Max(1.0, FontSizeForRendering),
                             fontStyle,
                             new XPdfFontOptions(presentFontEncoding)
                         )
                         {
                             DocumentFontName = ContentFontName
                         };
+                        return;
                     }
-                    finally
+                    catch
                     {
-                        // setter throws when assigning null
-                        if (existingFontResolver != null)
-                            GlobalFontSettings.FontResolver = existingFontResolver;
+                        Debug.Assert(false, $"Font {systemFontName} not found");
                     }
                 }
-                else
+                // ok, we bite the bullet and embed a new font (so at least the correct characters should show up, although with the possibly wrong font)
+                // TODO: Reasearch how to get the correct glyph indices for embedded fonts
+                font = new XFont(BaseContentFontName.TrimStart('/'), Math.Max(1.0, FontSizeForRendering));     // Avoid Exception, if size is zero
+            }
+        }
+
+        /// <summary>
+        /// Calculates the font-size based on the height of the field's widget
+        /// </summary>
+        /// <returns></returns>
+        private double DetermineFontSize()
+        {
+            var fontSize = 10.0;
+            for (var a = 0; a < Annotations.Elements.Count; a++)
+            {
+                var widget = Annotations.Elements[a];
+                if (widget != null && !widget.Rectangle.IsEmpty)
                 {
-                    // ok, we bite the bullet and embed a new font (so at least the correct characters should show up, although with the possibly wrong font)
-                    // TODO: Reasearch how to get the correct glyph indices for embedded fonts
-                    font = new XFont(BaseContentFontName.TrimStart('/'), Math.Max(1.0, fontSize));     // Avoid Exception, if size is zero
+                    var refValue = widget.Rotation == 0
+                        || widget.Rotation == 180
+                        || (widget.Flags & PdfAnnotationFlags.NoRotate) != 0 
+                            ? widget.Rectangle.Height : widget.Rectangle.Width;
+
+                    if (this is not PdfTextField field || !field.MultiLine)
+                        fontSize = refValue * 0.75;  // set font size to 75% of the widget height
+                    if (fontSize > 1.0)
+                        break;
                 }
             }
+            return Math.Abs(fontSize);  // Rects were spotted with negative height
         }
 
         /// <summary>
@@ -801,30 +847,46 @@ namespace PdfSharp.Pdf.AcroForms
             if (Font is null)
                 return;
 
+            var fontWasSet = false;
             // Non-flattened AcroFields need to have the proper Font set in the XForm's Resource-Table
             if (Font.FromDocument
-                && !string.IsNullOrEmpty(Font.DocumentFontName)
-                && _document.AcroForm?.Resources != null)
+                && !string.IsNullOrEmpty(Font.DocumentFontName))
             {
-                // standard fonts
+                // fonts already present in document
+                var possibleResources = new[]
+                {
+                    _document.AcroForm!.Resources?.Fonts,
+                    Elements.GetDictionary(PdfAcroForm.Keys.DR)?.Elements.GetDictionary(PdfResources.Keys.Font)
+                };
                 if (!form.PdfForm.Resources.Fonts.Elements.ContainsKey(Font.DocumentFontName))
                 {
-                    // Retrieve font-resources from the document's AcroForm
-                    if (_document.AcroForm.Resources.Fonts.Elements.ContainsKey(Font.DocumentFontName))
+                    foreach (var fontDict in possibleResources)
                     {
-                        // copy font-entry to XForm
-                        var formFont = _document.AcroForm.Resources.Fonts.Elements.GetDictionary(Font.DocumentFontName);
-                        if (formFont != null)
-                            form._pdfForm!.Resources.Fonts.Elements.Add(Font.DocumentFontName, formFont.Reference);
+                        // Retrieve font-resources from the document's AcroForm or the Field itself
+                        if (fontDict != null && fontDict.Elements.ContainsKey(Font.DocumentFontName))
+                        {
+                            // copy font-entry to XForm
+                            var formFont = fontDict.Elements.GetDictionary(Font.DocumentFontName);
+                            if (formFont != null)
+                            {
+                                form.PdfForm.Resources.Fonts.Elements.Add(Font.DocumentFontName, formFont.Reference);
+                                fontWasSet = true;
+                                break;
+                            }
+                        }
                     }
                 }
+                else
+                    fontWasSet = true;
             }
             else
             {
-                // non-standard fonts
+                // new fonts
                 var docFont = _document.FontTable.GetFont(Font);
                 form.PdfForm.Resources.AddFont(docFont);
+                fontWasSet = true;
             }
+            Debug.Assert(fontWasSet, "Font was not set on XForm");
         }
 
         internal override void PrepareForSave()

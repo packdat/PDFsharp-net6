@@ -107,7 +107,7 @@ namespace PdfSharp.Pdf.AcroForms
         protected override void DetermineAppearance()
         {
             base.DetermineAppearance();
-            if (!string.IsNullOrEmpty(ContentFontName) && DeterminedFontSize > 0.0)
+            if (!string.IsNullOrEmpty(ContentFontName) && FontSizeForRendering > 0.0)
                 return;
             for (var i = 0; i < Annotations.Elements.Count; i++)
             {

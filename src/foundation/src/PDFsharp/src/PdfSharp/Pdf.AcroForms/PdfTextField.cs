@@ -53,9 +53,9 @@ namespace PdfSharp.Pdf.AcroForms
                 {
                     // HACK to support Unicode chars in Form-Fields
                     if (IsStandardFont(BaseContentFontName, out var fontStyle))
-                        Font = new XFont(BaseContentFontName, Math.Max(1.0, DeterminedFontSize), fontStyle, new XPdfFontOptions(PdfFontEncoding.Unicode));
+                        Font = new XFont(BaseContentFontName.TrimStart('/'), Math.Max(1.0, FontSizeForRendering), fontStyle, new XPdfFontOptions(PdfFontEncoding.Unicode));
                     else
-                        Font = new XFont(BaseContentFontName.TrimStart('/'), Math.Max(1.0, DeterminedFontSize), XFontStyleEx.Regular, new XPdfFontOptions(PdfFontEncoding.Unicode));
+                        Font = new XFont(BaseContentFontName.TrimStart('/'), Math.Max(1.0, FontSizeForRendering), XFontStyleEx.Regular, new XPdfFontOptions(PdfFontEncoding.Unicode));
                 }
                 Elements.SetString(PdfAcroField.Keys.V, value ?? string.Empty);
             }
@@ -137,7 +137,7 @@ namespace PdfSharp.Pdf.AcroForms
                     continue;
 
                 // ensure a minimum size of 1x1, otherwise an exception is thrown
-                var xRect = new XRect(0, 0, Math.Max(DeterminedFontSize, Math.Max(1.0, rect.Width)), Math.Max(DeterminedFontSize, Math.Max(1.0, rect.Height)));
+                var xRect = new XRect(0, 0, Math.Max(FontSizeForRendering, Math.Max(1.0, rect.Width)), Math.Max(FontSizeForRendering, Math.Max(1.0, rect.Height)));
                 var form = (widget.Rotation == 90 || widget.Rotation == 270) && (widget.Flags & PdfAnnotationFlags.NoRotate) == 0
                     ? new XForm(_document, rect.Height, rect.Width)
                     : new XForm(_document, xRect);

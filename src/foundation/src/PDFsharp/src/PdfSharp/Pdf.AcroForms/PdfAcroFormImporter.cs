@@ -165,7 +165,8 @@ namespace PdfSharp.Pdf.AcroForms
                 importedField.Elements[PdfAcroField.Keys.AA] = ImportClosure(importedObjectTable, Owner, remoteField.Elements.GetObject(PdfAcroField.Keys.AA)!);
             importedField.SetFlags = remoteField.Flags;
             importedField.Font = remoteField.Font;
-            importedField.DeterminedFontSize = remoteField.DeterminedFontSize;
+            importedField.FontSize = remoteField.FontSize;
+            importedField.FontSizeForRendering = remoteField.FontSizeForRendering;
             importedField.ContentFontName = remoteField.ContentFontName;
             importedField.BaseContentFontName = remoteField.BaseContentFontName;
             importedField.ForeColor = remoteField.ForeColor;
