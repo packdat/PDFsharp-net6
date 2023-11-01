@@ -197,8 +197,13 @@ namespace PdfSharp.Fonts
                             // font is not embedded. if we have a FontFamily, try to resolve that (it may be a registered font)
                             var familyName = descriptor.Elements.GetString(PdfFontDescriptor.Keys.FontFamily);
                             // try this only, if names differ (avoid stack overflow)
-                            if (!string.IsNullOrEmpty(familyName) && familyName != fontName)
+                            if (!string.IsNullOrEmpty(familyName) && familyName.TrimStart('/') != fontName.TrimStart('/'))
+                            {
+#if DEBUG_
+                                Debug.WriteLine($"Resolve: {document?.FullPath ?? "null document"} - {fontName} -> {familyName}");
+#endif
                                 return Resolve(familyName.TrimStart('/'), isBold, isItalic);
+                            }
                         }
                     }
                     else if (fontList != null)
