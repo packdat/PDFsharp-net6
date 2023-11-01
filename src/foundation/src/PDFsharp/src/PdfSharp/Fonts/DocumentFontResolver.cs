@@ -151,7 +151,7 @@ namespace PdfSharp.Fonts
                 return new Tuple<byte[]?, FontResolverInfo?>(localData, new FontResolverInfo(fontName, isBold, isItalic));
             if (registeredFontFiles.TryGetValue(fontName, out var fileName))
             {
-                var fileData = File.ReadAllBytes(fileName);
+                var fileData = System.IO.File.ReadAllBytes(fileName);
                 return new Tuple<byte[]?, FontResolverInfo?>(fileData, new FontResolverInfo(fontName, isBold, isItalic));
             }
             var data = StandardFontData.GetFontData(fontName);
