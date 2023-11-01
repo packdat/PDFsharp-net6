@@ -143,8 +143,12 @@ namespace PdfSharp.Pdf.IO
 
             // #???
 
-            ParserDiagnostics.HandleUnexpectedCharacter(ch);
-            return _symbol = Symbol.None;
+            //ParserDiagnostics.HandleUnexpectedCharacter(ch);
+            // just skip over unexpected character
+            ScanNextChar(true);
+            goto Again;
+
+            //return _symbol = Symbol.None;
         }
 
         /// <summary>
