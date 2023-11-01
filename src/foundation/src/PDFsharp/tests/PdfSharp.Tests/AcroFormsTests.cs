@@ -1,17 +1,19 @@
 ﻿using FluentAssertions;
 using PdfSharp.Drawing;
 using PdfSharp.Fonts;
+using PdfSharp.Fonts.OpenType;
 using PdfSharp.Fonts.StandardFonts;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.AcroForms;
 using PdfSharp.Pdf.IO;
-using PdfSharp.Snippets.Font;
+using System.Diagnostics;
+using System.Text;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace PdfSharp.Tests
 {
-    public class AcroFormsTests
+    public class AcroFormsTests : TraceListener
     {
         private readonly ITestOutputHelper output;
 
@@ -57,8 +59,8 @@ namespace PdfSharp.Tests
         [Fact]
         public void CanImportMultipleForms()
         {
-            // required for now (when using the CORE lib)
-            GlobalFontSettings.FontResolver = new FailsafeFontResolver();
+            GlobalFontSettings.ResetFontResolvers();
+            GlobalFontSettings.FontResolver = new DocumentFontResolver();
 
             var files = new[] { "DocumentWithAcroForm.pdf", "DemoFormWithCombs.pdf" };
             var copiedDocument = new PdfDocument();
@@ -88,8 +90,8 @@ namespace PdfSharp.Tests
         [Fact]
         public void CanImportSameFormMultipleTimes()
         {
-            // required for now (when using the CORE lib)
-            GlobalFontSettings.FontResolver = new FailsafeFontResolver();
+            GlobalFontSettings.ResetFontResolvers();
+            GlobalFontSettings.FontResolver = new DocumentFontResolver();
 
             var files = new[] { "DocumentWithAcroForm.pdf", "DocumentWithAcroForm.pdf" };
             var copiedDocument = new PdfDocument();
@@ -122,8 +124,8 @@ namespace PdfSharp.Tests
         [Fact]
         public void CanFlattenForm()
         {
-            // required for now (when using the CORE lib)
-            GlobalFontSettings.FontResolver = new FailsafeFontResolver();
+            GlobalFontSettings.ResetFontResolvers();
+            GlobalFontSettings.FontResolver = new DocumentFontResolver();
 
             using var fs = File.OpenRead(Path.Combine("assets", "DocumentWithAcroForm.pdf"));
             var inputDocument = PdfReader.Open(fs, PdfDocumentOpenMode.Import);
@@ -153,7 +155,7 @@ namespace PdfSharp.Tests
         {
             CanCreateNewForm();     // create the form
 
-            // required for now (when using the CORE lib)
+            GlobalFontSettings.ResetFontResolvers();
             GlobalFontSettings.FontResolver = new DocumentFontResolver();
 
             using var fs = File.OpenRead(Path.Combine(Path.GetTempPath(), "CreatedForm.pdf"));
@@ -185,6 +187,7 @@ namespace PdfSharp.Tests
             const string firstNameValue = "Sebastién";
             const string lastNameValue = "Süßölgefäß";  // yep, that's a valid german word
 
+            GlobalFontSettings.ResetFontResolvers();
             // we use one of the 14 standard-fonts here (Helvetica)
             GlobalFontSettings.FontResolver = new DocumentFontResolver();
 
@@ -481,20 +484,67 @@ namespace PdfSharp.Tests
         }
 
         [Theory]
-        [InlineData("c:\\Temp\\TestPdf")]
-        public void TestListOfFiles(string basePath)
+        //[InlineData("C:\\Temp\\TestPdf\\PdfSharp-Issues\\46")]
+        [InlineData("C:\\Temp\\TestPdf")]
+        public void CollectPageCount(string basePath)
         {
+            Trace.Listeners.Add(this);
+
             Directory.Exists(basePath).Should().BeTrue("Folder with Pdf-files should exist");
             var allFiles = Directory.EnumerateFiles(basePath, "*.pdf", SearchOption.AllDirectories);
             allFiles.Count().Should().BeGreaterThan(0, "Folder should contain at least one Pdf-file");
 
-            // required for now (when using the CORE lib)
-            GlobalFontSettings.FontResolver = new FailsafeFontResolver();
+            var sb = new StringBuilder();
+            sb.AppendLine("Path\tPage count\tException\tMessage");
 
             foreach (var file in allFiles)
             {
-                VerifyPdfCanBeFilled(file);
+                var relativePath = Path.GetRelativePath(basePath, file);
+                output.WriteLine("Processing: {0}", file);
+                try
+                {
+                    var document = PdfReader.Open(file, PdfDocumentOpenMode.Import);
+                    sb.AppendFormat("{0}\t{1}", relativePath, document.PageCount);
+                }
+                catch(Exception ex)
+                {
+                    sb.AppendFormat("{0}\t\t{1}\t{2}", relativePath, ex.GetType().Name, ex.Message);
+                }
+                sb.AppendLine();
             }
+            File.WriteAllText(Path.Combine(basePath, "PageCounts2.csv"), sb.ToString());
+        }
+
+        [Theory]
+        [InlineData("c:\\Temp\\TestPdf")]
+        public void TestListOfFiles(string basePath)
+        {
+            Trace.Listeners.Add(this);
+
+            Directory.Exists(basePath).Should().BeTrue("Folder with Pdf-files should exist");
+            var allFiles = Directory.EnumerateFiles(basePath, "*.pdf", SearchOption.AllDirectories);
+            allFiles.Count().Should().BeGreaterThan(0, "Folder should contain at least one Pdf-file");
+
+            DocumentFontResolver.RegisterFolder(@"c:\windows\fonts");
+
+            foreach (var file in allFiles)
+            {
+                GlobalFontSettings.FontResolver = new DocumentFontResolver();
+                output.WriteLine("Processing: {0}", file);
+                VerifyPdfCanBeFilled(file);
+
+                GlobalFontSettings.ResetFontResolvers();
+            }
+        }
+
+        [Theory]
+        [InlineData(@"c:\Temp\TestPdf\issue #70.PDF")]
+        public void TestSpecificFile(string filePath)
+        {
+            DocumentFontResolver.RegisterFallbackFont(StandardFontNames.Helvetica);
+            GlobalFontSettings.FontResolver = new DocumentFontResolver();
+            DocumentFontResolver.RegisterFolder(@"c:\windows\fonts");
+            VerifyPdfCanBeFilled(filePath).Should().BeTrue();
         }
 
         private bool VerifyPdfCanBeFilled(string filePath)
@@ -537,13 +587,13 @@ namespace PdfSharp.Tests
                 if (field is PdfTextField textField)
                     textField.Text = field.Name;
                 else if (field is PdfComboBoxField comboBoxField)
-                    comboBoxField.SelectedIndex = Math.Min(1, comboBoxField.Options.Count);
+                    comboBoxField.SelectedIndex = Math.Min(1, comboBoxField.Options.Count - 1);
                 else if (field is PdfCheckBoxField checkboxField)
                     checkboxField.Checked = true;
                 else if (field is PdfRadioButtonField radioButtonField)
-                    radioButtonField.SelectedIndex = Math.Min(1, radioButtonField.Options.Count);
+                    radioButtonField.SelectedIndex = Math.Min(1, radioButtonField.Options.Count - 1);
                 else if (field is PdfListBoxField listBoxField)
-                    listBoxField.SelectedIndices = new[] { Math.Min(1, listBoxField.Options.Count) };
+                    listBoxField.SelectedIndices = new[] { Math.Min(1, listBoxField.Options.Count - 1) };
             }
         }
 
@@ -571,17 +621,17 @@ namespace PdfSharp.Tests
                 else if (field is PdfRadioButtonField radioButton)
                 {
                     radioButton.Options.Count.Should().BeGreaterThan(0);
-                    radioButton.SelectedIndex.Should().Be(Math.Min(1, radioButton.Options.Count));
+                    radioButton.SelectedIndex.Should().Be(Math.Min(1, radioButton.Options.Count - 1));
                 }
                 else if (field is PdfComboBoxField comboBox)
                 {
-                    comboBox.SelectedIndex.Should().Be(Math.Min(1, comboBox.Options.Count));
+                    comboBox.SelectedIndex.Should().Be(Math.Min(1, comboBox.Options.Count - 1));
                 }
                 else if (field is PdfListBoxField listBox)
                 {
                     listBox.Options.Count.Should().BeGreaterThan(0);
                     listBox.SelectedIndices.Count().Should().BeGreaterThan(0);
-                    listBox.SelectedIndices.First().Should().Be(Math.Min(1, listBox.Options.Count));
+                    listBox.SelectedIndices.First().Should().Be(Math.Min(1, listBox.Options.Count - 1));
                 }
             });
         }
@@ -593,8 +643,22 @@ namespace PdfSharp.Tests
             var allFields = GetAllFields(inputDocument);
             foreach (var field in allFields)
             {
+                if (field.ReadOnly)
+                    continue;
                 fieldVerifier(field);
             }
+        }
+
+        public override void Write(string? message)
+        {
+            if (message != null)
+                output.WriteLine(message);
+        }
+
+        public override void WriteLine(string? message)
+        {
+            if (message != null)
+                output.WriteLine(message);
         }
     }
 }
