@@ -210,14 +210,16 @@ namespace PdfSharp.Pdf.Advanced
         /// <exception cref="PdfReaderException"></exception>
         internal static PdfTrailer Rebuild(PdfDocument document, Stream stream, Parser parser)
         {
+            Debug.WriteLine("Attempt to rebuild trailer...");
+
             ArgumentNullException.ThrowIfNull(document, nameof(document));
             if (document._lexer == null)
                 throw new InvalidOperationException("Document must have a lexer set");
 
             // start on an object, e.g. "1 0 obj"
-            var rxObjectStart = new Regex("(?<num>\\d+)\\s(?<gen>\\d+)\\sobj");
+            var rxObjectStart = new Regex("\\b(?<num>\\d+)\\s+(?<gen>\\d+)\\s+obj\\b");
             // start of a trailer, e.g. "trailer <<"
-            var rxTrailerStart = new Regex("\\strailer\\s+<<");
+            var rxTrailerStart = new Regex("\\btrailer\\s*<<");
             var iref = new PdfCrossReferenceTable(document);
             var trailerStart = 0L;
             try
@@ -225,12 +227,14 @@ namespace PdfSharp.Pdf.Advanced
                 // scan the whole file and collect object-ids
                 stream.Position = 0;
                 var buffer = new byte[4096];
+                var nextStreamPos = stream.Position + 1;
                 while (stream.Position < stream.Length)
                 {
                     var bufStart = stream.Position;
                     var readLength = stream.Read(buffer, 0, buffer.Length);
                     var readString = Encoding.ASCII.GetString(buffer, 0, readLength);
                     // search for objects
+                    var numFound = 0;
                     var matches = rxObjectStart.Matches(readString);
                     foreach (Match match in matches)
                     {
@@ -239,6 +243,8 @@ namespace PdfSharp.Pdf.Advanced
                             var objNumber = int.Parse(match.Groups["num"].Value);
                             var generationNumber = int.Parse(match.Groups["gen"].Value);
                             iref.Add(new PdfReference(new PdfObjectID(objNumber, generationNumber), (int)bufStart + match.Index));
+                            nextStreamPos = bufStart + match.Index + match.Length;
+                            numFound++;
                         }
                     }
                     // search for the trailer
@@ -249,11 +255,17 @@ namespace PdfSharp.Pdf.Advanced
                         {
                             // if trailer is found multiple times, the last one wins (conforms to spec)
                             trailerStart = bufStart + match.Index;
+                            nextStreamPos = Math.Max(nextStreamPos, trailerStart + match.Length);
                         }
                     }
-                    // read with overlap to avoid splitting an object-declaration
-                    if (readLength == buffer.Length)
-                        stream.Position = Math.Max(0, stream.Position - 12);
+                    if (stream.Position < stream.Length)
+                    {
+                        if (matches.Count > 0 || numFound > 0)
+                            stream.Position = nextStreamPos;
+                        else
+                            // read with overlap to avoid splitting an object-declaration
+                            stream.Position = Math.Max(0, stream.Position - 12);
+                    }
                 }
                 document.IrefTable = iref;
                 iref.IsUnderConstruction = true;
@@ -264,7 +276,6 @@ namespace PdfSharp.Pdf.Advanced
                     // read the entries of the trailer dictionary
                     stream.Position = trailerStart;
                     document._lexer.Position = (int)trailerStart;
-                    document._lexer.ScanNextChar(false);
                     parser.ReadSymbol(Symbol.Trailer);
                     parser.ReadSymbol(Symbol.BeginDictionary);
                     parser.ReadDictionary(trailer, false);
@@ -295,6 +306,7 @@ namespace PdfSharp.Pdf.Advanced
                 }
                 var largestObjectNumber = allRefs.Max(x => x.ObjectID.ObjectNumber);
                 trailer.Elements.SetInteger(Keys.Size, largestObjectNumber + 1);
+                Debug.WriteLine($"Trailer was rebuild with {iref.AllObjectIDs.Length} found objects");
                 return trailer;
             }
             catch (Exception ex)
