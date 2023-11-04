@@ -239,7 +239,7 @@ namespace PdfSharp.Fonts.OpenType
                     // Remap ch for symbol fonts.
                     ch = (char)(ch | (FontFace.os2.usFirstCharIndex & 0xFF00));  // @@@ refactor
                 }
-                int glyphIndex = CharCodeToGlyphIndex(ch);
+                var glyphIndex = CharCodeToGlyphIndex(ch);
                 Widths[idx] = GlyphIndexToPdfWidth(glyphIndex);
             }
         }
@@ -320,25 +320,23 @@ namespace PdfSharp.Fonts.OpenType
                 && !char.IsSurrogatePair(text, index))
                 return CharCodeToGlyphIndex(text[index]);
 
-            var value = char.ConvertToUtf32(text, index);
+            // increment index here as we're handling 32bit values
+            var value = char.ConvertToUtf32(text, index++);
 
-            var converted = BitConverter.ToUInt32(BitConverter.GetBytes(value), 0);
             var cmap = FontFace.cmap.cmap12;
 
-            int seg;
-            for (seg = 0; seg < cmap.groups.Length; seg++)
+            int idx;
+            for (idx = 0; idx < cmap.groups.Length; idx++)
             {
-                if (value <= cmap.groups[seg].endCharCode)
+                if (value <= cmap.groups[idx].endCharCode)
                     break;
             }
-            Debug.Assert(seg < cmap.groups.Length);
+            Debug.Assert(idx < cmap.groups.Length);
 
-            if (value < cmap.groups[seg].startCharCode)
+            if (value < cmap.groups[idx].startCharCode)
                 return 0;
-            
-            index++;
 
-            return (int)(cmap.groups[seg].startGlyphID + converted - cmap.groups[seg].startCharCode);
+            return (int)(cmap.groups[idx].startGlyphID + value - cmap.groups[idx].startCharCode);
         }
 
         /// <summary>

@@ -403,7 +403,7 @@ namespace PdfSharp.Fonts.OpenType
 
             // Create a sorted array of all used glyphs.
             int glyphCount = glyphs.Count;
-            int[] glyphArray = new int[glyphCount];
+            var glyphArray = new int[glyphCount];
             glyphs.Keys.CopyTo(glyphArray, 0);
             Array.Sort(glyphArray);
 
@@ -423,7 +423,7 @@ namespace PdfSharp.Fonts.OpenType
             // Fill new glyf and loca table.
             int glyphOffset = 0;
             int glyphIndex = 0;
-            for (int idx = 0; idx < numGlyphs; idx++)
+            for (var idx = 0; idx < numGlyphs; idx++)
             {
                 locaNew.LocaTable[idx] = glyphOffset;
                 if (glyphIndex < glyphCount && glyphArray[glyphIndex] == idx)

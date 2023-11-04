@@ -90,7 +90,7 @@ namespace PdfSharp.Fonts.OpenType
         public void CompleteGlyphClosure(Dictionary<int, object?> glyphs)
         {
             int count = glyphs.Count;
-            int[] glyphArray = new int[glyphs.Count];
+            var glyphArray = new int[glyphs.Count];
             glyphs.Keys.CopyTo(glyphArray, 0);
             if (!glyphs.ContainsKey(0))
                 glyphs.Add(0, null);

@@ -70,7 +70,7 @@ namespace PdfSharp.Fonts
                 int length = glyphIndices.Length;
                 for (int idx = 0; idx < length; idx++)
                 {
-                    int glyphIndex = glyphIndices[idx];
+                    var glyphIndex = glyphIndices[idx];
                     GlyphIndices[glyphIndex] = null!;
                 }
             }
@@ -109,7 +109,7 @@ namespace PdfSharp.Fonts
 
         public int[] GetGlyphIndices()
         {
-            int[] indices = new int[GlyphIndices.Count];
+            var indices = new int[GlyphIndices.Count];
             GlyphIndices.Keys.CopyTo(indices, 0);
             Array.Sort(indices);
             return indices;
