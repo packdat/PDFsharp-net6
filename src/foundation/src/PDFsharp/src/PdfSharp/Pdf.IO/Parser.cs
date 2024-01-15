@@ -54,10 +54,11 @@ namespace PdfSharp.Pdf.IO
         /// </summary>
         public int MoveToObject(PdfObjectID objectID)
         {
-            int position = _document.IrefTable[objectID]?.Position ?? throw new AggregateException("Invalid object ID.");
+            int position = _document.IrefTable[objectID]?.Position 
+                ?? throw new PdfReaderException($"Invalid object ID. The object ({objectID}) could not be located in the reference-table.");
             if (position < 0)
             {
-                throw new AggregateException($"Invalid position {position} for object ID {objectID}.");
+                throw new PdfReaderException($"Invalid position {position} for object ID {objectID}.");
             }
             return _lexer.Position = position;
         }
@@ -275,8 +276,10 @@ namespace PdfSharp.Pdf.IO
                 ReadStream(dict);
 #else
                 var startOfStream = _lexer.Position;
-                int length = GetStreamLength(dict!); // NRT HACK
-                byte[] bytes = _lexer.ReadStream(length);
+                try
+                {
+                    int length = GetStreamLength(dict!); // NRT HACK
+                    byte[] bytes = _lexer.ReadStream(length);
 #if true_
                 if (dict.Elements.GetString("/Filter") == "/FlateDecode")
                 {
@@ -302,22 +305,26 @@ namespace PdfSharp.Pdf.IO
                 End: ;
                 }
 #endif
-                var stream = new PdfStream(bytes, dict ?? NRT.ThrowOnNull<PdfDictionary>());
-                try
-                {
+                    var stream = new PdfStream(bytes, dict ?? NRT.ThrowOnNull<PdfDictionary>());
+                    dict.Stream = stream;
                     ReadSymbol(Symbol.EndStream);
                 }
-                catch (PdfReaderException)
+                catch (NotImplementedException)
                 {
-                    // stream length may be incorrect, scan byte by byte up to the "endstream" keyword
-                    _lexer.Position = startOfStream;
-                    _lexer.Position = _lexer.MoveToStartOfStream();
-                    bytes = _lexer.ScanUntilMarker(PdfEncoders.RawEncoding.GetBytes("\nendstream"), out var markerFound);
-                    if (!markerFound)
-                        throw;
-                    stream = new PdfStream(bytes, dict);
+                    throw;  // File-streams
                 }
-                dict.Stream = stream;
+                catch
+                {
+                    // most likely there is a problem with the stream-length.
+                    // it may be incorrect or completely missing.
+                    // scan manually for the end of the stream
+                    _lexer.Position = startOfStream;
+                    if (!_lexer.SearchEndOfStream(out var streamLength))
+                        throw;
+                    var bytes = _lexer.ReadStream(streamLength);
+                    dict!.Stream = new PdfStream(bytes, dict ?? NRT.ThrowOnNull<PdfDictionary>());
+                    ReadSymbol(Symbol.EndStream);
+                }
                 symbol = ScanNextToken();
 #endif
             }
