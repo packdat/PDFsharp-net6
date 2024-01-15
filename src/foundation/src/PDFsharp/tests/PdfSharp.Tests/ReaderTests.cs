@@ -289,9 +289,10 @@ namespace PdfSharp.Tests
         //[InlineData(@"c:\Temp\TestPdf\apoBank\Produktprofile\Versicherungsbedingungen der R+V apoGoldCardPlus\Versicherungsbedingungen der R+V für die apoGoldCard Plus_06.2018.pdf")]
         //[InlineData(@"c:\Temp\TestPdf\Wiener Städtische Versicherung AG\Formulare\Unfallmeldung\Unfallsmeldung_55ME201s.pdf")]
         //[InlineData(@"c:\Temp\TestPdf\apoBank\Studenten\Studie Generation Y\generation-y.pdf")]
-        [InlineData(@"c:\Temp\TestPdf\apoBank\Über die apoBank\Halbjahresbericht 2020\apobank-halbjahresfinanzbericht-2020.pdf")]
+        //[InlineData(@"c:\Temp\TestPdf\apoBank\Über die apoBank\Halbjahresbericht 2020\apobank-halbjahresfinanzbericht-2020.pdf")]
         // PNG-Decoder skipped:
         //[InlineData(@"c:\Temp\TestPdf\16E_0721_Neuaufnahmeantrag_ENG_CMYK_A4_Web_barrierefrei.pdf")]
+        [InlineData(@"C:\Temp\GithubIssues\PdfSharp6\73\src\File.pdf")]
         public void TestSingleFile(string filePath)
         {
             File.Exists(filePath).Should().BeTrue("File should exist");
