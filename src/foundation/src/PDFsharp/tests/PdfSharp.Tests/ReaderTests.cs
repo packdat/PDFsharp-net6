@@ -277,9 +277,46 @@ namespace PdfSharp.Tests
             Directory.Exists(basePath).Should().BeTrue("Folder with Pdf-files should exist");
             var allFiles = Directory.EnumerateFiles(basePath, "*.pdf", SearchOption.AllDirectories);
             allFiles.Count().Should().BeGreaterThan(0, "Folder should contain at least one Pdf-file");
+            
+            // compare page-counts with previous test-runs
+            // this is to detect potential issues when loading objects
+            var pageCounts = new Dictionary<string, int>();
+            var countsFile = Path.Combine(basePath, "PageCounts.txt");
+            if (File.Exists(countsFile))
+            {
+                var lines = File.ReadAllLines(countsFile, Encoding.UTF8);
+                for (var i = 0; i < lines.Length; i += 2)
+                {
+                    var name = lines[i];
+                    var strCount = lines[i + 1];
+                    if (int.TryParse(strCount, NumberStyles.Integer, CultureInfo.InvariantCulture, out var count))
+                    {
+                        pageCounts[name] = count;
+                    }
+                }
+            }
+            var pageCountMismatches = 0;
             foreach (var file in allFiles)
             {
-                VerifyPdfCanBeImported(file);
+                VerifyPdfCanBeImported(file, out var pageCount);
+                if (pageCounts.TryGetValue(file, out var counts) && counts != pageCount)
+                {
+                    pageCountMismatches++;
+                    Console.WriteLine("PageCount mismatch: Actual: {0}, Expected: {1}, File: {2}",
+                        pageCount, counts, file);
+                }
+                pageCounts[file] = pageCount;
+            }
+            // do not overwrite with potentially wrong values
+            // fix issues and comment the next 2 lines
+            if (pageCountMismatches > 0)
+                return;
+
+            using var sw = new StreamWriter(countsFile, false, Encoding.UTF8);
+            foreach (var kv in pageCounts)
+            {
+                sw.WriteLine(kv.Key);
+                sw.WriteLine(kv.Value.ToString(CultureInfo.InvariantCulture));
             }
         }
 
@@ -297,7 +334,7 @@ namespace PdfSharp.Tests
         public void TestSingleFile(string filePath)
         {
             File.Exists(filePath).Should().BeTrue("File should exist");
-            VerifyPdfCanBeImported(filePath);
+            VerifyPdfCanBeImported(filePath, out _);
         }
 
         [Theory]
@@ -313,7 +350,7 @@ namespace PdfSharp.Tests
             copiedDoc.Save(Path.Combine(Path.GetTempPath(), "out.pdf"));
         }
 
-        private bool VerifyPdfCanBeImported(string filePath)
+        private bool VerifyPdfCanBeImported(string filePath, out int numPages)
         {
             try
             {
@@ -328,6 +365,7 @@ namespace PdfSharp.Tests
                     documentCopy.AddPage(page);
                 }
                 documentCopy.Save(Path.Combine(Path.GetTempPath(), "out.pdf"));
+                numPages = pageCount;
                 return true;
             }
             catch (Exception ex)
@@ -337,6 +375,7 @@ namespace PdfSharp.Tests
                 Console.WriteLine();
                 output.WriteLine(message);
             }
+            numPages = 0;
             return false;
         }
     }
