@@ -77,10 +77,10 @@ As i have little to no experience regarding `PdfSignatureFields` i would be grea
 <br>
 
 ---
-Version **6.0.0-preview-2**  
-Published **2023-04-25**
+Version **6.1.0-preview-1**  
+Published **2023-12-21**
 
-This is the third preview of the **PDFsharp** project, the main project of PDFsharp & MigraDoc 6.0 with updates for C# 10 and .NET 6.0.
+This is a preview version of the **PDFsharp** project, the main project of PDFsharp & MigraDoc 6.0 with updates for C# 10 and .NET 6.0.
 
 PDFsharp: Copyright (c) 2005-2023 empira Software GmbH, Troisdorf (Cologne Area, Germany)  
 MigraDoc: Copyright (c) 2001-2023 empira Software GmbH, Troisdorf (Cologne Area, Germany)  
@@ -91,6 +91,8 @@ For more information see [docs.pdfsharp.net](https://docs.pdfsharp.net/)
 ## Read this FIRST
 
 Project documentation can be found on our DOCS site: <https://docs.pdfsharp.net>.
+
+Note: PowerShell 7 or higher is required to execute the PowerShell scripts that come with PDFsharp.
 
 ### Download assets first
 
@@ -106,7 +108,7 @@ Execute `./dev/download-assets.ps1`
 
 * You need the latest .NET SDK version installed
 * If you got an exception from `GitVersion.MsBuild` let us know.  
-  You can set a tag to define a valid version, e.g.: `git tag v6.0.0` to make it work.
+  You can set a tag to define a valid version, e.g.: `git tag v6.1.0` to make it work.
 
 ### Central package management
 

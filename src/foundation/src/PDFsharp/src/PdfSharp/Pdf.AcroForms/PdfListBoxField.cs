@@ -79,7 +79,7 @@ namespace PdfSharp.Pdf.AcroForms
                 {
                     var index = IndexInOptArray(v, true);
                     if (index < 0)
-                        throw new ArgumentException($"'{v}' is not a valid value for field '{FullyQualifiedName}'. Valid values are: [{string.Join(',', Options)}]");
+                        throw new ArgumentException($"'{v}' is not a valid value for field '{FullyQualifiedName}'. Valid values are: [{string.Join(",", Options)}]");
 
                     indices.Add(index);
                 }
@@ -138,7 +138,7 @@ namespace PdfSharp.Pdf.AcroForms
                     return;
                 }
                 if (value.Any(v => v < 0 || v >= Options.Count))
-                    throw new ArgumentOutOfRangeException($"At least one of the indices [{string.Join(',', value)}] is out of range. Valid values are in the range 0..{Options.Count - 1}");
+                    throw new ArgumentOutOfRangeException($"At least one of the indices [{string.Join(",", value)}] is out of range. Valid values are in the range 0..{Options.Count - 1}");
                 
                 Elements.Remove(PdfChoiceField.Keys.I);
                 Elements.Remove(PdfAcroField.Keys.V);

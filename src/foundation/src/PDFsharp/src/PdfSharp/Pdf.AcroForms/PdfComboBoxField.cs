@@ -67,7 +67,7 @@ namespace PdfSharp.Pdf.AcroForms
                 {
                     var index = IndexInOptArray(value, true);
                     if (index < 0)
-                        throw new ArgumentException($"'{value}' is not a valid value for field '{FullyQualifiedName}'. Valid values are: [{string.Join(',', Options)}]");
+                        throw new ArgumentException($"'{value}' is not a valid value for field '{FullyQualifiedName}'. Valid values are: [{string.Join(",", Options)}]");
                     
                     Elements.SetString(PdfAcroField.Keys.V, index >= 0 ? value : string.Empty);
                     SelectedIndex = index;

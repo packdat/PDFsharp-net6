@@ -260,7 +260,11 @@ namespace PdfSharp.Pdf
                 if (names.Count > 0)
                 {
                     _leastKey = names[0];
+#if NET6_0_OR_GREATER
                     _greatestKey = names[^1];
+#else
+                    _greatestKey = names[names.Count - 1];
+#endif
                     Elements[Keys.Limits] = new PdfArray(Owner, 
                         new PdfString(_leastKey), new PdfString(_greatestKey));
                 }

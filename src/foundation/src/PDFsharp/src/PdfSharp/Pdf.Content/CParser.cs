@@ -100,8 +100,7 @@ namespace PdfSharp.Pdf.Content
                     case CSymbol.UnicodeHexString:
                         s = new CString();
                         s.Value = _lexer.Token;
-                        // CString.ToString() only supports CStringType.String
-                        s.CStringType = CStringType.String;
+                        s.CStringType = CStringType.String; // Must set string type. So far, only CStringType.String is supported in CString.ToString().
                         _operands.Add(s);
                         break;
 
@@ -113,7 +112,6 @@ namespace PdfSharp.Pdf.Content
                         op = CreateOperator(OpCodeName.Dictionary);
                         //_operands.Clear();
                         sequence.Add(op);
-
                         break;
 
                     case CSymbol.Name:
@@ -182,7 +180,8 @@ namespace PdfSharp.Pdf.Content
                 }
             }
 #endif
-            op.Operands.Add(_operands);
+            //if (_operands.Count != 0)  // Do not create empty Operands sequence.
+                op.Operands.Add(_operands);
             _operands.Clear();
             return op;
         }

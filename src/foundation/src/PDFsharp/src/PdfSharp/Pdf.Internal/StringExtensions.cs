@@ -20,9 +20,17 @@
                 idx--;
             idx++;
             if (idx < text.Length)
+#if NET6_0_OR_GREATER
                 numberSuffix = int.Parse(text[idx..]);
+#else
+                numberSuffix = int.Parse(text.Substring(idx));
+#endif
             numberSuffix++;
+#if NET6_0_OR_GREATER
             var namePrefix = text[..idx];
+#else
+            var namePrefix = text.Substring(0, idx);
+#endif
             return namePrefix + numberSuffix.ToString(CultureInfo.InvariantCulture);
         }
     }

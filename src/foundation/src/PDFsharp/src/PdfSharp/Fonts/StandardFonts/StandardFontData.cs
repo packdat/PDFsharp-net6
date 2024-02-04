@@ -19,7 +19,7 @@
                 return null;
 
             // if the name comes from a resource-dictionary...
-            if (fontName.StartsWith('/'))
+            if (fontName.StartsWith("/"))
                 fontName = fontName.TrimStart('/');
 
             if (fontData.TryGetValue(fontName, out var data))

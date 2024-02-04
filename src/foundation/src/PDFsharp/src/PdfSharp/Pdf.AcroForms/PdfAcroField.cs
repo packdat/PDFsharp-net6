@@ -1194,9 +1194,13 @@ namespace PdfSharp.Pdf.AcroForms
                 if (String.IsNullOrEmpty(name))
                     return null;
 
+#if NET6_0_OR_GREATER
                 int dot = name.IndexOf('.', StringComparison.Ordinal);
-                string prefix = dot == -1 ? name : name[..dot];
-                string suffix = dot == -1 ? "" : name[(dot + 1)..];
+#else
+                int dot = name.IndexOf(".", StringComparison.Ordinal);
+#endif
+                string prefix = dot == -1 ? name : name.Substring(0, dot);
+                string suffix = dot == -1 ? "" : name.Substring(dot + 1);
 
                 int count = Elements.Count;
                 for (int idx = 0; idx < count; idx++)

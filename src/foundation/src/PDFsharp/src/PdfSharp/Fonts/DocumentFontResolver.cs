@@ -164,7 +164,7 @@ namespace PdfSharp.Fonts
                 return new Tuple<byte[]?, FontResolverInfo?>(null, null);
 
             // in a document, fonts are referenced by their name
-            if (!fontName.StartsWith('/'))
+            if (!fontName.StartsWith("/"))
                 fontName = "/" + fontName;
 
             var possibleResources = new List<PdfDictionary?>

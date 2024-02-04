@@ -608,13 +608,20 @@ namespace PdfSharp.Pdf.Content
                 if (Char.IsLetterOrDigit(_currChar))
                 {
                     hex[0] = Char.ToUpper(_currChar);
-                    // if there is an odd number of chars, the missing char should be treated as '0' according to the spec.
-                    hex[1] = _nextChar == '>' ? '0' : Char.ToUpper(_nextChar);
+                    // Second char is optional in PDF spec.
+                    if (Char.IsLetterOrDigit(_nextChar))
+                    {
+                        hex[1] = Char.ToUpper(_nextChar);
+                        ScanNextChar();
+                    }
+                    else
+                    {
+                        // We could check for ">" here and throw if we find anything else. The throw comes after the next iteration anyway.
+                        hex[1] = '0';
+                    }
                     int ch = Int32.Parse(new string(hex), NumberStyles.AllowHexSpecifier);
                     _token.Append(Convert.ToChar(ch));
                     ScanNextChar();
-                    if (_currChar != '>')
-                        ScanNextChar();
                 }
             }
             string chars = _token.ToString();
@@ -636,8 +643,8 @@ namespace PdfSharp.Pdf.Content
         {
             if (ContLength <= _charIndex)
             {
-                _currChar = _nextChar;
-                _nextChar = Chars.EOF;
+                _currChar = _nextChar; // The last character we are now dealing with.
+                _nextChar = Chars.EOF; // Next character is EOF.
             }
             else
             {

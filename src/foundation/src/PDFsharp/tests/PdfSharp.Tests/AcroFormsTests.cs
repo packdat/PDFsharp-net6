@@ -499,7 +499,11 @@ namespace PdfSharp.Tests
 
             foreach (var file in allFiles)
             {
+#if NET6_0_OR_GREATER
                 var relativePath = Path.GetRelativePath(basePath, file);
+#else
+                var relativePath = file.Substring(basePath.Length);
+#endif
                 output.WriteLine("Processing: {0}", file);
                 try
                 {

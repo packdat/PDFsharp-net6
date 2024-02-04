@@ -32,9 +32,14 @@ namespace PdfSharp.Pdf.Advanced
         /// <returns>true, if name is found, false otherwise</returns>
         public bool Contains(string name)
         {
+#if NET6_0_OR_GREATER
             ArgumentNullException.ThrowIfNull(name, nameof(name));
+#else
+            if (name == null)
+                throw new ArgumentNullException(nameof(name));
+#endif
 
-            return Elements.ContainsKey(name.StartsWith('/') ? name : '/' + name);
+            return Elements.ContainsKey(name.StartsWith("/") ? name : '/' + name);
         }
 
         /// <summary>
@@ -45,9 +50,14 @@ namespace PdfSharp.Pdf.Advanced
         /// or null if <paramref name="name"/> does not exist</returns>
         public PdfArray? GetDestination(string name)
         {
+#if NET6_0_OR_GREATER
             ArgumentNullException.ThrowIfNull(name, nameof(name));
+#else
+            if (name == null)
+                throw new ArgumentNullException(nameof(name));
+#endif
 
-            name = name.StartsWith('/') ? name : '/' + name;
+            name = name.StartsWith("/") ? name : '/' + name;
             var dict = Elements.GetDictionary(name);
             if (dict != null)
             {

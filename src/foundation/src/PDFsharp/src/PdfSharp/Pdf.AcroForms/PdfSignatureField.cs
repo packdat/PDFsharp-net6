@@ -5,6 +5,8 @@ using PdfSharp.Drawing;
 using PdfSharp.Pdf.Advanced;
 using PdfSharp.Pdf.Annotations;
 
+using PdfSharp.Pdf.IO;
+
 namespace PdfSharp.Pdf.AcroForms
 {
     /// <summary>
@@ -81,6 +83,23 @@ namespace PdfSharp.Pdf.AcroForms
         {
             base.PrepareForSave();
             RenderAppearance();
+        }
+
+        /// <summary>
+        /// Writes a key/value pair of this signature field dictionary.
+        /// </summary>
+        internal override void WriteDictionaryElement(PdfWriter writer, PdfName key)
+        {
+            // Don't encrypt Contents key's value (PDF Reference 2.0: 7.6.2, Page 71).
+            if (key.Value == Keys.Contents)
+            {
+                var securityHandler = writer.SecurityHandler;
+                writer.SecurityHandler = null;
+                base.WriteDictionaryElement(writer, key);
+                writer.SecurityHandler = securityHandler;
+            }
+            else
+                base.WriteDictionaryElement(writer, key);
         }
 
         /// <summary>

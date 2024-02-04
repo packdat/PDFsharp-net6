@@ -8,7 +8,7 @@ using System.Drawing.Drawing2D;
 #endif
 #if WPF
 using System.Windows;
-using System.Windows.Media;
+//using System.Windows.Media;
 #endif
 using PdfSharp.Pdf.Internal;
 #if !EDF_CORE
@@ -60,7 +60,7 @@ namespace PdfSharp.Fonts.OpenType
                 if (idName.Contains("XPS-Font-") && FontFace.name != null && FontFace.name.Name.Length != 0)
                 {
                     string tag = String.Empty;
-                    if (idName.IndexOf('+', StringComparison.Ordinal) == 6)
+                    if (idName.IndexOf("+", StringComparison.Ordinal) == 6)
                         tag = idName.Substring(0, 6);
                     idName = tag + "+" + FontFace.name.Name;
                     if (FontFace.name.Style.Length != 0)
@@ -267,10 +267,7 @@ namespace PdfSharp.Fonts.OpenType
         /// </summary>
         public int CharCodeToGlyphIndex(char value)
         {
-            //try
-            //{
-
-            CMap4 cmap = FontFace.cmap.cmap4;
+            var cmap = FontFace.cmap.cmap4;
             int segCount = cmap.segCountX2 / 2;
             int seg;
             for (seg = 0; seg < segCount; seg++)
@@ -281,7 +278,13 @@ namespace PdfSharp.Fonts.OpenType
             Debug.Assert(seg < segCount);
 
             if (value < cmap.startCount[seg])
+            {
+                // If no glyph is found for no-break hyphen, use hyphen glyph instead.
+                if (value == '\u2011')
+                    return CharCodeToGlyphIndex('-');
+
                 return 0;
+            }
 
             if (cmap.idRangeOffs[seg] == 0)
                 return (value + cmap.idDelta[seg]) & 0xFFFF;
@@ -289,7 +292,9 @@ namespace PdfSharp.Fonts.OpenType
             int idx = cmap.idRangeOffs[seg] / 2 + (value - cmap.startCount[seg]) - (segCount - seg);
             Debug.Assert(idx >= 0 && idx < cmap.glyphCount);
 
-            if (cmap.glyphIdArray[idx] == 0)
+            var glyphId = cmap.glyphIdArray[idx];
+
+            if (glyphId == 0)
                 return 0;
 
             return (cmap.glyphIdArray[idx] + cmap.idDelta[seg]) & 0xFFFF;
