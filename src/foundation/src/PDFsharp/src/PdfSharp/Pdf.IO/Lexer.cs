@@ -173,32 +173,6 @@ namespace PdfSharp.Pdf.IO
         }
 
         /// <summary>
-        /// Moves to the first byte of a stream.<br></br>
-        /// The current position is expected be be located right after the "stream" keyword.
-        /// </summary>
-        /// <returns></returns>
-        internal int MoveToStartOfStream()
-        {
-            int pos;
-
-            // Skip illegal blanks behind «stream».
-            while (_currChar == Chars.SP)
-                ScanNextChar(true);
-
-            // Skip new line behind «stream».
-            if (_currChar == Chars.CR)
-            {
-                if (_nextChar == Chars.LF)
-                    pos = _idxChar + 2;
-                else
-                    pos = _idxChar + 1;
-            }
-            else if (_currChar == Chars.LF)
-                pos = _idxChar + 1;
-            return pos;
-        }
-
-        /// <summary>
         /// Scans the input stream for the specified marker.<br></br>
         /// Returns the bytes from the current position up to the start of the marker or the end of the stream.<br></br>
         /// The position of the input-stream is the byte right after the marker (if found) or the end of the stream.
