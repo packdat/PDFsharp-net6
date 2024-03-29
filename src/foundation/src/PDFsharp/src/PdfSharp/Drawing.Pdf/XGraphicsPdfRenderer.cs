@@ -4,7 +4,9 @@
 #define ITALIC_SIMULATION
 
 using System.Text;
+using Microsoft.Extensions.Logging;
 using PdfSharp.Events;
+using PdfSharp.Fonts.Internal;
 #if GDI
 using System.Drawing.Drawing2D;
 #endif
@@ -20,9 +22,11 @@ using SysSize = Windows.Foundation.Size;
 #endif
 using PdfSharp.Fonts.OpenType;
 using PdfSharp.Internal;
+using PdfSharp.Logging;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.Internal;
 using PdfSharp.Pdf.Advanced;
+using PdfSharp.Fonts;
 
 // ReSharper disable RedundantNameQualifier
 // ReSharper disable CompareOfFloatsByEqualityOperator
@@ -111,7 +115,7 @@ namespace PdfSharp.Drawing.Pdf
         public void DrawLines(XPen pen, XPoint[] points)
         {
             if (Owner._uaManager != null)
-                Owner.Events.OnPageGraphicsAction(Owner, new PageGraphicsEventArgs { Page = _page, Graphics = Gfx, ActionType = PageGraphicsActionType.Draw });  // @PDF/UA
+                Owner.Events.OnPageGraphicsAction(Owner, new PageGraphicsEventArgs(Owner) { Page = _page, Graphics = Gfx, ActionType = PageGraphicsActionType.Draw });  // @PDF/UA
 
             if (pen == null)
                 throw new ArgumentNullException(nameof(pen));
@@ -124,7 +128,7 @@ namespace PdfSharp.Drawing.Pdf
 
             Realize(pen);
 
-            const string format = Config.SignificantFigures4;
+            const string format = Config.SignificantDecimalPlaces4;
             AppendFormatPoint("{0:" + format + "} {1:" + format + "} m\n", points[0].X, points[0].Y);
             for (int idx = 1; idx < count; idx++)
                 AppendFormatPoint("{0:" + format + "} {1:" + format + "} l\n", points[idx].X, points[idx].Y);
@@ -143,7 +147,7 @@ namespace PdfSharp.Drawing.Pdf
         public void DrawBeziers(XPen pen, XPoint[] points)
         {
             if (Owner._uaManager != null)
-                Owner.Events.OnPageGraphicsAction(Owner, new PageGraphicsEventArgs { Page = _page, Graphics = Gfx, ActionType = PageGraphicsActionType.Draw });  // @PDF/UA
+                Owner.Events.OnPageGraphicsAction(Owner, new PageGraphicsEventArgs(Owner) { Page = _page, Graphics = Gfx, ActionType = PageGraphicsActionType.Draw });  // @PDF/UA
 
             if (pen == null)
                 throw new ArgumentNullException(nameof(pen));
@@ -159,7 +163,7 @@ namespace PdfSharp.Drawing.Pdf
 
             Realize(pen);
 
-            const string format = Config.SignificantFigures4;
+            const string format = Config.SignificantDecimalPlaces4;
             AppendFormatPoint("{0:" + format + "} {1:" + format + "} m\n", points[0].X, points[0].Y);
             for (int idx = 1; idx < count; idx += 3)
                 AppendFormat3Points("{0:" + format + "} {1:" + format + "} {2:" + format + "} {3:" + format + "} {4:" + format + "} {5:" + format + "} c\n",
@@ -175,7 +179,7 @@ namespace PdfSharp.Drawing.Pdf
         public void DrawCurve(XPen pen, XPoint[] points, double tension)
         {
             if (Owner._uaManager != null)
-                Owner.Events.OnPageGraphicsAction(Owner, new PageGraphicsEventArgs { Page = _page, Graphics = Gfx, ActionType = PageGraphicsActionType.Draw });  // @PDF/UA
+                Owner.Events.OnPageGraphicsAction(Owner, new PageGraphicsEventArgs(Owner) { Page = _page, Graphics = Gfx, ActionType = PageGraphicsActionType.Draw });  // @PDF/UA
 
             if (pen == null)
                 throw new ArgumentNullException(nameof(pen));
@@ -193,7 +197,7 @@ namespace PdfSharp.Drawing.Pdf
 
             Realize(pen);
 
-            const string format = Config.SignificantFigures4;
+            const string format = Config.SignificantDecimalPlaces4;
             AppendFormatPoint("{0:" + format + "} {1:" + format + "} m\n", points[0].X, points[0].Y);
             if (count == 2)
             {
@@ -215,7 +219,7 @@ namespace PdfSharp.Drawing.Pdf
         public void DrawArc(XPen pen, double x, double y, double width, double height, double startAngle, double sweepAngle)
         {
             if (Owner._uaManager != null)
-                Owner.Events.OnPageGraphicsAction(Owner, new PageGraphicsEventArgs { Page = _page, Graphics = Gfx, ActionType = PageGraphicsActionType.Draw });  // @PDF/UA
+                Owner.Events.OnPageGraphicsAction(Owner, new PageGraphicsEventArgs(Owner) { Page = _page, Graphics = Gfx, ActionType = PageGraphicsActionType.Draw });  // @PDF/UA
 
             if (pen == null)
                 throw new ArgumentNullException(nameof(pen));
@@ -231,14 +235,14 @@ namespace PdfSharp.Drawing.Pdf
         public void DrawRectangle(XPen? pen, XBrush? brush, double x, double y, double width, double height)
         {
             if (Owner._uaManager != null)
-                Owner.Events.OnPageGraphicsAction(Owner, new PageGraphicsEventArgs { Page = _page, Graphics = Gfx, ActionType = PageGraphicsActionType.Draw });  // @PDF/UA
+                Owner.Events.OnPageGraphicsAction(Owner, new PageGraphicsEventArgs(Owner) { Page = _page, Graphics = Gfx, ActionType = PageGraphicsActionType.Draw });  // @PDF/UA
 
             if (pen == null && brush == null)
             {    // ReSharper disable once NotResolvedInText
                 throw new ArgumentNullException("pen and brush");
             }
 
-            const string format = Config.SignificantFigures3;
+            const string format = Config.SignificantDecimalPlaces3;
 
             Realize(pen, brush);
             //AppendFormat123("{0:" + format + "} {1:" + format + "} {2:" + format + "} {3:" + format + "} re\n", x, y, width, -height);
@@ -269,7 +273,7 @@ namespace PdfSharp.Drawing.Pdf
         public void DrawRoundedRectangle(XPen? pen, XBrush? brush, double x, double y, double width, double height, double ellipseWidth, double ellipseHeight)
         {
             if (Owner._uaManager != null)
-                Owner.Events.OnPageGraphicsAction(Owner, new PageGraphicsEventArgs { Page = _page, Graphics = Gfx, ActionType = PageGraphicsActionType.Draw });  // @PDF/UA
+                Owner.Events.OnPageGraphicsAction(Owner, new PageGraphicsEventArgs(Owner) { Page = _page, Graphics = Gfx, ActionType = PageGraphicsActionType.Draw });  // @PDF/UA
 
             XGraphicsPath path = new XGraphicsPath();
             path.AddRoundedRectangle(x, y, width, height, ellipseWidth, ellipseHeight);
@@ -281,7 +285,7 @@ namespace PdfSharp.Drawing.Pdf
         public void DrawEllipse(XPen? pen, XBrush? brush, double x, double y, double width, double height)
         {
             if (Owner._uaManager != null)
-                Owner.Events.OnPageGraphicsAction(Owner, new PageGraphicsEventArgs { Page = _page, Graphics = Gfx, ActionType = PageGraphicsActionType.Draw });  // @PDF/UA
+                Owner.Events.OnPageGraphicsAction(Owner, new PageGraphicsEventArgs(Owner) { Page = _page, Graphics = Gfx, ActionType = PageGraphicsActionType.Draw });  // @PDF/UA
 
             Realize(pen, brush);
 
@@ -297,7 +301,7 @@ namespace PdfSharp.Drawing.Pdf
             double y0 = rect.Y + δy;
 
             // Approximate an ellipse by drawing four cubic splines.
-            const string format = Config.SignificantFigures4;
+            const string format = Config.SignificantDecimalPlaces4;
             AppendFormatPoint("{0:" + format + "} {1:" + format + "} m\n", x0 + δx, y0);
             AppendFormat3Points("{0:" + format + "} {1:" + format + "} {2:" + format + "} {3:" + format + "} {4:" + format + "} {5:" + format + "} c\n",
               x0 + δx, y0 + fy, x0 + fx, y0 + δy, x0, y0 + δy);
@@ -315,7 +319,7 @@ namespace PdfSharp.Drawing.Pdf
         public void DrawPolygon(XPen? pen, XBrush? brush, XPoint[] points, XFillMode fillmode)
         {
             if (Owner._uaManager != null)
-                Owner.Events.OnPageGraphicsAction(Owner, new PageGraphicsEventArgs { Page = _page, Graphics = Gfx, ActionType = PageGraphicsActionType.Draw });  // @PDF/UA
+                Owner.Events.OnPageGraphicsAction(Owner, new PageGraphicsEventArgs(Owner) { Page = _page, Graphics = Gfx, ActionType = PageGraphicsActionType.Draw });  // @PDF/UA
 
             Realize(pen, brush);
 
@@ -323,7 +327,7 @@ namespace PdfSharp.Drawing.Pdf
             if (points.Length < 2)
                 throw new ArgumentException(PSSR.PointArrayAtLeast(2), nameof(points));
 
-            const string format = Config.SignificantFigures4;
+            const string format = Config.SignificantDecimalPlaces4;
             AppendFormatPoint("{0:" + format + "} {1:" + format + "} m\n", points[0].X, points[0].Y);
             for (int idx = 1; idx < count; idx++)
                 AppendFormatPoint("{0:" + format + "} {1:" + format + "} l\n", points[idx].X, points[idx].Y);
@@ -337,11 +341,11 @@ namespace PdfSharp.Drawing.Pdf
           double startAngle, double sweepAngle)
         {
             if (Owner._uaManager != null)
-                Owner.Events.OnPageGraphicsAction(Owner, new PageGraphicsEventArgs { Page = _page, Graphics = Gfx, ActionType = PageGraphicsActionType.Draw });  // @PDF/UA
+                Owner.Events.OnPageGraphicsAction(Owner, new PageGraphicsEventArgs(Owner) { Page = _page, Graphics = Gfx, ActionType = PageGraphicsActionType.Draw });  // @PDF/UA
 
             Realize(pen, brush);
 
-            const string format = Config.SignificantFigures4;
+            const string format = Config.SignificantDecimalPlaces4;
             AppendFormatPoint("{0:" + format + "} {1:" + format + "} m\n", x + width / 2, y + height / 2);
             AppendPartialArc(x, y, width, height, startAngle, sweepAngle, PathStart.LineTo1st, new XMatrix());
             AppendStrokeFill(pen, brush, XFillMode.Alternate, true);
@@ -352,7 +356,7 @@ namespace PdfSharp.Drawing.Pdf
         public void DrawClosedCurve(XPen? pen, XBrush? brush, XPoint[] points, double tension, XFillMode fillmode)
         {
             if (Owner._uaManager != null)
-                Owner.Events.OnPageGraphicsAction(Owner, new PageGraphicsEventArgs { Page = _page, Graphics = Gfx, ActionType = PageGraphicsActionType.Draw });  // @PDF/UA
+                Owner.Events.OnPageGraphicsAction(Owner, new PageGraphicsEventArgs(Owner) { Page = _page, Graphics = Gfx, ActionType = PageGraphicsActionType.Draw });  // @PDF/UA
 
             int count = points.Length;
             if (count == 0)
@@ -365,7 +369,7 @@ namespace PdfSharp.Drawing.Pdf
 
             Realize(pen, brush);
 
-            const string format = Config.SignificantFigures4;
+            const string format = Config.SignificantDecimalPlaces4;
             AppendFormatPoint("{0:" + format + "} {1:" + format + "} m\n", points[0].X, points[0].Y);
             if (count == 2)
             {
@@ -388,7 +392,7 @@ namespace PdfSharp.Drawing.Pdf
         public void DrawPath(XPen? pen, XBrush? brush, XGraphicsPath path)
         {
             if (Owner._uaManager != null)
-                Owner.Events.OnPageGraphicsAction(Owner, new PageGraphicsEventArgs { Page = _page, Graphics = Gfx, ActionType = PageGraphicsActionType.Draw });  // @PDF/UA
+                Owner.Events.OnPageGraphicsAction(Owner, new PageGraphicsEventArgs(Owner) { Page = _page, Graphics = Gfx, ActionType = PageGraphicsActionType.Draw });  // @PDF/UA
 
             if (pen == null && brush == null)
                 throw new ArgumentNullException(nameof(pen));
@@ -428,7 +432,7 @@ namespace PdfSharp.Drawing.Pdf
         public void DrawString(string s, XFont font, XBrush brush, XRect rect, XStringFormat format)
         {
             if (Owner._uaManager != null)
-                Owner.Events.OnPageGraphicsAction(Owner, new PageGraphicsEventArgs { Page = _page, Graphics = Gfx, ActionType = PageGraphicsActionType.DrawString });  // @PDF/UA
+                Owner.Events.OnPageGraphicsAction(Owner, new(Owner) { Page = _page, Graphics = Gfx, ActionType = PageGraphicsActionType.DrawString });  // @PDF/UA
 
             double x = rect.X;
             double y = rect.Y;
@@ -436,14 +440,60 @@ namespace PdfSharp.Drawing.Pdf
             double lineSpace = font.GetHeight();
             double cyAscent = lineSpace * font.CellAscent / font.CellSpace;
             double cyDescent = lineSpace * font.CellDescent / font.CellSpace;
-            double width = _gfx.MeasureString(s, font).Width;
 
             bool italicSimulation = (font.GlyphTypeface.StyleSimulations & XStyleSimulations.ItalicSimulation) != 0;
             bool boldSimulation = (font.GlyphTypeface.StyleSimulations & XStyleSimulations.BoldSimulation) != 0;
             bool strikeout = (font.Style & XFontStyleEx.Strikeout) != 0;
             bool underline = (font.Style & XFontStyleEx.Underline) != 0;
 
-            Realize(font, brush, boldSimulation ? 2 : 0);
+            //var otDescriptor = font.OpenTypeDescriptor;
+            //var ids = otDescriptor.GlyphIndicesFromCodepoints(codePoints);
+            //var codeRun = new CharacterCodeRun(ids);
+            var codePoints = UnicodeHelper.Utf32FromString(s /*, font.AnsiEncoding*/);
+            var glyphTypeface = font.GlyphTypeface;
+            var otDescriptor = font.OpenTypeDescriptor;
+            var codePointsWithGlyphIndices = otDescriptor.GlyphIndicesFromCodePoints(codePoints);
+
+            // Invoke RenderEvent.
+            var args = new RenderTextEventArgs(Owner)
+            {
+                Font = font,
+                CodePointGlyphIndexPairs = codePointsWithGlyphIndices
+            };
+
+            Owner.RenderEvents.OnRenderTextEvent(this, args);
+            codePointsWithGlyphIndices = args.CodePointGlyphIndexPairs;
+            if (args.ReevaluateGlyphIndices)
+            {
+                codePoints = args.CodePointGlyphIndexPairs.Select(x => x.CodePoint).ToArray();
+                codePointsWithGlyphIndices = otDescriptor.GlyphIndicesFromCodePoints(codePoints);
+            }
+
+            // Decide text encoding.
+            FontType fontType;
+            bool isAnsi;
+            if (font.AutoEncoding)
+            {
+                // Can we use WinAnsi encoding?
+                isAnsi = AnsiEncoding.IsAnsi(codePoints);
+                fontType = isAnsi ? FontType.TrueTypeWinAnsi : FontType.Type0Unicode;
+            }
+            else
+            {
+                fontType = font.FontTypeFromUnicodeFlag;
+                isAnsi = fontType == FontType.TrueTypeWinAnsi;
+            }
+
+            //Realize(font, brush, boldSimulation ? 2 : 0);
+            //Realize(glyphTypeface, font.Size, brush, boldSimulation ? 2 : 0, font.FontTypeFromUnicodeFlag);
+            Realize(glyphTypeface, font.Size, brush, boldSimulation ? 2 : 0, fontType);
+            var realizedFont = _gfxState.RealizedFont;
+            Debug.Assert(realizedFont != null);
+            realizedFont.AddChars(codePointsWithGlyphIndices);
+
+            //double width = _gfx.MeasureString(s, font).Width;
+            double width = FontHelper.MeasureString(codePointsWithGlyphIndices, font).Width;
+            //Debug.Assert(widthOld == width2);
 
             switch (format.Alignment)
             {
@@ -504,134 +554,232 @@ namespace PdfSharp.Drawing.Pdf
                 }
             }
 
-            var realizedFont = _gfxState.RealizedFont;
-            Debug.Assert(realizedFont != null);
-            realizedFont.AddChars(s);
+#if true
+            var length = codePoints.Length;
 
-            OpenTypeDescriptor descriptor = realizedFont.FontDescriptor._descriptor;
+            // Standard-case: characters do not have color-information
+            if (codePointsWithGlyphIndices.All(item => item.Color is null))
+            {
+                string? text;
+                if (isAnsi)
+                {
+                    // Use ANSI character encoding.
+                    byte[] bytes = new byte[length];
+                    for (int idx = 0; idx < length; idx++)
+                    {
+                        ref var item = ref codePoints[idx];
+                        var ch = AnsiEncoding.UnicodeToAnsi((char)item);
+                        bytes[idx] = (byte)ch;
+                    }
+                    text = PdfEncoders.ToStringLiteral(bytes, false, null);
+                }
+                else
+                {
+                    // Use Unicode glyph encoding.
+                    var bytes = new byte[2 * length];
+                    for (int idx = 0; idx < length; idx++)
+                    {
+                        ref var item = ref codePointsWithGlyphIndices[idx];
+                        bytes[idx * 2] = (byte)((item.GlyphIndex & 0xFF00) >>> 8);
+                        bytes[idx * 2 + 1] = (byte)(item.GlyphIndex & 0xFF);
+                    }
+                    text = PdfEncoders.ToHexStringLiteral(bytes, true, false, null);
+                }
+                RenderText(text, font, brush, x, y, width);
+                return;
+            }
 
-            string? text;
+            // Special case: characters are colorized (e.g. Emoji-Fonts)
             // we split the text based on whether special color-handling is required for a character
-            List<List<(int, ColrTable.GlyphRecord?)>> textParts = new();
-            var needsColorHandling = false;
+
+            List<List<CodePointGlyphIndexPair>> textParts = [];
+            var partGlyphs = new List<CodePointGlyphIndexPair>();
+            var isColorized = false;
+            for (int idx = 0; idx < length; idx++)
+            {
+                ref var cp = ref codePointsWithGlyphIndices[idx];
+                var color = cp.Color;
+                // if glyph is colored, render individually, else add to list
+                if (color != null || (color == null && isColorized))
+                {
+                    if (partGlyphs.Count > 0)
+                        textParts.Add(partGlyphs);
+                    partGlyphs = [];
+                    isColorized = color != null;
+                }
+                partGlyphs.Add(cp);
+            }
+            if (partGlyphs.Count > 0)
+                textParts.Add(partGlyphs);
+
+            Debug.Assert(textParts.Sum(p => p.Count) == length, "Character count mismatch");
+
+            const string format2 = Config.SignificantDecimalPlaces4;
+            foreach (var textPart in textParts)
+            {
+                // textPart is either a single item having a color-record or 1-N items without color
+                // TODO: does not look right.. Refactor and render based on length of textPart ?
+                if (textPart.Count == 1 && textPart[0].Color != null)
+                {
+                    var chunkWidth = 0.0;
+                    var glyphRecord = textPart[0].Color!.Value;
+                    for (var i = 0; i < glyphRecord.numLayers; i++)
+                    {
+                        var layer = otDescriptor.FontFace.colr!.layerRecords[i + glyphRecord.firstLayerIndex];
+                        var cp = new CodePointGlyphIndexPair(layer.glyphId, layer.glyphId);
+                        // 0xffff is a special entry denoting the current foreground-color
+                        if (layer.paletteIndex != 0xffff)
+                        {
+                            var color = otDescriptor.FontFace.cpal!.colorRecords[layer.paletteIndex];
+                            _gfxState.RealizeBrush(new XSolidBrush(color), _colorMode, 0, 0);
+                        }
+                        else
+                        {
+                            _gfxState.RealizeBrush(brush, _colorMode, 0, 0);
+                        }
+                        realizedFont.AddChars([cp]);
+                        var partWidth = otDescriptor.GlyphIndexToEmWidth(layer.glyphId, font.Size);
+                        chunkWidth = Math.Max(chunkWidth, partWidth);
+                        var partBytes = new byte[2];
+                        partBytes[0] = (byte)((layer.glyphId & 0xFF00) >>> 8);
+                        partBytes[1] = (byte)(layer.glyphId & 0xFF);
+                        partBytes = PdfEncoders.FormatStringLiteral(partBytes, true, false, true, null);
+                        var text = PdfEncoders.RawEncoding.GetString(partBytes, 0, partBytes.Length);
+                        if (i == 0)
+                        {
+                            var pos = new XPoint(x, y);
+                            pos = WorldToView(pos);
+                            AdjustTdOffset(ref pos, 0, false);
+                            AppendFormatArgs("{0:" + format2 + "} {1:" + format2 + "} Td {2} Tj\n", pos.X, pos.Y, text);
+                        }
+                        else
+                        {
+                            // rest of the layers are rendered on top of the first layer
+                            AppendFormatArgs("0 0 Td {0} Tj\n", text);
+                        }
+                    }
+                    x += chunkWidth;
+                }
+                else
+                {
+                    Debug.Assert(textPart.All(p => p.Color == null), "Colors should be null here");
+
+                    width = 0.0;
+                    var sb = new StringBuilder(textPart.Count);
+                    foreach (var cp in textPart)
+                    {
+                        width += otDescriptor.GlyphIndexToWidth(cp.GlyphIndex);
+                        sb.Append((char)cp.GlyphIndex);
+                    }
+                    width = width * font.Size / otDescriptor.UnitsPerEm;
+                    s = sb.ToString();
+                    byte[] bytes = PdfEncoders.RawUnicodeEncoding.GetBytes(s);
+                    bytes = PdfEncoders.FormatStringLiteral(bytes, true, false, true, null);
+                    var text = PdfEncoders.RawEncoding.GetString(bytes, 0, bytes.Length);
+                    _gfxState.RealizeBrush(brush, _colorMode, 0, 0);
+                    RenderText(text, font, brush, x, y, width);
+                    x += width;
+                }
+            }
+#else
             if (font.Unicode)
             {
-                var partGlyphs = new List<(int, ColrTable.GlyphRecord?)>();
-                bool isSymbolFont = descriptor.FontFace.cmap.symbol;
-                for (int idx = 0; idx < s.Length; idx++)
+                var sb = new StringBuilder();
+                bool isSymbolFont = descriptor.IsSymbolFont;
+                int length = s.Length;
+                for (int idx = 0; idx < length; idx++)
                 {
-                    int glyphID;
                     char ch = s[idx];
+                    if (Char.IsLowSurrogate(ch))
+                    {
+                        // We only come here when the text contains a low surrogate not preceded by a high surrogate.
+                        // This is an error in the UTF-32 text and therefore ignored.
+                        LogHost.FontManagementLogger.LogWarning("Unexpected low surrogate found: 0x{Char:X2}", ch);
+                        continue;
+                    }
+
                     if (isSymbolFont)
                     {
+                        // ch must be fit in one byte.
+                        if ((ch & 0xFF00) != 0)
+                        {
+                            LogHost.FontManagementLogger.LogWarning("Unexpected character found for symbol font: 0x{Char:X2}", ch);
+                            continue;
+                        }
+
                         // Remap ch for symbol fonts.
-                        ch = (char)(ch | (descriptor.FontFace.os2.usFirstCharIndex & 0xFF00));  // @@@ refactor
-                        glyphID = descriptor.CharCodeToGlyphIndex(ch);
+                        ch = descriptor.RemapSymbolChar(ch);
+                        var glyphIndex = descriptor.BmpCodepointToGlyphIndex(ch);
+                        sb.Append((char)glyphIndex);
+
+                    }
+                    else if (Char.IsHighSurrogate(ch))
+                    {
+                        // UTF16 surrogate pair expected.
+                        char ch2;
+                        if (++idx < length)
+                        {
+                            ch2 = s[idx];
+                            if (Char.IsLowSurrogate(ch2) is false)
+                            {
+                                LogHost.FontManagementLogger.LogWarning("High surrogate 0x{Char:X2} not followed by low surrogate.", ch);
+                                continue;
+                            }
+                        }
+                        else
+                        {
+                            LogHost.FontManagementLogger.LogWarning("High surrogate 0x{Char:X2} found at end of string.", ch);
+                            break;
+                        }
+
+                        var glyphIndex = descriptor.SurrogatePairToGlyphIndex(ch, ch2);
+                        sb.Append((char)glyphIndex);
                     }
                     else
-                        glyphID = descriptor.CharCodeToGlyphIndex(s, ref idx);
-                    var color = descriptor.GetColorRecord(glyphID);
-                    // if glyph is colored, render individually, else add to list
-                    if (color != null || (color == null && needsColorHandling))
                     {
-                        if (partGlyphs.Count > 0)
-                            textParts.Add(partGlyphs);
-                        partGlyphs = new();
-                        needsColorHandling = color != null;
+                        // BMP character.
+                        var glyphIndex = descriptor.BmpCodepointToGlyphIndex(ch);
+#if DEBUG_
+                        // Are BMP characters also in cmap 12?
+                        // => No
+                        var altID = descriptor.CodepointToGlyphIndex_cmap12_only(ch);
+                        if (glyphIndex != altID)
+                            _ = typeof(int);
+#endif
+                        sb.Append((char)glyphIndex);
                     }
-                    partGlyphs.Add((glyphID, color));
+                    else
+                        sb.Append((char)part.Item1);
                 }
-                if (partGlyphs.Count > 0)
-                    textParts.Add(partGlyphs);
+                s = sb.ToString();
+
+                byte[] bytes = PdfEncoders.RawUnicodeEncoding.GetBytes(s);
+                bytes = PdfEncoders.FormatStringLiteral(bytes, true, false, true, null);
+                text = PdfEncoders.RawEncoding.GetString(bytes, 0, bytes.Length);
             }
             else
             {
                 byte[] bytes = PdfEncoders.WinAnsiEncoding.GetBytes(s);
                 text = PdfEncoders.ToStringLiteral(bytes, false, null);
-                RenderText(text, brush, x, y, font, realizedFont, lineSpace, width,
-                    boldSimulation, italicSimulation, underline, strikeout);
-                return;
             }
-
-            const string format2 = Config.SignificantFigures4;
-
-            foreach (var textPart in textParts)
-            {
-                var sb = new StringBuilder();
-                foreach (var part in textPart)
-                {
-                    if (part.Item2 != null)
-                    {
-                        var chunkWidth = 0.0;
-                        var glyphRecord = part.Item2.Value;
-                        for (var i = 0; i < glyphRecord.numLayers; i++)
-                        {
-                            var layer = descriptor.FontFace.colr!.layerRecords[i + glyphRecord.firstLayerIndex];
-                            sb.Append((char)layer.glyphId);
-                            // 0xffff is a special entry denoting the current foreground-color
-                            if (layer.paletteIndex != 0xffff)
-                            {
-                                _gfxState.RealizeBrush(
-                                    new XSolidBrush(descriptor.FontFace.cpal!.colorRecords[layer.paletteIndex]),
-                                    _colorMode, 0, 0);
-                            }
-                            else
-                            {
-                                _gfxState.RealizeBrush(brush, _colorMode, 0, 0);
-                            }
-                            s = sb.ToString();
-                            realizedFont.AddGlyphIndices(s);
-                            var partWidth = descriptor.GlyphIndexToEmfWidth(layer.glyphId, font.Size);
-                            chunkWidth = Math.Max(chunkWidth, partWidth);
-                            var partBytes = PdfEncoders.RawUnicodeEncoding.GetBytes(s);
-                            partBytes = PdfEncoders.FormatStringLiteral(partBytes, true, false, true, null);
-                            text = PdfEncoders.RawEncoding.GetString(partBytes, 0, partBytes.Length);
-                            if (i == 0)
-                            {
-                                var pos = new XPoint(x, y);
-                                pos = WorldToView(pos);
-                                AdjustTdOffset(ref pos, 0, false);
-                                AppendFormatArgs("{0:" + format2 + "} {1:" + format2 + "} Td {2} Tj\n", pos.X, pos.Y, text);
-                            }
-                            else
-                            {
-                                // rest of the layers are rendered on top of the first layer
-                                AppendFormatArgs("0 0 Td {0} Tj\n", text);
-                            }
-                            sb.Length = 0;
-                        }
-                        x += chunkWidth;
-                    }
-                    else
-                        sb.Append((char)part.Item1);
-                }
-                if (sb.Length > 0)
-                {
-                    width = 0.0;
-                    s = sb.ToString();
-                    foreach (var glyphIndex in s)
-                        width += descriptor.GlyphIndexToWidth(glyphIndex);
-                    width = width * font.Size / descriptor.UnitsPerEm;
-                    byte[] bytes = PdfEncoders.RawUnicodeEncoding.GetBytes(s);
-                    bytes = PdfEncoders.FormatStringLiteral(bytes, true, false, true, null);
-                    text = PdfEncoders.RawEncoding.GetString(bytes, 0, bytes.Length);
-                    _gfxState.RealizeBrush(brush, _colorMode, 0, 0);
-                    RenderText(text, brush, x, y, font, realizedFont, lineSpace, width,
-                        boldSimulation, italicSimulation, underline, strikeout);
-                    x += width;
-                }
-            }
+#endif            
         }
 
-        private void RenderText(string text, XBrush brush, double x, double y,
-            XFont font, PdfFont realizedFont,
-            double lineSpace, double width,
-            bool boldSimulation, bool italicSimulation, bool underline, bool strikeout)
+        void RenderText(string text, XFont font, XBrush brush, double x, double y, double width)
         {
-            const string format2 = Config.SignificantFigures4;
+            double lineSpace = font.GetHeight();
+            double cyAscent = lineSpace * font.CellAscent / font.CellSpace;
+            double cyDescent = lineSpace * font.CellDescent / font.CellSpace;
+
+            bool italicSimulation = (font.GlyphTypeface.StyleSimulations & XStyleSimulations.ItalicSimulation) != 0;
+            bool boldSimulation = (font.GlyphTypeface.StyleSimulations & XStyleSimulations.BoldSimulation) != 0;
+            bool strikeout = (font.Style & XFontStyleEx.Strikeout) != 0;
+            bool underline = (font.Style & XFontStyleEx.Underline) != 0;
+
+            var realizedFont = _gfxState.RealizedFont;
 
             // Map absolute position to PDF world space.
-            XPoint pos = new(x, y);
+            var pos = new XPoint(x, y);
             pos = WorldToView(pos);
 
             double verticalOffset = 0;
@@ -642,20 +790,34 @@ namespace PdfSharp.Drawing.Pdf
                 //verticalOffset = font.Size * Const.BoldEmphasis / 2;
             }
 
+            // Select the number of decimal places used for the relative text positioning.
+            const string formatTj = Config.SignificantDecimalPlaces3;
 #if ITALIC_SIMULATION
             if (italicSimulation)
             {
                 if (_gfxState.ItalicSimulationOn)
-                {
+                {   // Case: Simulate Italic and simulation is already on.
+
+                    // Build format string only once.
+                    s_format1 ??= "{0:" + formatTj + "} {1:" + formatTj + "} Td\n{2} Tj\n";
+
                     AdjustTdOffset(ref pos, verticalOffset, true);
-                    AppendFormatArgs("{0:" + format2 + "} {1:" + format2 + "} Td\n{2} Tj\n", pos.X, pos.Y, text);
+                    // earlier:
+                    //AppendFormatArgs("{0:" + format2 + "} {1:" + format2 + "} Td\n{2} Tj\n", pos.X, pos.Y, text);
+                    AppendFormatArgs(s_format1, pos.X, pos.Y, text);
                 }
                 else
-                {
+                {   // Case: Simulate Italic and turn simulation on.
+
+                    s_format2 ??= "{0:" + formatTj + "} {1:" + formatTj + "} {2:" + formatTj + "} {3:" + formatTj + "} {4:"
+                                  + formatTj + "} {5:" + formatTj + "} Tm\n{6} Tj\n";
+
                     // Italic simulation is done by skewing characters 20° to the right.
                     var m = new XMatrix(1, 0, Const.ItalicSkewAngleSinus, 1, pos.X, pos.Y);
-                    AppendFormatArgs("{0:" + format2 + "} {1:" + format2 + "} {2:" + format2 + "} {3:" + format2 + "} {4:" + format2 + "} {5:" + format2 + "} Tm\n{6} Tj\n",
-                        m.M11, m.M12, m.M21, m.M22, m.OffsetX, m.OffsetY, text);
+                    // earlier:
+                    //AppendFormatArgs("{0:" + format2 + "} {1:" + format2 + "} {2:" + format2 + "} {3:" + format2 + "} {4:" + format2 + "} {5:" + format2 + "} Tm\n{6} Tj\n",
+                    //    m.M11, m.M12, m.M21, m.M22, m.OffsetX, m.OffsetY, text);
+                    AppendFormatArgs(s_format2, m.M11, m.M12, m.M21, m.M22, m.OffsetX, m.OffsetY, text);
                     _gfxState.ItalicSimulationOn = true;
                     AdjustTdOffset(ref pos, verticalOffset, false);
                 }
@@ -663,17 +825,30 @@ namespace PdfSharp.Drawing.Pdf
             else
             {
                 if (_gfxState.ItalicSimulationOn)
-                {
+                {   // Case: Do not simulate Italic but simulation is currently on.
+
+                    // Same as format2, but keep code clear.
+                    s_format3 ??= "{0:" + formatTj + "} {1:" + formatTj + "} {2:" + formatTj + "} {3:" + formatTj + "} {4:"
+                                  + formatTj + "} {5:" + formatTj + "} Tm\n{6} Tj\n";
+
                     var m = new XMatrix(1, 0, 0, 1, pos.X, pos.Y);
-                    AppendFormatArgs("{0:" + format2 + "} {1:" + format2 + "} {2:" + format2 + "} {3:" + format2 + "} {4:" + format2 + "} {5:" + format2 + "} Tm\n{6} Tj\n",
-                        m.M11, m.M12, m.M21, m.M22, m.OffsetX, m.OffsetY, text);
+                    // earlier:
+                    //AppendFormatArgs("{0:" + format2 + "} {1:" + format2 + "} {2:" + format2 + "} {3:" + format2 + "} {4:" + format2 + "} {5:" + format2 + "} Tm\n{6} Tj\n",
+                    //    m.M11, m.M12, m.M21, m.M22, m.OffsetX, m.OffsetY, text);
+                    AppendFormatArgs(s_format3, m.M11, m.M12, m.M21, m.M22, m.OffsetX, m.OffsetY, text);
                     _gfxState.ItalicSimulationOn = false;
                     AdjustTdOffset(ref pos, verticalOffset, false);
                 }
                 else
-                {
+                {   // Case: Do not simulate Italic and simulation is already off.
+
+                    // Same as format1, but keep code clear.
+                    s_format4 ??= "{0:" + formatTj + "} {1:" + formatTj + "} Td\n{2} Tj\n";
+
                     AdjustTdOffset(ref pos, verticalOffset, false);
-                    AppendFormatArgs("{0:" + format2 + "} {1:" + format2 + "} Td {2} Tj\n", pos.X, pos.Y, text);
+                    // earlier:
+                    //AppendFormatArgs("{0:" + format2 + "} {1:" + format2 + "} Td {2} Tj\n", pos.X, pos.Y, text);
+                    AppendFormatArgs(s_format4, pos.X, pos.Y, text);
                 }
             }
 #else
@@ -682,8 +857,8 @@ namespace PdfSharp.Drawing.Pdf
 #endif
             if (underline)
             {
-                double underlinePosition = lineSpace * realizedFont.FontDescriptor._descriptor.UnderlinePosition / font.CellSpace;
-                double underlineThickness = lineSpace * realizedFont.FontDescriptor._descriptor.UnderlineThickness / font.CellSpace;
+                double underlinePosition = lineSpace * realizedFont.FontDescriptor.Descriptor.UnderlinePosition / font.CellSpace;
+                double underlineThickness = lineSpace * realizedFont.FontDescriptor.Descriptor.UnderlineThickness / font.CellSpace;
                 //DrawRectangle(null, brush, x, y - underlinePosition, width, underlineThickness);
                 double underlineRectY = Gfx.PageDirection == XPageDirection.Downwards
                     ? y - underlinePosition
@@ -693,8 +868,8 @@ namespace PdfSharp.Drawing.Pdf
 
             if (strikeout)
             {
-                double strikeoutPosition = lineSpace * realizedFont.FontDescriptor._descriptor.StrikeoutPosition / font.CellSpace;
-                double strikeoutSize = lineSpace * realizedFont.FontDescriptor._descriptor.StrikeoutSize / font.CellSpace;
+                double strikeoutPosition = lineSpace * realizedFont.FontDescriptor.Descriptor.StrikeoutPosition / font.CellSpace;
+                double strikeoutSize = lineSpace * realizedFont.FontDescriptor.Descriptor.StrikeoutSize / font.CellSpace;
                 //DrawRectangle(null, brush, x, y - strikeoutPosition - strikeoutSize, width, strikeoutSize);
                 double strikeoutRectY = Gfx.PageDirection == XPageDirection.Downwards
                     ? y - strikeoutPosition
@@ -702,6 +877,13 @@ namespace PdfSharp.Drawing.Pdf
                 DrawRectangle(null, brush, x, strikeoutRectY, width, strikeoutSize);
             }
         }
+
+        // ReSharper disable InconsistentNaming
+        static string? s_format1;
+        static string? s_format2;
+        static string? s_format3;
+        static string? s_format4;
+        // ReSharper restore InconsistentNaming
 
         public void DrawString(string s, XGlyphTypeface typeface, XBrush brush, XRect rect, XStringFormat format)
         {
@@ -746,12 +928,12 @@ namespace PdfSharp.Drawing.Pdf
         public void DrawImage(XImage image, double x, double y, double width, double height)
         {
             if (Owner._uaManager != null)
-                Owner.Events.OnPageGraphicsAction(Owner, new PageGraphicsEventArgs { Page = _page, Graphics = Gfx, ActionType = PageGraphicsActionType.Draw });  // @PDF/UA
+                Owner.Events.OnPageGraphicsAction(Owner, new PageGraphicsEventArgs(Owner) { Page = _page, Graphics = Gfx, ActionType = PageGraphicsActionType.Draw });  // @PDF/UA
 
-            const string format = Config.SignificantFigures4;
+            const string format = Config.SignificantDecimalPlaces4;
 
             string name = Realize(image);
-            if (!(image is XForm))
+            if (image is not XForm form)
             {
                 if (_gfx.PageDirection == XPageDirection.Downwards)
                 {
@@ -768,18 +950,18 @@ namespace PdfSharp.Drawing.Pdf
             {
                 BeginPage();
 
-                XForm form = (XForm)image;
                 form.Finish();
 
                 PdfFormXObject pdfForm = Owner.FormTable.GetForm(form);
 
-                double cx = width / image.PointWidth;
-                double cy = height / image.PointHeight;
+                double cx = width / form.PointWidth;
+                double cy = height / form.PointHeight;
 
                 if (cx != 0 && cy != 0)
                 {
-                    var xForm = image as XPdfForm;
-                    // Reset colors in this graphics state. Usually PDF images should set them, but in rare cases they don't which may result in changed colors inside the image.
+                    var xForm = form as XPdfForm;
+                    // Reset colors in this graphics state. Usually PDF images should set them.
+                    // But in rare cases they aren't which may result in changed colors inside the image.
                     var resetColor = xForm != null ? "\n0 g\n0 G\n" : " ";
 
                     if (_gfx.PageDirection == XPageDirection.Downwards)
@@ -810,9 +992,9 @@ namespace PdfSharp.Drawing.Pdf
         public void DrawImage(XImage image, XRect destRect, XRect srcRect, XGraphicsUnit srcUnit)
         {
             if (Owner._uaManager != null)
-                Owner.Events.OnPageGraphicsAction(Owner, new PageGraphicsEventArgs { Page = _page, Graphics = Gfx, ActionType = PageGraphicsActionType.Draw });  // @PDF/UA
+                Owner.Events.OnPageGraphicsAction(Owner, new PageGraphicsEventArgs(Owner) { Page = _page, Graphics = Gfx, ActionType = PageGraphicsActionType.Draw });  // @PDF/UA
 
-            const string format = Config.SignificantFigures4;
+            const string format = Config.SignificantDecimalPlaces4;
 
             double x = destRect.X;
             double y = destRect.Y;
@@ -820,7 +1002,7 @@ namespace PdfSharp.Drawing.Pdf
             double height = destRect.Height;
 
             string name = Realize(image);
-            if (!(image is XForm))
+            if (image is not XForm form)
             {
                 if (_gfx.PageDirection == XPageDirection.Downwards)
                 {
@@ -837,17 +1019,16 @@ namespace PdfSharp.Drawing.Pdf
             {
                 BeginPage();
 
-                XForm form = (XForm)image;
                 form.Finish();
 
                 PdfFormXObject pdfForm = Owner.FormTable.GetForm(form);
 
-                double cx = width / image.PointWidth;
-                double cy = height / image.PointHeight;
+                double cx = width / form.PointWidth;
+                double cy = height / form.PointHeight;
 
                 if (cx != 0 && cy != 0)
                 {
-                    var xForm = image as XPdfForm;
+                    var xForm = form as XPdfForm;
                     // Reset colors in this graphics state. Usually PDF images should set them, but in rare cases they don't which may result in changed colors inside the image.
                     var resetColor = xForm != null ? "\n0 g\n0 G\n" : " ";
 
@@ -874,7 +1055,7 @@ namespace PdfSharp.Drawing.Pdf
             }
         }
 
-#endregion
+        #endregion
 
         // --------------------------------------------------------------------------------------------
 
@@ -921,7 +1102,7 @@ namespace PdfSharp.Drawing.Pdf
 
         #region Transformation
 
-        //public void SetPageTransform(XPageDirection direction, XPoint origion, XGraphicsUnit unit)
+        //public void SetPageTransform(XPageDirection direction, XPoint origin, XGraphicsUnit unit)
         //{
         //  if (_gfxStateStack.Count > 0)
         //    throw new InvalidOperationException("PageTransformation can be modified only when the graphics stack is empty.");
@@ -1200,7 +1381,7 @@ namespace PdfSharp.Drawing.Pdf
             sinβ = Math.Sin(β);
             double cosβ = Math.Cos(β);
 
-            const string format = Config.SignificantFigures3;
+            const string format = Config.SignificantDecimalPlaces3;
             XPoint pt1, pt2, pt3;
             if (!reflect)
             {
@@ -1256,7 +1437,7 @@ namespace PdfSharp.Drawing.Pdf
         void AppendPartialArc(SysPoint point1, SysPoint point2, double rotationAngle,
             SysSize size, bool isLargeArc, SweepDirection sweepDirection, PathStart pathStart)
         {
-            const string format = Config.SignificantFigures4;
+            const string format = Config.SignificantDecimalPlaces4;
 
             Debug.Assert(pathStart == PathStart.Ignore1st);
 
@@ -1282,7 +1463,7 @@ namespace PdfSharp.Drawing.Pdf
         /// </summary>
         void AppendCurveSegment(XPoint pt0, XPoint pt1, XPoint pt2, XPoint pt3, double tension3)
         {
-            const string format = Config.SignificantFigures4;
+            const string format = Config.SignificantDecimalPlaces4;
             AppendFormat3Points("{0:" + format + "} {1:" + format + "} {2:" + format + "} {3:" + format + "} {4:" + format + "} {5:" + format + "} c\n",
                 pt1.X + tension3 * (pt2.X - pt0.X), pt1.Y + tension3 * (pt2.Y - pt0.Y),
                 pt2.X - tension3 * (pt3.X - pt1.X), pt2.Y - tension3 * (pt3.Y - pt1.Y),
@@ -1460,7 +1641,7 @@ namespace PdfSharp.Drawing.Pdf
 #if CORE || GDI
         void AppendPath(XPoint[] points, Byte[] types)
         {
-            const string format = Config.SignificantFigures4;
+            const string format = Config.SignificantDecimalPlaces4;
             int count = points.Length;
             if (count == 0)
                 return;
@@ -1473,10 +1654,10 @@ namespace PdfSharp.Drawing.Pdf
                 const byte PathPointTypeLine = 1; // line
                 const byte PathPointTypeBezier = 3; // default Bezier (= cubic Bezier)
                 const byte PathPointTypePathTypeMask = 0x07; // type mask (lowest 3 bits).
-                //const byte PathPointTypeDashMode = 0x10; // currently in dash mode.
-                //const byte PathPointTypePathMarker = 0x20; // a marker for the path.
+                                                             //const byte PathPointTypeDashMode = 0x10; // currently in dash mode.
+                                                             //const byte PathPointTypePathMarker = 0x20; // a marker for the path.
                 const byte PathPointTypeCloseSubpath = 0x80; // closed flag
-                // ReSharper restore InconsistentNaming
+                                                             // ReSharper restore InconsistentNaming
 
                 byte type = types[idx];
                 switch (type & PathPointTypePathTypeMask)
@@ -1514,7 +1695,7 @@ namespace PdfSharp.Drawing.Pdf
         /// </summary>
         internal void AppendPath(PathGeometry geometry)
         {
-            const string format = Config.SignificantFigures4;
+            const string format = Config.SignificantDecimalPlaces4;
 
             foreach (PathFigure figure in geometry.Figures)
             {
@@ -1607,7 +1788,7 @@ namespace PdfSharp.Drawing.Pdf
                         else if (type == typeof(PolyQuadraticBezierSegment))
                         {
                             PolyQuadraticBezierSegment seg = (PolyQuadraticBezierSegment)segment;
-#if NET6_0_OR_GREATER
+#if NET6_0_OR_GREATER || USE_INDEX_AND_RANGE
                             currentPoint = seg.Points[^1];
 #else
                             currentPoint = seg.Points[seg.Points.Count - 1];
@@ -1624,7 +1805,7 @@ namespace PdfSharp.Drawing.Pdf
         }
 #endif
 
-                            internal void Append(string value)
+        internal void Append(string value)
         {
             _content.Append(value);
         }
@@ -1800,7 +1981,7 @@ namespace PdfSharp.Drawing.Pdf
                     {
                         Debug.Assert(_gfxState.RealizedCtm.IsIdentity);
                         //_gfxState.RealizedCtm = DefaultViewMatrix;
-                        const string format = Config.SignificantFigures7;
+                        const string format = Config.SignificantDecimalPlaces7;
                         double[] cm = DefaultViewMatrix.GetElements();
                         AppendFormatArgs("{0:" + format + "} {1:" + format + "} {2:" + format + "} {3:" + format + "} {4:" + format + "} {5:" + format + "} cm ",
                                      cm[0], cm[1], cm[2], cm[3], cm[4], cm[5]);
@@ -1841,7 +2022,7 @@ namespace PdfSharp.Drawing.Pdf
                     // Save initial graphic state.
                     SaveState();
                     // Set page transformation.
-                    const string format = Config.SignificantFigures7;
+                    const string format = Config.SignificantDecimalPlaces7;
                     double[] cm = DefaultViewMatrix.GetElements();
                     AppendFormat3Points("{0:" + format + "} {1:" + format + "} {2:" + format + "} {3:" + format + "} {4:" + format + "} {5:" + format + "} cm ",
                         cm[0], cm[1], cm[2], cm[3], cm[4], cm[5]);
@@ -1937,12 +2118,14 @@ namespace PdfSharp.Drawing.Pdf
         /// <summary>
         /// Makes the specified font and brush the current graphics objects.
         /// </summary>
-        void Realize(XFont font, XBrush brush, int renderingMode)
+        //void Realize(XFont font, XBrush brush, int renderingMode, FontType fontType)
+        void Realize(XGlyphTypeface glyphTypeface, double emSize, XBrush brush, int renderingMode, FontType fontType)
         {
             BeginPage();
             RealizeTransform();
             BeginTextMode();
-            _gfxState.RealizeFont(font, brush, renderingMode);
+            //_gfxState.RealizeFont(new XFontSurro(font), font.Size, brush, renderingMode, fontType);
+            _gfxState.RealizeFont(glyphTypeface, emSize, brush, renderingMode, fontType);
         }
 
         /// <summary>
@@ -2115,11 +2298,11 @@ namespace PdfSharp.Drawing.Pdf
         /// <summary>
         /// Gets the resource name of the specified font within this page or form.
         /// </summary>
-        internal string GetFontName(XFont font, out PdfFont pdfFont)
+        internal string GetFontName(XGlyphTypeface glyphTypeface, FontType fontType, out PdfFont pdfFont)
         {
             if (_page != null!)
-                return _page.GetFontName(font, out pdfFont);
-            return _form.GetFontName(font, out pdfFont);
+                return _page.GetFontName(glyphTypeface, fontType, out pdfFont);
+            return _form.GetFontName(glyphTypeface, fontType, out pdfFont);
         }
 
         /// <summary>
@@ -2137,7 +2320,7 @@ namespace PdfSharp.Drawing.Pdf
         /// </summary>
         internal string GetFormName(XForm form)
         {
-            if (_page != null)
+            if (_page != null!)
                 return _page.GetFormName(form);
             return _form.GetFormName(form);
         }
@@ -2146,9 +2329,9 @@ namespace PdfSharp.Drawing.Pdf
         internal PdfPage _page = default!;
         internal XForm _form = default!;
         internal PdfColorMode _colorMode;
-        XGraphicsPdfPageOptions _options;
+        readonly XGraphicsPdfPageOptions _options;
         XGraphics _gfx;
-        internal readonly StringBuilder _content = default!;
+        internal readonly StringBuilder _content;
         // ReSharper restore InconsistentNaming
 
         /// <summary>

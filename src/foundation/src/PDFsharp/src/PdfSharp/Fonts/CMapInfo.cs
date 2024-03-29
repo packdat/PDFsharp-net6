@@ -1,10 +1,10 @@
 // PDFsharp - A .NET library for processing PDF
 // See the LICENSE file in the solution root for more information.
 
-using System;
-using System.Diagnostics;
-using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
+using PdfSharp.Fonts.Internal;
 using PdfSharp.Fonts.OpenType;
+using PdfSharp.Logging;
 using PdfSharp.Pdf.Internal;
 
 namespace PdfSharp.Fonts
@@ -19,90 +19,37 @@ namespace PdfSharp.Fonts
             Debug.Assert(descriptor != null);
             _descriptor = descriptor;
         }
-        internal OpenTypeDescriptor _descriptor;
+        readonly OpenTypeDescriptor _descriptor;
 
-        /// <summary>
-        /// Adds the characters of the specified string to the hashtable.
-        /// </summary>
-        public void AddChars(string text)
+        public void AddChars(CodePointGlyphIndexPair[] codePoints)
         {
-            if (text != null)
+            int length = codePoints.Length;
+
+            for (int idx = 0; idx < length; idx++)
             {
-                bool symbol = _descriptor.FontFace.cmap.symbol;
-                int length = text.Length;
-                for (int idx = 0; idx < length; idx++)
-                {
-                    int glyphIndex;
-                    if (char.IsSurrogate(text, idx)
-                        || char.IsHighSurrogate(text, idx)
-                        || char.IsSurrogatePair(text, idx))
-                    {
-                        glyphIndex = _descriptor.CharCodeToGlyphIndex(text, ref idx);
-                        GlyphIndices[glyphIndex] = default!;
-                        continue;
-                    }
-                    char ch = text[idx];
-                    if (!CharacterToGlyphIndex.ContainsKey(ch) || char.IsHighSurrogate(ch))
-                    {
-                        var ch2 = ch;
-                        if (symbol)
-                        {
-                            // Remap ch for symbol fonts.
-                            ch2 = (char)(ch | (_descriptor.FontFace.os2.usFirstCharIndex & 0xFF00));  // @@@ refactor
-                        }
-                        glyphIndex = _descriptor.CharCodeToGlyphIndex(ch2);
-                        CharacterToGlyphIndex.Add(ch, glyphIndex);
-                        GlyphIndices[glyphIndex] = default!;
-                        MinChar = (char)Math.Min(MinChar, ch);
-                        MaxChar = (char)Math.Max(MaxChar, ch);
-                    }
-                }
-            }
-        }
+                var item = codePoints[idx];
+                if (item.GlyphIndex == 0)
+                    continue;
 
-        /// <summary>
-        /// Adds the glyphIndices to the hashtable.
-        /// </summary>
-        public void AddGlyphIndices(string glyphIndices)
-        {
-            if (glyphIndices != null!)
-            {
-                int length = glyphIndices.Length;
-                for (int idx = 0; idx < length; idx++)
-                {
-                    var glyphIndex = glyphIndices[idx];
-                    GlyphIndices[glyphIndex] = null!;
-                }
-            }
-        }
+                if (CodePointsToGlyphIndices.ContainsKey(item.CodePoint))
+                    continue;
 
-        /// <summary>
-        /// Adds a ANSI characters.
-        /// </summary>
-        internal void AddAnsiChars()
-        {
-            byte[] ansi = new byte[256 - 32];
-            for (int idx = 0; idx < 256 - 32; idx++)
-                ansi[idx] = (byte)(idx + 32);
-#if EDF_CORE
-            string text = null; // PdfEncoders.WinAnsiEncoding.GetString(ansi, 0, ansi.Length);
-#else
-            string text = PdfEncoders.WinAnsiEncoding.GetString(ansi, 0, ansi.Length);
-#endif
-            AddChars(text);
+                CodePointsToGlyphIndices.Add(item.CodePoint, item.GlyphIndex);
+                GlyphIndices[item.GlyphIndex] = default;
+                MinCodePoint = Math.Min(MinCodePoint, item.CodePoint);
+                MaxCodePoint = Math.Max(MaxCodePoint, item.CodePoint);
+            }
         }
 
         internal bool Contains(char ch)
-        {
-            return CharacterToGlyphIndex.ContainsKey(ch);
-        }
+            => CodePointsToGlyphIndices.ContainsKey(ch);
 
-        public char[] Chars
+        public int[] Chars
         {
             get
             {
-                char[] chars = new char[CharacterToGlyphIndex.Count];
-                CharacterToGlyphIndex.Keys.CopyTo(chars, 0);
+                var chars = new int[CodePointsToGlyphIndices.Count];
+                CodePointsToGlyphIndices.Keys.CopyTo(chars, 0);
                 Array.Sort(chars);
                 return chars;
             }
@@ -116,9 +63,17 @@ namespace PdfSharp.Fonts
             return indices;
         }
 
-        public char MinChar = Char.MaxValue;
-        public char MaxChar = Char.MinValue;
-        public Dictionary<char, int> CharacterToGlyphIndex = new();
-        public Dictionary<int, object> GlyphIndices = new();
+        public int MinCodePoint = Int32.MaxValue;  
+        public int MaxCodePoint = Int32.MinValue;
+
+        /// <summary>
+        /// Maps a Unicode code point to a glyph id.
+        /// </summary>
+        public Dictionary<int, int> CodePointsToGlyphIndices = [];
+
+        /// <summary>
+        /// Collects all use glyph ids. Value is not used.
+        /// </summary>
+        public Dictionary<int, object?> GlyphIndices = [];
     }
 }
