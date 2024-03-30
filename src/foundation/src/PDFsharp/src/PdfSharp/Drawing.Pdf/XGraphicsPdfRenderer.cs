@@ -615,10 +615,10 @@ namespace PdfSharp.Drawing.Pdf
             Debug.Assert(textParts.Sum(p => p.Count) == length, "Character count mismatch");
 
             const string format2 = Config.SignificantDecimalPlaces4;
+            var layerBytes = new byte[2];
             foreach (var textPart in textParts)
             {
                 // textPart is either a single item having a color-record or 1-N items without color
-                // TODO: does not look right.. Refactor and render based on length of textPart ?
                 if (textPart.Count == 1 && textPart[0].Color != null)
                 {
                     var chunkWidth = 0.0;
@@ -640,11 +640,9 @@ namespace PdfSharp.Drawing.Pdf
                         realizedFont.AddChars([cp]);
                         var partWidth = otDescriptor.GlyphIndexToEmWidth(layer.glyphId, font.Size);
                         chunkWidth = Math.Max(chunkWidth, partWidth);
-                        var partBytes = new byte[2];
-                        partBytes[0] = (byte)((layer.glyphId & 0xFF00) >>> 8);
-                        partBytes[1] = (byte)(layer.glyphId & 0xFF);
-                        partBytes = PdfEncoders.FormatStringLiteral(partBytes, true, false, true, null);
-                        var text = PdfEncoders.RawEncoding.GetString(partBytes, 0, partBytes.Length);
+                        layerBytes[0] = (byte)((layer.glyphId & 0xFF00) >>> 8);
+                        layerBytes[1] = (byte)(layer.glyphId & 0xFF);
+                        var text = PdfEncoders.ToHexStringLiteral(layerBytes, true, false, null);
                         if (i == 0)
                         {
                             var pos = new XPoint(x, y);
@@ -665,17 +663,16 @@ namespace PdfSharp.Drawing.Pdf
                     Debug.Assert(textPart.All(p => p.Color == null), "Colors should be null here");
 
                     width = 0.0;
-                    var sb = new StringBuilder(textPart.Count);
-                    foreach (var cp in textPart)
+                    var bytes = new byte[textPart.Count * 2];
+                    for (var idx = 0; idx < textPart.Count; idx++)
                     {
+                        var cp = textPart[idx];
                         width += otDescriptor.GlyphIndexToWidth(cp.GlyphIndex);
-                        sb.Append((char)cp.GlyphIndex);
+                        bytes[idx * 2] = (byte)((cp.GlyphIndex & 0xFF00) >>> 8);
+                        bytes[idx * 2 + 1] = (byte)(cp.GlyphIndex & 0xFF);
                     }
                     width = width * font.Size / otDescriptor.UnitsPerEm;
-                    s = sb.ToString();
-                    byte[] bytes = PdfEncoders.RawUnicodeEncoding.GetBytes(s);
-                    bytes = PdfEncoders.FormatStringLiteral(bytes, true, false, true, null);
-                    var text = PdfEncoders.RawEncoding.GetString(bytes, 0, bytes.Length);
+                    var text = PdfEncoders.ToHexStringLiteral(bytes, true, false, null);
                     _gfxState.RealizeBrush(brush, _colorMode, 0, 0);
                     RenderText(text, font, brush, x, y, width);
                     x += width;

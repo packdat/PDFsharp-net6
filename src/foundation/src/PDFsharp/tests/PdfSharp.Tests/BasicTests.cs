@@ -97,6 +97,8 @@ namespace PdfSharp.Tests
             gfx.DrawString("XxX 🤣 XxX", renderFont, brush, x, y);
             y += gapY;
             gfx.DrawString("XxX🤣😞😢XxX", renderFont, brush, x, y);
+            y += gapY;
+            gfx.DrawString("-> \U0001faf8\U0001faf7 <-", renderFont, brush, x, y);
 
             gfx.Dispose();
 
