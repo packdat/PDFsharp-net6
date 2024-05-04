@@ -1,26 +1,14 @@
 ﻿// PDFsharp - A .NET library for processing PDF
 // See the LICENSE file in the solution root for more information.
 
-#if GDI
-using System.Drawing;
-using System.Drawing.Text;
-#endif
-#if WPF
-using System.Windows.Media;
-#endif
-using System.Text;
-using PdfSharp.Drawing;
-using PdfSharp.Pdf.Internal;
 using PdfSharp.Fonts.OpenType;
 
 namespace PdfSharp.Fonts
 {
     /// <summary>
-    /// The combination of a UTF-16 code unit (either BMP code point or surrogate pair),
-    /// a Unicode code point, and the glyph index of the code point in a particular
-    /// font face.
+    /// The combination of a Unicode code point and the glyph index of this code point in a particular font face.
     /// </summary>
-    public struct CodePointGlyphIndexPair(int codePoint, int glyphIndex)
+    public struct CodePointGlyphIndexPair(int codePoint, ushort glyphIndex)
     {
         /// <summary>
         /// The Unicode code point of the Character value.
@@ -30,10 +18,10 @@ namespace PdfSharp.Fonts
         public int CodePoint = codePoint;
 
         /// <summary>
-        /// The glyph identifier of the code point for a specific OpenType font.
+        /// The glyph index of the code point for a specific OpenType font.
         /// The value is 0 if the specific font has no glyph for the code point.
         /// </summary>
-        public int GlyphIndex = glyphIndex;
+        public ushort GlyphIndex = glyphIndex;
 
         /// <summary>
         /// The color-record of the Glyph if provided by the font.

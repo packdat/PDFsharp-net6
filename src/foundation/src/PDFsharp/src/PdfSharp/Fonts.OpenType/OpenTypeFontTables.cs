@@ -164,7 +164,7 @@ namespace PdfSharp.Fonts.OpenType
         public UInt32 language; // This field must be set to zero for all cmap subtables whose platform IDs are other than Macintosh (platform ID 1). 
         public UInt32 numGroups; // Number of groupings which follow
 
-        public SequentialMapGroup[] groups = Array.Empty<SequentialMapGroup>();
+        public SequentialMapGroup[] groups = [];
 
         public CMap12(OpenTypeFontFace fontData, WinEncodingId encodingId)
             : base(fontData, "----")
@@ -189,9 +189,9 @@ namespace PdfSharp.Fonts.OpenType
                 for (int i = 0; i < groups.Length; i++)
                 {
                     ref var group = ref groups[i];
-                    group.startCharCode = _fontData.ReadULong();
-                    group.endCharCode = _fontData.ReadULong();
-                    group.startGlyphIndex = _fontData.ReadULong();
+                    group.startCharCode = fontData.ReadULong();
+                    group.endCharCode = fontData.ReadULong();
+                    group.startGlyphIndex = fontData.ReadULong();
                 }
             }
             catch (Exception ex)
@@ -305,7 +305,7 @@ namespace PdfSharp.Fonts.OpenType
             return cmap12?.GetSupportedCharacters() ?? cmap4?.GetSupportedCharacters() ?? emptyGlyphs;
         }
 
-        private static readonly List<int> emptyGlyphs = new();
+        private static readonly List<int> emptyGlyphs = [];
     }
 
     /// <summary>
@@ -336,10 +336,10 @@ namespace PdfSharp.Fonts.OpenType
         public ushort numLayerRecords;
         // version 0 tables end
 
-        public GlyphRecord[] baseGlyphRecords = Array.Empty<GlyphRecord>();
-        public LayerRecord[] layerRecords = Array.Empty<LayerRecord>();
+        public GlyphRecord[] baseGlyphRecords = [];
+        public LayerRecord[] layerRecords = [];
         // helper array that contains just the glyphIds for the baseGlyphRecords
-        private int[] glyphRecordsHelperArray = Array.Empty<int>();
+        private int[] glyphRecordsHelperArray = [];
 
         public ColrTable(OpenTypeFontFace fontData)
             : base(fontData, Tag)
@@ -416,8 +416,8 @@ namespace PdfSharp.Fonts.OpenType
         public ushort numPalettes;
         public ushort numColorRecords;
         public uint colorRecordsArrayOffset;
-        public ushort[] colorRecordIndices = Array.Empty<ushort>();
-        public XColor[] colorRecords = Array.Empty<XColor>();
+        public ushort[] colorRecordIndices = [];
+        public XColor[] colorRecords = [];
 
         public CpalTable(OpenTypeFontFace fontData)
             : base(fontData, Tag)
@@ -931,7 +931,7 @@ namespace PdfSharp.Fonts.OpenType
                     byte[] value = new byte[nrec.length];
                     Buffer.BlockCopy(_fontData.FontSource.Bytes, DirectoryEntry.Offset + stringOffset + nrec.offset, value, 0, nrec.length);
 
-                    //Debug.WriteLine(nrec.platformID.ToString());
+                    //De/bug.WriteLine(nrec.platformID.ToString());
 
                     // Read font name and style in US English.
                     if (nrec.platformID is 0 or 3)
