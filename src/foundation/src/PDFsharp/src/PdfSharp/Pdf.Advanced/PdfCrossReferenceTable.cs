@@ -115,8 +115,8 @@ namespace PdfSharp.Pdf.Advanced
             ObjectTable.Add(value.ObjectID, value.ReferenceNotNull);
 
             // new objects must be treated like modified objects
-            if (FullyLoaded && _document.IsAppending && value.Reference != null)
-                ModifiedObjects[value.ObjectID] = value.Reference;
+            if (FullyLoaded && _document.IsAppending)
+                ModifiedObjects[value.ObjectID] = value.ReferenceNotNull;
         }
 
         /// <summary>

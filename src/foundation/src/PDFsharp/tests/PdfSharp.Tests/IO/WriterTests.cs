@@ -5,7 +5,11 @@ using FluentAssertions;
 using PdfSharp.Drawing;
 using PdfSharp.Pdf.IO;
 using PdfSharp.Quality;
+using PdfSharp.Pdf.Signatures;
 using Xunit;
+using System.Security.Cryptography.X509Certificates;
+using PdfSharp.Pdf.AcroForms;
+
 #if WPF
 using System.IO;
 #endif
@@ -60,6 +64,76 @@ namespace PdfSharp.Tests.IO
                 count.Should().Be(numContentsPerPage[idx] + 1);
                 idx++;
             }
+        }
+
+        [Fact]
+        public void Sign()
+        {
+            /**
+             Easy way to create a self-signed certificate for testing.
+             Put the following code in a file called "makecert.ps1" and execute it from PowerShell (tested with 7.4.2).
+             (Adapt the variables to your liking)
+
+             $date = Get-Date
+             # mark valid for 10 years
+             $date = $date.AddYears(10)
+             # define some variables
+             $issuedTo = "FooBar"
+             $subject = "CN=" + $issuedTo
+             $friendlyName = $issuedTo
+             $exportFileName = $issuedTo + ".pfx"
+             # create certificate and add to personal store
+             $cert = New-SelfSignedCertificate -Type Custom -Subject $subject -KeyUsage DigitalSignature,NonRepudiation -KeyUsageProperty Sign -FriendlyName $friendlyName -CertStoreLocation "Cert:\CurrentUser\My" -NotAfter $date
+             # specify password for exported certificate
+             $password = ConvertTo-SecureString -String "1234" -Force -AsPlainText 
+             # export to current folder in pfx format
+             Export-PfxCertificate -Cert $cert -FilePath $exportFileName -Password $password
+             */
+            var cert = new X509Certificate2(@"C:\Data\packdat.pfx", "1234");
+            // sign 2 times
+            for (var i = 1; i <= 2; i++)
+            {
+                var options = new PdfSignatureOptions
+                {
+                    Certificate = cert,
+                    FieldName = "Signature-" + Guid.NewGuid().ToString("N"),
+                    PageIndex = 0,
+                    Rectangle = new XRect(120 * i, 40, 100, 60),
+                    Location = "My PC",
+                    Reason = "Approving Rev #" + i,
+                    // Signature appearances can also consist of an image (Rectangle should be adapted to image's aspect ratio)
+                    //Image = XImage.FromFile(@"C:\Data\stamp.png")
+                };
+
+                string sourceFile;
+                string targetFile;
+                // first signature
+                if (i == 1)
+                {
+                    sourceFile = IOUtility.GetAssetsPath("archives/grammar-by-example/GBE/ReferencePDFs/WPF 1.31/Table-Layout.pdf")!;
+                    targetFile = Path.Combine(Path.GetTempPath(), "AA-Signed.pdf");
+                }
+                // second signature
+                else
+                {
+                    sourceFile = Path.Combine(Path.GetTempPath(), "AA-Signed.pdf");
+                    targetFile = Path.Combine(Path.GetTempPath(), "AA-Signed-2.pdf");
+                }
+                File.Copy(sourceFile, targetFile, true);
+
+                using var fs = File.Open(targetFile, FileMode.Open, FileAccess.ReadWrite);
+                var signer = new PdfSigner(fs, options);
+                var resultStream = signer.Sign();
+                // overwrite input document
+                fs.Seek(0, SeekOrigin.Begin);
+                resultStream.CopyTo(fs);
+            }
+
+            using var finalDoc = PdfReader.Open(Path.Combine(Path.GetTempPath(), "AA-Signed-2.pdf"), PdfDocumentOpenMode.Modify);
+            var acroForm = finalDoc.AcroForm;
+            acroForm.Should().NotBeNull();
+            var signatureFields = acroForm!.GetAllFields().OfType<PdfSignatureField>().ToList();
+            signatureFields.Count.Should().Be(2);
         }
     }
 }

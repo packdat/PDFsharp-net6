@@ -19,24 +19,19 @@ using PdfSharp.UniversalAccessibility;
 
 namespace PdfSharp.Pdf
 {
-    internal class PdfDocumentEventArgs : EventArgs
-    {
-        public PdfDocumentEventArgs(PdfWriter writer)
-        {
-            Writer = writer;
-        }
-
-        public PdfWriter Writer { get; set; }
-    }
-
     /// <summary>
     /// Represents a PDF document.
     /// </summary>
     [DebuggerDisplay("(Name={" + nameof(Name) + "})")]  // A name makes debugging easier
     public sealed class PdfDocument : PdfObject, IDisposable
     {
-        internal event EventHandler BeforeSave = (s, e) => { };
-        internal event EventHandler<PdfDocumentEventArgs> AfterSave = (s, e) => { };
+        /// <summary>
+        /// Used to report that saving the document has been finished.
+        /// </summary>
+        /// <param name="writer"></param>
+        internal delegate void AfterSaveCallback(PdfWriter writer);
+
+        internal AfterSaveCallback? AfterSave;
 #if DEBUG_
         static PdfDocument()
         {
@@ -324,9 +319,7 @@ namespace PdfSharp.Pdf
         {
             PdfSharpLogHost.Logger.PdfDocumentSaved(Name);
 
-            BeforeSave(this, EventArgs.Empty);
-
-            if (_pages == null || _pages.Count == 0)
+            if (Pages == null || Pages.Count == 0)
             {
                 if (OutStream != null)
                 {
@@ -403,9 +396,8 @@ namespace PdfSharp.Pdf
             {
                 if (writer != null!)
                 {
-                    AfterSave(this, new PdfDocumentEventArgs(writer));
-
                     writer.Stream.Flush();
+                    AfterSave?.Invoke(writer);
                     // DO NOT CLOSE WRITER HERE
                 }
                 _state |= DocumentState.Saved;
@@ -476,6 +468,15 @@ namespace PdfSharp.Pdf
                 if (key == PdfTrailer.Keys.Prev || key == PdfTrailer.Keys.Size)
                     continue;
                 newTrailer.Elements[key] = Trailer.Elements[key];
+                if (key == PdfTrailer.Keys.ID)
+                {
+                    // first id stays the same, second is updated for each update
+                    var id1 = Trailer.GetDocumentID(0);
+                    var docID = Guid.NewGuid().ToByteArray();
+                    string id2 = PdfEncoders.RawEncoding.GetString(docID, 0, docID.Length);
+                    newTrailer.Elements.SetObject(PdfTrailer.Keys.ID, new PdfArray(this,
+                        new PdfString(id1, PdfStringFlags.HexLiteral), new PdfString(id2, PdfStringFlags.HexLiteral)));
+                }
             }
             newTrailer.Size = IrefTable.MaxObjectNumber + 1;
             newTrailer.Elements.SetObject(PdfTrailer.Keys.Prev, new PdfLongIntegerObject(this, Trailer.Position));
@@ -753,7 +754,22 @@ namespace PdfSharp.Pdf
         /// <summary>
         /// Get the AcroForm dictionary.
         /// </summary>
-        public PdfAcroForm AcroForm => Catalog.AcroForm;
+        public PdfAcroForm? AcroForm => Catalog.AcroForm;
+
+        /// <summary>
+        /// Gets the existing <see cref="PdfAcroForm"/> or creates a new one, if there is no <see cref="PdfAcroForm"/> in the current document
+        /// </summary>
+        /// <returns>The <see cref="PdfAcroForm"/> associated with this document</returns>
+        public PdfAcroForm GetOrCreateAcroForm()
+        {
+            var form = AcroForm;
+            if (form == null)
+            {
+                form = new PdfAcroForm(this);
+                Catalog.AcroForm = form;
+            }
+            return form;
+        }
 
         /// <summary>
         /// Gets or sets the default language of the document.
@@ -930,7 +946,7 @@ namespace PdfSharp.Pdf
         /// </summary>
         public void Flatten()
         {
-            for (int idx = 0; idx < AcroForm.Fields.Count; idx++)
+            for (int idx = 0; idx < AcroForm?.Fields.Count; idx++)
             {
                 AcroForm.Fields[idx].ReadOnly = true;
             }
