@@ -226,7 +226,7 @@ namespace PdfSharp.Pdf.Signatures
             var renderer = options.Renderer ?? new DefaultSignatureRenderer();
             renderer.Render(gfx, annotRect, options);
             form.DrawingFinished();
-            form.PdfRenderer.Close();
+            form.PdfRenderer?.Close();
 
             if (signatureField.Elements[PdfAnnotation.Keys.AP] is not PdfDictionary ap)
             {
