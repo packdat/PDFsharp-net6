@@ -183,7 +183,7 @@ namespace PdfSharp.Pdf.Content
             {
                 if (op.OpCode.OpCodeName != OpCodeName.ID)
                 {
-                    GetType();
+                    _ = typeof(int);
                     Debug.Assert(false, "Invalid number of operands.");
                 }
             }
@@ -213,7 +213,7 @@ namespace PdfSharp.Pdf.Content
         {
             CSymbol current = _lexer.ScanNextToken();
             if (symbol != current)
-                ContentReaderDiagnostics.ThrowContentReaderException(PSSR.UnexpectedToken(_lexer.Token));
+                ContentReaderDiagnostics.ThrowContentReaderException(PsMsgs.UnexpectedToken(_lexer.Token));
             return current;
         }
 

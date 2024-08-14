@@ -49,6 +49,11 @@ namespace PdfSharp.Pdf.Security
         }
 
         /// <summary>
+        /// Returns true, if the standard security handler exists and encryption is active.
+        /// </summary>
+        public bool IsEncrypted => EffectiveSecurityHandler != null;
+
+        /// <summary>
         /// Determines whether the document can be saved.
         /// </summary>
         internal bool CanSave(ref string message)
@@ -59,7 +64,7 @@ namespace PdfSharp.Pdf.Security
             {
                 if (String.IsNullOrEmpty(effectiveSecurityHandler.UserPassword) && String.IsNullOrEmpty(effectiveSecurityHandler.OwnerPassword))
                 {
-                    message = PSSR.UserOrOwnerPasswordRequired;
+                    message = PsMsgs.UserOrOwnerPasswordRequired;
                     return false;
                 }
             }

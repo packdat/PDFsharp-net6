@@ -18,7 +18,7 @@ using WpfFontFamily = System.Windows.Media.FontFamily;
 using WpfTypeface = System.Windows.Media.Typeface;
 using WpfGlyphTypeface = System.Windows.Media.GlyphTypeface;
 #endif
-#if UWP
+#if WUI
 using Windows.UI.Text;
 using Windows.UI.Xaml.Media;
 #endif
@@ -81,7 +81,7 @@ namespace PdfSharp.Fonts.Internal
                 {
                     int glyphIndex;
                     char ch = text[idx];
-                    // HACK: Unclear what to do here.
+                    // H/ACK: Unclear what to do here.
                     if (ch < 32)
                         continue;
 

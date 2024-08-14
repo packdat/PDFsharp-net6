@@ -21,7 +21,7 @@ namespace PdfSharp.Pdf
     // ReSharper restore InconsistentNaming
     {
         /// <summary>
-        /// Don't create the value.
+        /// Don’t create the value.
         /// </summary>
         None,
 
@@ -135,7 +135,7 @@ namespace PdfSharp.Pdf
         {
             // Get keys and sort.
             PdfName[] keys = Elements.KeyNames;
-            List<PdfName> list = new List<PdfName>(keys);
+            List<PdfName> list = [..keys];
             list.Sort(PdfName.Comparer);
             list.CopyTo(keys, 0);
 
@@ -160,12 +160,12 @@ namespace PdfSharp.Pdf
                 Debug.Assert(Elements.ContainsKey("/Length"), "Dictionary has a stream but no length is set.");
 #endif
 
-            if (_stream is not null && writer.SecurityHandler != null)
+            if (_stream is not null && writer.EffectiveSecurityHandler != null)
             {
                 // Encryption could change the size of the stream.
                 // Encrypt the bytes before writing the dictionary to get and update the actual size.
                 var bytes = (byte[])_stream.Value.Clone();
-                writer.SecurityHandler.EncryptStream(ref bytes, this);
+                writer.EffectiveSecurityHandler.EncryptStream(ref bytes, this);
                 _stream.Value = bytes;
                 Elements[PdfStream.Keys.Length] = new PdfInteger(_stream?.Length ?? 0);
             }
@@ -378,6 +378,44 @@ namespace PdfSharp.Pdf
                 => GetInteger(key, false);
 
             /// <summary>
+            /// Converts the specified value to unsigned integer.
+            /// If the value does not exist, the function returns 0.
+            /// If the value is not convertible, the function throws an InvalidCastException.
+            /// </summary>
+            public uint GetUnsignedInteger(string key, bool create)
+            {
+                object? obj = this[key];
+                if (obj == null)
+                {
+                    if (create)
+                        this[key] = new PdfInteger();
+                    return 0;
+                }
+
+                if (obj is PdfNull)
+                    return 0;
+
+                if (obj is PdfReference reference)
+                    obj = reference.Value;
+
+                return obj switch
+                {
+                    PdfInteger integer => (uint)integer.Value,
+                    PdfIntegerObject integerObject => (uint)integerObject.Value,
+                    PdfLongInteger longInteger => longInteger.Value is >= 0 and <= uint.MaxValue ? (uint)longInteger.Value : throw new InvalidCastException("GetUnsignedInteger: Long integer object is not an integer."),
+                    _ => throw new InvalidCastException("GetUnsignedInteger: Object is not an integer.")
+                };
+            }
+
+            /// <summary>
+            /// Converts the specified value to integer.
+            /// If the value does not exist, the function returns 0.
+            /// If the value is not convertible, the function throws an InvalidCastException.
+            /// </summary>
+            public uint GetUnsignedInteger(string key)
+                => GetUnsignedInteger(key, false);
+
+            /// <summary>
             /// Sets the entry to a direct integer value.
             /// </summary>
             public void SetInteger(string key, int value)
@@ -524,7 +562,7 @@ namespace PdfSharp.Pdf
 
             /// <summary>
             /// Sets the specified name value.
-            /// If the value doesn't start with a slash, it is added automatically.
+            /// If the value doesn’t start with a slash, it is added automatically.
             /// </summary>
             public void SetName(string key, string value)
             {
@@ -845,25 +883,24 @@ namespace PdfSharp.Pdf
             PdfArray CreateArray(Type type, PdfArray? oldArray)
             {
 #if true
-                //ConstructorInfo ctorInfo;
                 PdfArray? array;
                 if (oldArray == null)
                 {
                     // Use constructor with signature 'Ctor(PdfDocument owner)'.
                     var ctorInfo = type.GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
-                          null, new[] { typeof(PdfDocument) }, null);
+                          null, [typeof(PdfDocument)], null);
                     Debug.Assert(ctorInfo != null, "No appropriate constructor found for type: " + type.Name);
                     //array = ctorInfo.Invoke(new object[] { _ownerDictionary.Owner }) as PdfArray;
-                    array = ctorInfo.Invoke(new object[] { _ownerDictionary.Owner }) as PdfArray;
+                    array = ctorInfo.Invoke([_ownerDictionary.Owner]) as PdfArray;
                 }
                 else
                 {
                     // Use constructor with signature 'Ctor(PdfDictionary dict)'.
                     var ctorInfo = type.GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
-                                null, new[] { typeof(PdfArray) }, null);
-                    Debug.Assert(ctorInfo != null, "No appropriate constructor found for type: " + type.Name);
+                                null, types: [typeof(PdfArray)], null);
+                    Debug.Assert(ctorInfo != null, $"No appropriate constructor found for type: {type.Name}.");
                     //array = ctorInfo.Invoke(new object[] { oldArray }) as PdfArray;
-                    array = ctorInfo.Invoke(new object[] { oldArray }) as PdfArray;
+                    array = ctorInfo.Invoke([oldArray]) as PdfArray;
                 }
                 return array ?? NRT.ThrowOnNull<PdfArray>();
 #else
@@ -914,17 +951,17 @@ namespace PdfSharp.Pdf
                 {
                     // Use constructor with signature 'Ctor(PdfDocument owner)'.
                     ctorInfo = type.GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
-                        null, new[] { typeof(PdfDocument) }, null);
+                        null, [typeof(PdfDocument)], null);
                     Debug.Assert(ctorInfo != null, "No appropriate constructor found for type: " + type.Name);
-                    dict = ctorInfo.Invoke(new object[] { _ownerDictionary.Owner }) as PdfDictionary;
+                    dict = ctorInfo.Invoke([_ownerDictionary.Owner]) as PdfDictionary;
                 }
                 else
                 {
                     // Use constructor with signature 'Ctor(PdfDictionary dict)'.
                     ctorInfo = type.GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
-                      null, new[] { typeof(PdfDictionary) }, null);
+                      null, [typeof(PdfDictionary)], null);
                     Debug.Assert(ctorInfo != null, "No appropriate constructor found for type: " + type.Name);
-                    dict = ctorInfo.Invoke(new object[] { oldDictionary }) as PdfDictionary;
+                    dict = ctorInfo.Invoke([oldDictionary]) as PdfDictionary;
                 }
                 return dict ?? NRT.ThrowOnNull<PdfDictionary>();
 #else
@@ -968,8 +1005,8 @@ namespace PdfSharp.Pdf
             {
 #if true
                 var ctorInfo = type.GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
-                    null, new Type[] { typeof(PdfDocument) }, null);
-                var obj = ctorInfo!.Invoke(new object[] { _ownerDictionary.Owner }) as PdfObject;
+                    null, [typeof(PdfDocument)], null);
+                var obj = ctorInfo!.Invoke([_ownerDictionary.Owner]) as PdfObject;
                 if (oldValue != null)
                 {
                     obj!.Reference = oldValue.Reference;
@@ -1010,7 +1047,7 @@ namespace PdfSharp.Pdf
             }
 
             /// <summary>
-            /// Sets the entry with the specified value. DON'T USE THIS FUNCTION - IT MAY BE REMOVED.
+            /// Sets the entry with the specified value. DON’T USE THIS FUNCTION - IT MAY BE REMOVED.
             /// </summary>
             public void SetValue(string key, PdfItem value)
             {
@@ -1018,7 +1055,7 @@ namespace PdfSharp.Pdf
                 Debug.Assert(value is PdfObject { Reference: null } or not PdfObject,
                 "You try to set an indirect object directly into a dictionary.");
 
-                // HACK?
+                // Hammer the value in without further checks.
                 _elements[key] = value;
             }
 
@@ -1127,7 +1164,7 @@ namespace PdfSharp.Pdf
                         throw new ArgumentNullException(nameof(value));
 #if DEBUG_
                     if (key == "/MediaBox")
-                        key.GetType();
+                        _ = typeof(int);
 
                     //if (value is PdfObject)
                     //{
@@ -1665,20 +1702,7 @@ namespace PdfSharp.Pdf
         /// Gets the DebuggerDisplayAttribute text.
         /// </summary>
         // ReSharper disable UnusedMember.Local
-        string DebuggerDisplay
+        string DebuggerDisplay => Invariant($"dictionary({ObjectID.DebuggerDisplay},[{Elements.Count}])={_elements?.DebuggerDisplay}");
         // ReSharper restore UnusedMember.Local
-        {
-            get
-            {
-#if true
-                return String.Format(CultureInfo.InvariantCulture, "dictionary({0},[{1}])={2}",
-                    ObjectID.DebuggerDisplay,
-                    Elements.Count,
-                    _elements?.DebuggerDisplay);
-#else
-                return String.Format(CultureInfo.InvariantCulture, "dictionary({0},[{1}])=", ObjectID.DebuggerDisplay, _elements.DebuggerDisplay);
-#endif
-            }
-        }
     }
 }

@@ -1,4 +1,4 @@
-// PDFsharp - A .NET library for processing PDF
+﻿// PDFsharp - A .NET library for processing PDF
 // See the LICENSE file in the solution root for more information.
 
 using Microsoft.Extensions.Logging;
@@ -43,7 +43,7 @@ namespace PdfSharp.Pdf.IO
 
         /// <summary>
         /// Determines whether the file specified by its path is a PDF file by inspecting the first eight
-        /// bytes of the data. If the file header has the form �%PDF-x.y� the function returns the version
+        /// bytes of the data. If the file header has the form «%PDF-x.y» the function returns the version
         /// number as integer (e.g. 14 for PDF 1.4). If the file header is invalid or inaccessible
         /// for any reason, 0 is returned. The function never throws an exception. 
         /// </summary>
@@ -83,7 +83,7 @@ namespace PdfSharp.Pdf.IO
 
         /// <summary>
         /// Determines whether the specified stream is a PDF file by inspecting the first eight
-        /// bytes of the data. If the data begins with �%PDF-x.y� the function returns the version
+        /// bytes of the data. If the data begins with «%PDF-x.y» the function returns the version
         /// number as integer (e.g. 14 for PDF 1.4). If the data is invalid or inaccessible
         /// for any reason, 0 is returned. The function never throws an exception.
         /// This method expects the stream position to point to the start of the file data to be checked.
@@ -120,7 +120,7 @@ namespace PdfSharp.Pdf.IO
 
         /// <summary>
         /// Determines whether the specified data is a PDF file by inspecting the first eight
-        /// bytes of the data. If the data begins with �%PDF-x.y� the function returns the version
+        /// bytes of the data. If the data begins with «%PDF-x.y» the function returns the version
         /// number as integer (e.g. 14 for PDF 1.4). If the data is invalid or inaccessible
         /// for any reason, 0 is returned. The function never throws an exception. 
         /// </summary>
@@ -134,7 +134,7 @@ namespace PdfSharp.Pdf.IO
         {
             try
             {
-                // Acrobat accepts headers like �%!PS-Adobe-N.n PDF-M.m�...
+                // Acrobat accepts headers like «%!PS-Adobe-N.n PDF-M.m»...
                 var header =
                     PdfEncoders.RawEncoding.GetString(bytes, 0, bytes.Length); // Encoding.ASCII.GetString(bytes);
                 if (header[0] == '%' || header.Contains("%PDF"))
@@ -282,7 +282,7 @@ namespace PdfSharp.Pdf.IO
                 _document = new PdfDocument(lexer);
                 _document._state |= DocumentState.Imported;
                 _document._openMode = openMode;
-                _document._fileSize = stream.Length;
+                _document.FileSize = stream.Length;
 
                 // Get file version.
                 byte[] header = new byte[1024];
@@ -290,7 +290,7 @@ namespace PdfSharp.Pdf.IO
                 var _ = stream.Read(header, 0, 1024);
                 _document._version = GetPdfFileVersion(header);
                 if (_document._version == 0)
-                    throw new InvalidOperationException(PSSR.InvalidPdf);
+                    throw new InvalidOperationException(PsMsgs.InvalidPdf);
 
                 // Set IsUnderConstruction for IrefTable to true. This allows Parser.ParseObject() to insert placeholder references for objects not yet known.
                 // This is necessary for documents with objects saved in objects streams, which are read and decoded after reading the file level PdfObjects.
@@ -303,14 +303,14 @@ namespace PdfSharp.Pdf.IO
                 _document.Trailer = parser.ReadTrailer();
                 if (_document.Trailer == null!)
                     ParserDiagnostics.ThrowParserException(
-                        "Invalid PDF file: no trailer found."); // TODO L10N using PSSR.
+                        "Invalid PDF file: no trailer found."); // TODO L10N using PsMsgs
                 // References available by now: All references to file-level objects.
                 // Reference.Values available by now: All trailers and cross-reference streams (which are not encrypted by definition). 
 
                 // 2. Read the encryption dictionary, if existing.
                 if (_document.Trailer!.Elements[PdfTrailer.Keys.Encrypt] is PdfReference xrefEncrypt)
                 {
-                    var encrypt = parser.ReadIndirectObject(xrefEncrypt, true);
+                    var encrypt = parser.ReadIndirectObject(xrefEncrypt, null, true);
                     encrypt.Reference = xrefEncrypt;
                     xrefEncrypt.Value = encrypt;
 
@@ -340,9 +340,9 @@ namespace PdfSharp.Pdf.IO
                         else
                         {
                             if (password == null)
-                                throw new PdfReaderException(PSSR.PasswordRequired);
+                                throw new PdfReaderException(PsMsgs.PasswordRequired);
                             else
-                                throw new PdfReaderException(PSSR.InvalidPassword);
+                                throw new PdfReaderException(PsMsgs.InvalidPassword);
                         }
                     }
                     else if (validity == PasswordValidity.UserPassword && openMode == PdfDocumentOpenMode.Modify)
@@ -357,7 +357,7 @@ namespace PdfSharp.Pdf.IO
                             goto TryAgain;
                         }
                         else
-                            throw new PdfReaderException(PSSR.OwnerPasswordRequired);
+                            throw new PdfReaderException(PsMsgs.OwnerPasswordRequired);
                     }
                     // ReSharper restore RedundantIfElseBlock
                 }
@@ -383,7 +383,7 @@ namespace PdfSharp.Pdf.IO
                 // 6. Reset encryption so that it must be redefined to save the document encrypted.
                 effectiveSecurityHandler?.SetEncryptionToNoneAndResetPasswords();
 
-                // 7. Replace all document's placeholder references by references knowing their objects.
+                // 7. Replace all document’s placeholder references by references knowing their objects.
                 // Placeholder references are used, when reading indirect objects referring objects stored in object streams before reading and decoding them.
                 FinishReferences();
 
@@ -392,7 +392,7 @@ namespace PdfSharp.Pdf.IO
 #if DEBUG_ // TODO: Delete or rewrite.
                 // Some tests...
                 PdfReference[] reachables = document.xrefTable.TransitiveClosure(document.trailer);
-                reachables.GetType();
+                _ = typeof(int);
                 reachables = document.xrefTable.AllXRefs;
                 document.xrefTable.CheckConsistence();
 #endif
@@ -414,7 +414,10 @@ namespace PdfSharp.Pdf.IO
                     // Remove all unreachable objects.
                     int removed = _document.IrefTable.Compact();
                     if (removed != 0)
-                        Debug.WriteLine("Number of deleted unreachable objects: " + removed);
+                    {
+                        //Debug.WriteLine("Number of deleted unreachable objects: " + removed);
+                        PdfSharpLogHost.PdfReadingLogger.LogInformation("Number of deleted unreachable objects: " + removed);
+                    }
 
                     // Force flattening of page tree.
                     var pages = _document.Pages;
@@ -444,7 +447,7 @@ namespace PdfSharp.Pdf.IO
                 Debug.Assert(iref.Value != null,
                     "All references saved in IrefTable should have been created when their referred PdfObject has been accessible.");
 
-                // Get and update object's references.
+                // Get and update object’s references.
                 FinishItemReferences(iref.Value, _document, finishedObjects);
             }
 
@@ -495,7 +498,7 @@ namespace PdfSharp.Pdf.IO
 
         void FinishChildReferences(PdfDictionary dictionary, HashSet<PdfObject> finishedObjects)
         {
-            // Dictionary elements are modified inside loop. Avoid "Collection was modified; enumeration operation may not execute" error occuring in net 4.7.2.
+            // Dictionary elements are modified inside loop. Avoid "Collection was modified; enumeration operation may not execute" error occuring in net 4.6.2.
             // There is no way to access KeyValuePairs via index natively to use a for loop with.
             // Instead, enumerate Keys and get value via Elements[key], which shall be O(1).
             foreach (var key in dictionary.Elements.Keys)
@@ -510,7 +513,7 @@ namespace PdfSharp.Pdf.IO
                     item = value;
                 }
 
-                // Get and update item's references.
+                // Get and update item’s references.
                 FinishItemReferences(item, _document, finishedObjects);
             }
         }
@@ -530,7 +533,7 @@ namespace PdfSharp.Pdf.IO
                     item = value;
                 }
 
-                // Get and update item's references.
+                // Get and update item’s references.
                 FinishItemReferences(item, _document, finishedObjects);
             }
         }

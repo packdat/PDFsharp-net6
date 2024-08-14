@@ -1,4 +1,4 @@
-// PDFsharp - A .NET library for processing PDF
+﻿// PDFsharp - A .NET library for processing PDF
 // See the LICENSE file in the solution root for more information.
 
 using System;
@@ -19,13 +19,7 @@ namespace PdfSharp.Pdf
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfNumberTreeNode"/> class.
         /// </summary>
-        public PdfNumberTreeNode()
-        { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfNumberTreeNode"/> class.
-        /// </summary>
-        public PdfNumberTreeNode(bool isRoot)  //??? Needed HACK StLa
+        public PdfNumberTreeNode(bool isRoot = false)
         {
             IsRoot = isRoot;
         }
@@ -33,12 +27,7 @@ namespace PdfSharp.Pdf
         /// <summary>
         /// Gets a value indicating whether this instance is a root node.
         /// </summary>
-        public bool IsRoot
-        {
-            get => _isRoot;
-            private init => _isRoot = value;
-        }
-        readonly bool _isRoot;
+        public bool IsRoot { get; private init; }
 
         /// <summary>
         /// Gets the number of Kids elements.
@@ -99,12 +88,12 @@ namespace PdfSharp.Pdf
         /// <summary>
         /// Gets the least key.
         /// </summary>
-        public string LeastKey => "todo";
+        public string LeastKey => throw new NotImplementedException(nameof(LeastKey));  // NYI
 
         /// <summary>
         /// Gets the greatest key.
         /// </summary>
-        public string GreatestKey => "todo";
+        public string GreatestKey => throw new NotImplementedException(nameof(GreatestKey));  // NYI
 
         /// <summary>
         /// Updates the limits by inspecting Kids and Names.
@@ -113,7 +102,7 @@ namespace PdfSharp.Pdf
         {
             if (_updateRequired)
             {
-                //TODO Recalc Limits
+                // NYI Recalculate Limits
                 _updateRequired = false;
             }
         }
@@ -129,7 +118,7 @@ namespace PdfSharp.Pdf
 
         internal override void WriteObject(PdfWriter writer)
         {
-            GetType();
+            _ = typeof(int);
             base.WriteObject(writer);
         }
 
@@ -163,7 +152,7 @@ namespace PdfSharp.Pdf
             /// <summary>
             /// (Root and leaf nodes only; required in leaf nodes; present in the root node if and only if Kids is not present)
             /// An array of the form
-            ///      [key1 value1 key2 value2 � keyn valuen]
+            ///      [key1 value1 key2 value2 … keyn valuen]
             /// where each keyi is an integer and the corresponding valuei is the object associated with that key.
             /// The keys are sorted in numerical order, analogously to the arrangement of keys in a name tree.
             /// </summary>

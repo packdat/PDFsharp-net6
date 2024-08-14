@@ -99,11 +99,11 @@ namespace MigraDoc.DocumentObjectModel.Tables
                     return _idx;
                 if (Values.Index is null && Parent is Columns clms)
                 {
-                    for (int i = 0; i < clms.Count; ++i)
+                    for (int idx = 0; idx < clms.Count; idx++)
                     {
-                        clms[i].Values.Index = i;
-                        clms[i]._idx = i;
-                        clms[i]._hasIdx = true;
+                        clms[idx].Values.Index = idx;
+                        clms[idx]._idx = idx;
+                        clms[idx]._hasIdx = true;
                     }
                     if (_hasIdx)
                         return _idx;
@@ -118,7 +118,7 @@ namespace MigraDoc.DocumentObjectModel.Tables
         /// <summary>
         /// Gets a cell by its row index. The first cell has index 0.
         /// </summary>
-        public Cell? this[int index] => Values.Index is not null ? Table.Rows[index][Values.Index.Value] : null; // BUG Doesn't use Index property to guarantee getter loop ran.
+        public Cell? this[int index] => Values.Index is not null ? Table.Rows[index][Values.Index.Value] : null; // BUG Doesn’t use Index property to guarantee getter loop ran.
 
         /// <summary>
         /// Sets or gets the default style name for all cells of the column.

@@ -1,4 +1,4 @@
-// PDFsharp - A .NET library for processing PDF
+﻿// PDFsharp - A .NET library for processing PDF
 // See the LICENSE file in the solution root for more information.
 
 using System.Text;
@@ -77,7 +77,6 @@ namespace PdfSharp.Pdf.Advanced
             };
             //_descendantFont.FontDescriptor._cmapInfo2 = new(otDescriptor);
 
-
             // Create ToUnicode map
             _toUnicodeMap = new PdfToUnicodeMap(document, _cmapInfo0);
             document.Internals.AddObject(_toUnicodeMap);
@@ -87,7 +86,7 @@ namespace PdfSharp.Pdf.Advanced
             BaseFont = otDescriptor.FontName;
 
             // CID fonts are always embedded
-            if (!BaseFont.Contains("+"))  // HACK in PdfType0Font
+            if (!BaseFont.Contains("+"))  // H/ACK in PdfType0Font
                 BaseFont = FontDescriptor.CreateEmbeddedFontSubsetName(BaseFont);
 
             FontDescriptor.FontName = BaseFont;
@@ -163,9 +162,9 @@ namespace PdfSharp.Pdf.Advanced
             /// dictionary. The conventions described here ensure maximum compatibility
             /// with existing Acrobat products.
             /// If the descendant is a Type 0 CIDFont, this name should be the concatenation
-            /// of the CIDFont�s BaseFont name, a hyphen, and the CMap name given in the
+            /// of the CIDFont’s BaseFont name, a hyphen, and the CMap name given in the
             /// Encoding entry (or the CMapName entry in the CMap). If the descendant is a
-            /// Type 2 CIDFont, this name should be the same as the CIDFont�s BaseFont name.
+            /// Type 2 CIDFont, this name should be the same as the CIDFont’s BaseFont name.
             /// </summary>
             [KeyInfo(KeyType.Name | KeyType.Required)]
             public new const string BaseFont = "/BaseFont";

@@ -2,7 +2,7 @@
 // See the LICENSE file in the solution root for more information.
 
 using System.IO;
-//#if NET/FX_CORE || UWP || DNC10
+//#if NET/FX_CORE || WUI || DNC10
 //using System.Threading.Tasks;
 //using Windows.Foundation;
 //using Windows.Storage;
@@ -337,7 +337,6 @@ namespace PdfSharp.Quality
         /// <param name="sourceBytes">The source bytes.</param>
         /// <param name="filepath">The filepath.</param>
         /// <param name="startViewer">if set to <c>true</c> [start viewer].</param>
-        /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">sourceBytes</exception>
         public string SaveAndShowFile(byte[]? sourceBytes, string filepath = "", bool startViewer = false)
         {
@@ -351,8 +350,8 @@ namespace PdfSharp.Quality
             using var stream = File.Create(filepath);
             {
                 stream.Write(sourceBytes, 0, sourceBytes.Length);
-                // Stream must be closed here, otherwise it cannot being copied under Linux.
-                // To me, it is not clear what's the difference with windows.
+                // Stream must be closed here, otherwise it cannot be copied under Linux.
+                // To me, it is not clear what’s the difference with Windows.
                 stream.Close();
             }
 
@@ -367,7 +366,7 @@ namespace PdfSharp.Quality
         //    if (sourceBytes is null)
         //        throw new ArgumentNullException(nameof(sourceBytes));
 
-        //    // Add generated filename, if filepath is only a directory (doesn't contain a file extension).
+        //    // Add generated filename, if filepath is only a directory (doesn’t contain a file extension).
         //    return String.IsNullOrEmpty(Path.GetExtension(filepath))
         //        ? Path.Combine(filepath, GenerateFilename(sourceBytes))
         //        : filepath;
@@ -540,7 +539,7 @@ namespace PdfSharp.Quality
 #if GDI
                 _gfx = null!;
 #endif
-                _pdfBytes = Array.Empty<byte>();
+                _pdfBytes = [];
             }
         }
         PdfDocument? _document;

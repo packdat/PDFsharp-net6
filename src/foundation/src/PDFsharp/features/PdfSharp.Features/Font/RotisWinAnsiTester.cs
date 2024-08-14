@@ -136,7 +136,7 @@ namespace PdfSharp.Features.Font
         }
 
         /// <summary>
-        /// The internal names that uniquely identify a font's type faces (i.e. a physical font file).
+        /// The internal names that uniquely identify a font’s type faces (i.e. a physical font file).
         /// Used in the first parameter of the FontResolverInfo constructor.
         /// </summary>
         static class FaceNames
@@ -325,7 +325,7 @@ namespace PdfSharp.Features.Font
 #endif
             }
             // PDFsharp never calls GetFont with a face name that was not returned by ResolveTypeface.
-            throw new ArgumentException(String.Format("Invalid face name '{0}'", faceName));
+            throw new ArgumentException($"Invalid face name '{faceName}'");
         }
     }
 

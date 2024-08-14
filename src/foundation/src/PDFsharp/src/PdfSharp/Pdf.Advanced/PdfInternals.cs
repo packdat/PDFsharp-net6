@@ -1,4 +1,4 @@
-// PDFsharp - A .NET library for processing PDF
+﻿// PDFsharp - A .NET library for processing PDF
 // See the LICENSE file in the solution root for more information.
 
 using System.Text;
@@ -98,7 +98,7 @@ namespace PdfSharp.Pdf.Advanced
 
         /// <summary>
         /// Returns the PdfReference of the specified object, or null if the object is not in the
-        /// document's object table.
+        /// document’s object table.
         /// </summary>
         public static PdfReference? GetReference(PdfObject obj)
         {
@@ -244,8 +244,10 @@ namespace PdfSharp.Pdf.Advanced
         public void WriteObject(Stream stream, PdfItem item)
         {
             // Never write an encrypted object
-            PdfWriter writer = new(stream, null);
-            writer.Options = PdfWriterOptions.OmitStream;
+            PdfWriter writer = new(stream, _document, null)
+            {
+                Options = PdfWriterOptions.OmitStream
+            };
             item.WriteObject(writer);
         }
 

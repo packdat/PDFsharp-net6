@@ -15,7 +15,7 @@ using WpfFontFamily = System.Windows.Media.FontFamily;
 using WpfTypeface = System.Windows.Media.Typeface;
 using WpfGlyphTypeface = System.Windows.Media.GlyphTypeface;
 #endif
-#if UWP
+#if WUI
 using UwpFontFamily = Windows.UI.Xaml.Media.FontFamily;
 #endif
 using PdfSharp.Fonts;
@@ -336,7 +336,7 @@ namespace PdfSharp.Drawing
         {
 #if DEBUG_
             if (_familyName == "Segoe UI Semilight" && (_style & XFontStyleEx.BoldItalic) == XFontStyleEx.Italic)
-                GetType();
+                _ = typeof(int);
 #endif
             FontResolvingOptions fontResolvingOptions = OverrideStyleSimulations
                 ? new FontResolvingOptions(_style, StyleSimulations)
@@ -526,8 +526,9 @@ namespace PdfSharp.Drawing
         /// </summary>
         public bool Underline => (_style & XFontStyleEx.Underline) == XFontStyleEx.Underline;
 
+#if true_ // #DELETE
         /// <summary>
-        /// Temporary HACK for XPS to PDF converter.
+        /// Temporary H/ACK for XPS to PDF converter.
         /// </summary>
         internal bool IsVertical
         {
@@ -535,6 +536,7 @@ namespace PdfSharp.Drawing
             set => _isVertical = value;
         }
         bool _isVertical;
+#endif
 
         /// <summary>
         /// Indicates whether this XFont object is a symbol font.
@@ -620,7 +622,7 @@ namespace PdfSharp.Drawing
         public double GetHeight()
         {
             double value = CellSpace * _emSize / UnitsPerEm;
-#if CORE || UWP
+#if CORE || WUI
             return value;
 #endif
 #if GDI && !WPF
@@ -649,7 +651,7 @@ namespace PdfSharp.Drawing
 #if true
             throw new InvalidOperationException("Honestly: Use GetHeight() without parameter!");
 #else
-#if CORE || UWP
+#if CORE || WUI
             double value = CellSpace * _emSize / UnitsPerEm;
             return value;
 #endif

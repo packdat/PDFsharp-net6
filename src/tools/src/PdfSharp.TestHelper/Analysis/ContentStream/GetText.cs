@@ -86,7 +86,7 @@ namespace PdfSharp.TestHelper.Analysis.ContentStream
             x += xOffset;
             y += yOffset;
 
-            // Find all preceding Td's of Text object and calculate coordinates.
+            // Find all preceding Td’s of Text object and calculate coordinates.
             while (MoveToPreviousTdInTextObject())
             {
                 if (!GetCurrentOffset(out var xOffset2, out var yOffset2, out _, out _))
@@ -134,7 +134,7 @@ namespace PdfSharp.TestHelper.Analysis.ContentStream
                 if (!_contentStreamEnumerator.MovePrevious())
                     return false;
 
-                // TD's before BT belong to another text object and their offsets don't mind. 
+                // TD’s before BT belong to another text object and their offsets don’t mind. 
                 if (_contentStreamEnumerator.Current == "BT")
                     return false;
 
@@ -190,7 +190,7 @@ namespace PdfSharp.TestHelper.Analysis.ContentStream
 
             public TextInfo(double x, double y, double xOffset, double yOffset, string text, bool isHex,
                 ContentStreamEnumerator.IState tdXElement, ContentStreamEnumerator.IState tdYElement, ContentStreamEnumerator.IState tdElement,
-                ContentStreamEnumerator.IState textElement, ContentStreamEnumerator.IState tjElement, 
+                ContentStreamEnumerator.IState textElement, ContentStreamEnumerator.IState tjElement,
                 ContentStreamEnumerator contentStreamEnumerator)
             {
                 X = x;
@@ -256,18 +256,21 @@ namespace PdfSharp.TestHelper.Analysis.ContentStream
             {
                 // This code should be analog to XGraphicsPdfRenderer.DrawString().
 
-                var codePoints = UnicodeHelper.Utf32FromString(text /*, font.AnsiEncoding*/);
+                var pdfDocument = _contentStreamEnumerator.PdfDocument;
+
+                // Invoke TextEvent.
+                var args2 = new PrepareTextEventArgs(pdfDocument, font, text);
+                pdfDocument.RenderEvents.OnPrepareTextEvent(this, args2);
+                text = args2.Text;
+
+                var codePoints = font.IsSymbolFont
+                    ? UnicodeHelper.SymbolCodePointsFromString(text, font.OpenTypeDescriptor)
+                    : UnicodeHelper.Utf32FromString(text /*, font.AnsiEncoding*/);
                 var otDescriptor = font.OpenTypeDescriptor;
                 var codePointsWithGlyphIndices = otDescriptor.GlyphIndicesFromCodePoints(codePoints);
 
-                var pdfDocument = _contentStreamEnumerator.PdfDocument;
-
                 // Invoke RenderEvent.
-                var args = new RenderTextEventArgs(pdfDocument)
-                {
-                    Font = font,
-                    CodePointGlyphIndexPairs = codePointsWithGlyphIndices
-                };
+                var args = new RenderTextEventArgs(pdfDocument, font, codePointsWithGlyphIndices);
 
                 pdfDocument.RenderEvents.OnRenderTextEvent(this, args);
                 codePointsWithGlyphIndices = args.CodePointGlyphIndexPairs;
@@ -288,7 +291,7 @@ namespace PdfSharp.TestHelper.Analysis.ContentStream
                     var fontType = font.FontTypeFromUnicodeFlag;
                     isAnsi = fontType == FontType.TrueTypeWinAnsi;
                 }
-                
+
                 if (isAnsi)
                 {
                     // Use ANSI character encoding.
@@ -318,7 +321,6 @@ namespace PdfSharp.TestHelper.Analysis.ContentStream
 
                     text = PdfEncoders.ToHexStringLiteral(bytes, true, false, null);
                 }
-
 
                 // Remove the brackets:
                 if (text.Length >= 2)

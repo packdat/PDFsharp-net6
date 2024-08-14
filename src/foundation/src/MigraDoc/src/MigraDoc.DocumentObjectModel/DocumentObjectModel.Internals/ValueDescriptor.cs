@@ -34,7 +34,6 @@ namespace MigraDoc.DocumentObjectModel.Internals
         /// </summary>
         /// <param name="doc">The document object.</param>
         /// <param name="flags">The GetValue flags.</param>
-        /// <returns></returns>
         public abstract object? GetValue(DocumentObject doc, GV flags);
 
         /// <summary>
@@ -84,7 +83,7 @@ namespace MigraDoc.DocumentObjectModel.Internals
                 {
                     // Case: The type of the property is nullable.
                     //ValueStyleInternal |= ValueStyleInternal.Nullable;
-                    //valueType.GetType();
+                    //_ = typeof(int);
                 }
             }
 #endif
@@ -137,7 +136,7 @@ namespace MigraDoc.DocumentObjectModel.Internals
         protected void EnsureGetValueFlags(GV flags)
         {
             if (!Enum.IsDefined(typeof(GV), flags))
-                throw new InvalidEnumArgumentException(DomSR.InvalidEnumValue(flags));
+                throw new InvalidEnumArgumentException(MdDomMsgs.InvalidEnumValue(flags).Message);
         }
 
         /// <summary>

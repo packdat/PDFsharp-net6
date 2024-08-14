@@ -1,4 +1,4 @@
-// MigraDoc - Creating Documents on the Fly
+ï»¿// MigraDoc - Creating Documents on the Fly
 // See the LICENSE file in the solution root for more information.
 
 using MigraDoc.DocumentObjectModel.Visitors;
@@ -47,7 +47,7 @@ namespace MigraDoc.DocumentObjectModel
                 {
                     int count = Count;
                     // index starts from 1; DefaultParagraphFont cannot be modified.
-                    for (int index = 1; index < count; ++index)
+                    for (int index = 1; index < count; index++)
                     {
                         var style = this[index];
                         if (String.Compare(style.Name, styleName, StringComparison.OrdinalIgnoreCase) == 0)
@@ -75,7 +75,7 @@ namespace MigraDoc.DocumentObjectModel
                 throw new ArgumentNullException(nameof(styleName));
 
             int count = Count;
-            for (int index = 0; index < count; ++index)
+            for (int index = 0; index < count; index++)
             {
                 var style = this[index];
                 if (String.Compare(style.Name, styleName, StringComparison.OrdinalIgnoreCase) == 0)
@@ -114,14 +114,12 @@ namespace MigraDoc.DocumentObjectModel
                 throw new ArgumentNullException(nameof(value));
 
             if (value is not Style style)
-                //throw new InvalidOperationException(DomSR.StyleExpected);
                 throw TH.ArgumentException_StyleExpected(value.GetType());
 
             bool isRootStyle = style.IsRootStyle;
 
             if (style.BaseStyle == "" && !isRootStyle)
-                //throw new ArgumentException(DomSR.UndefinedBaseStyle(style.BaseStyle));
-                throw TH.ArgumentException_UndefinedBaseStyle(style.BaseStyle);
+                throw TH.ArgumentException_UndefinedBaseStyle(style.Name);
 
             Style? baseStyle = null;
             int styleIndex = GetIndex(style.BaseStyle);
@@ -129,8 +127,7 @@ namespace MigraDoc.DocumentObjectModel
             if (styleIndex != -1)
                 baseStyle = this[styleIndex];
             else if (!isRootStyle)
-                //throw new ArgumentException(DomSR.UndefinedBaseStyle(style.BaseStyle));
-                throw TH.ArgumentException_UndefinedBaseStyle(style.BaseStyle);
+                throw TH.ArgumentException_UndefinedBaseStyle(style.Name);
 
             if (baseStyle != null)
                 style.Values.StyleType = baseStyle.Type;
@@ -179,7 +176,7 @@ namespace MigraDoc.DocumentObjectModel
             };
             Add(style);
 
-            // Normal 'Standard' (Paragraph Style).
+            // Normal 'standard' (Paragraph Style).
             style = new(Style.DefaultParagraphName, null)
             {
                 Values =
@@ -217,7 +214,7 @@ namespace MigraDoc.DocumentObjectModel
             };
             Add(style);
 
-            // Heading1 'Überschrift 1' (Paragraph Style).
+            // Heading1 'Ãœberschrift 1' (Paragraph Style).
             style = new(StyleNames.Heading1, StyleNames.Normal)
             {
                 Values =
@@ -231,7 +228,7 @@ namespace MigraDoc.DocumentObjectModel
             };
             Add(style);
 
-            // Heading2 'Überschrift 2' (Paragraph Style).
+            // Heading2 'Ãœberschrift 2' (Paragraph Style).
             style = new(StyleNames.Heading2, StyleNames.Heading1)
             {
                 Values =
@@ -245,7 +242,7 @@ namespace MigraDoc.DocumentObjectModel
             };
             Add(style);
 
-            // Heading3 'Überschrift 3' (Paragraph Style).
+            // Heading3 'Ãœberschrift 3' (Paragraph Style).
             style = new(StyleNames.Heading3, StyleNames.Heading2)
             {
                 Values =
@@ -259,7 +256,7 @@ namespace MigraDoc.DocumentObjectModel
             };
             Add(style);
 
-            // Heading4 'Überschrift 4' (Paragraph Style).
+            // Heading4 'Ãœberschrift 4' (Paragraph Style).
             style = new(StyleNames.Heading4, StyleNames.Heading3)
             {
                 Values =
@@ -273,7 +270,7 @@ namespace MigraDoc.DocumentObjectModel
             };
             Add(style);
 
-            // Heading5 'Überschrift 5' (Paragraph Style).
+            // Heading5 'Ãœberschrift 5' (Paragraph Style).
             style = new(StyleNames.Heading5, StyleNames.Heading4)
             {
                 Values =
@@ -287,7 +284,7 @@ namespace MigraDoc.DocumentObjectModel
             };
             Add(style);
 
-            // Heading6 'Überschrift 6' (Paragraph Style).
+            // Heading6 'Ãœberschrift 6' (Paragraph Style).
             style = new(StyleNames.Heading6, StyleNames.Heading5)
             {
                 Values =
@@ -301,7 +298,7 @@ namespace MigraDoc.DocumentObjectModel
             };
             Add(style);
 
-            // Heading7 'Überschrift 7' (Paragraph Style).
+            // Heading7 'Ãœberschrift 7' (Paragraph Style).
             style = new(StyleNames.Heading7, StyleNames.Heading6)
             {
                 Values =
@@ -315,7 +312,7 @@ namespace MigraDoc.DocumentObjectModel
             };
             Add(style);
 
-            // Heading8 'Überschrift 8' (Paragraph Style).
+            // Heading8 'Ãœberschrift 8' (Paragraph Style).
             style = new(StyleNames.Heading8, StyleNames.Heading7)
             {
                 Values =
@@ -329,7 +326,7 @@ namespace MigraDoc.DocumentObjectModel
             };
             Add(style);
 
-            // Heading9 'Überschrift 9' (Paragraph Style).
+            // Heading9 'Ãœberschrift 9' (Paragraph Style).
             style = new(StyleNames.Heading9, StyleNames.Heading8)
             {
                 Values =
@@ -353,7 +350,7 @@ namespace MigraDoc.DocumentObjectModel
             };
             Add(style);
 
-            // Footnote 'Fußnote' (Paragraph Style).
+            // Footnote 'FuÃŸnote' (Paragraph Style).
             style = new Style(StyleNames.Footnote, StyleNames.Normal)
             {
                 Values =
@@ -373,7 +370,7 @@ namespace MigraDoc.DocumentObjectModel
             };
             Add(style);
 
-            // -33: Footer 'Fußzeile' (Paragraph Style).
+            // -33: Footer 'FuÃŸzeile' (Paragraph Style).
             style = new Style(StyleNames.Footer, StyleNames.Normal)
             {
                 Values =
@@ -393,7 +390,7 @@ namespace MigraDoc.DocumentObjectModel
             };
             Add(style);
 
-            // InvalidStyleName 'Ungültiger Formatvorlagenname' (Paragraph Style).
+            // InvalidStyleName 'UngÃ¼ltiger Formatvorlagenname' (Paragraph Style).
             style = new Style(StyleNames.InvalidStyleName, StyleNames.Normal)
             {
                 Values =
@@ -418,7 +415,7 @@ namespace MigraDoc.DocumentObjectModel
             serializer.WriteComment(Values.Comment);
             int pos = serializer.BeginContent("\\styles");
             {
-                // A style can only be added to Styles if its base style exists. Therefore the
+                // A style can only be added to Styles if its base style exists. Therefore, the
                 // styles collection is consistent at any one time by definition. But because it 
                 // is possible to change the base style of a style, the sequence of the styles 
                 // in the styles collection can be in an order that a style comes before its base

@@ -1,9 +1,8 @@
-// PDFsharp - A .NET library for processing PDF
+﻿// PDFsharp - A .NET library for processing PDF
 // See the LICENSE file in the solution root for more information.
 
 using System.Collections;
 using PdfSharp.Events;
-using PdfSharp.Internal.Logging;
 using PdfSharp.Logging;
 using PdfSharp.Pdf.IO;
 using PdfSharp.Pdf.Advanced;
@@ -46,10 +45,10 @@ namespace PdfSharp.Pdf
             get
             {
                 if (index < 0 || index >= Count)
-                    throw new ArgumentOutOfRangeException(nameof(index), index, PSSR.PageIndexOutOfRange);
+                    throw new ArgumentOutOfRangeException(nameof(index), index, PsMsgs.PageIndexOutOfRange);
 
-                PdfDictionary dict = (PdfDictionary)((PdfReference)PagesArray.Elements[index]).Value;
-                if (!(dict is PdfPage))
+                var dict = (PdfDictionary)((PdfReference)PagesArray.Elements[index]).Value;
+                if (dict is not PdfPage)
                     dict = new PdfPage(dict);
                 return (PdfPage)dict;
             }
@@ -99,7 +98,7 @@ namespace PdfSharp.Pdf
         /// </summary>
         public PdfPage Insert(int index)
         {
-            PdfPage page = new PdfPage();
+            var page = new PdfPage();
             Insert(index, page);
             return page;
         }
@@ -122,7 +121,7 @@ namespace PdfSharp.Pdf
                 for (int idx = 0; idx < count; idx++)
                 {
                     if (ReferenceEquals(this[idx], page))
-                        throw new InvalidOperationException(PSSR.MultiplePageInsert);
+                        throw new InvalidOperationException(PsMsgs.MultiplePageInsert);
                 }
 
                 // Because the owner of the inserted page is this document we assume that the page was former part of it,
@@ -180,8 +179,7 @@ namespace PdfSharp.Pdf
                     _document.Events.OnPageAdded(_document, new PageEventArgs(_document) { Page = page, PageIndex = index, EventType = PageEventType.Imported });
             }
 
-            PdfSharpLogHost.Logger.NewPdfPageAdded(_document?.Name);
-
+            PdfSharpLogHost.Logger.NewPdfPageCreated(_document?.Name);
 
             if (Owner.Settings.TrimMargins.AreSet)
                 page.TrimMargins = Owner.Settings.TrimMargins;
@@ -346,7 +344,7 @@ namespace PdfSharp.Pdf
                         var annots2 = page.Elements.GetArray(PdfPage.Keys.Annots);
                         if (annots2 is not null)
                         {
-                            GetType(); // Temporary line for breakpoints.
+                            _ = typeof(int);  // Temporary line for breakpoints.
                         }
 
                         //Owner._irefTable.Add(annotations);
@@ -406,7 +404,7 @@ namespace PdfSharp.Pdf
         /// </summary>
         public void RemoveAt(int index)
         {
-            PdfPage? page = PagesArray.Elements[index] as PdfPage;
+            var page = PagesArray.Elements[index] as PdfPage;
             PagesArray.Elements.RemoveAt(index);
             Elements.SetInteger(Keys.Count, PagesArray.Elements.Count);
 
@@ -450,7 +448,7 @@ namespace PdfSharp.Pdf
             if (importPage.Owner._openMode != PdfDocumentOpenMode.Import)
                 throw new InvalidOperationException("A PDF document must be opened with PdfDocumentOpenMode.Import to import pages from it.");
 
-            PdfPage page = new PdfPage(_document);
+            var page = new PdfPage(_document);
 
             // ReSharper disable AccessToStaticMemberViaDerivedType for a better code readability.
             CloneElement(page, importPage, PdfPage.Keys.Resources, false);
@@ -592,16 +590,16 @@ namespace PdfSharp.Pdf
             if (type == "/Page")
             {
                 PdfPage.InheritValues(kid, values);
-                return new PdfDictionary[] { kid };
+                return [kid];
             }
 
-            // If it has kids, it's logically not going to be type page.
+            // If it has kids, it’s logically not going to be type page.
             if (String.IsNullOrEmpty(type) && !kid.Elements.ContainsKey("/Kids"))
             {
                 // Type is required. If type is missing, assume it is "/Page" and hope it will work.
-                // TODO Implement a "Strict" mode in PDFsharp and don't do this in "Strict" mode.
+                // TODO Implement a "Strict" mode in PDFsharp and don’t do this in "Strict" mode.
                 PdfPage.InheritValues(kid, values);
-                return new PdfDictionary[] { kid };
+                return [kid];
             }
 
 #else
@@ -614,7 +612,7 @@ namespace PdfSharp.Pdf
 
             Debug.Assert(kid.Elements.GetName(Keys.Type) == "/Pages");
             PdfPage.InheritValues(kid, ref values);
-            List<PdfDictionary> list = new();
+            List<PdfDictionary> list = [];
             var kids = kid.Elements["/Kids"] as PdfArray;
 
             if (kids == null)
@@ -696,7 +694,7 @@ namespace PdfSharp.Pdf
                 get
                 {
                     if (_index == -1 || _index >= _list.Count)
-                        throw new InvalidOperationException(PSSR.ListEnumCurrentOutOfRange);
+                        throw new InvalidOperationException(PsMsgs.ListEnumCurrentOutOfRange);
                     return _currentElement ?? throw new InvalidOperationException("Current called before MoveNext.");
                 }
             }

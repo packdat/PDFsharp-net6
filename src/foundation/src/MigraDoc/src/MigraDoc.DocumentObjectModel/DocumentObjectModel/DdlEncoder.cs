@@ -20,9 +20,9 @@ namespace MigraDoc.DocumentObjectModel
 
             int length = str.Length;
             var sb = new StringBuilder(length + (length >> 2));
-            for (int index = 0; index < length; ++index)
+            for (int index = 0; index < length; index++)
             {
-                // Don't convert characters into DDL.
+                // Don’t convert characters into DDL.
                 char ch = str[index];
                 switch (ch)
                 {
@@ -43,7 +43,7 @@ namespace MigraDoc.DocumentObjectModel
                         if (index < length - 1 && str[index + 1] == '/')
                         {
                             sb.Append("\\//");
-                            ++index;
+                            index++;
                         }
                         else
                             sb.Append("/");
@@ -68,7 +68,7 @@ namespace MigraDoc.DocumentObjectModel
 
             var sb = new StringBuilder(length + (length >> 2));
             sb.Append("\"");
-            for (int index = 0; index < length; ++index)
+            for (int index = 0; index < length; index++)
             {
                 char ch = str[index];
                 switch (ch)

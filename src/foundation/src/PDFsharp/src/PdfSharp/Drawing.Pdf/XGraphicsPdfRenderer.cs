@@ -15,7 +15,7 @@ using System.Windows.Media;
 using SysPoint = System.Windows.Point;
 using SysSize = System.Windows.Size;
 #endif
-#if UWP
+#if WUI
 using Windows.UI.Xaml.Media;
 using SysPoint = Windows.Foundation.Point;
 using SysSize = Windows.Foundation.Size;
@@ -23,11 +23,11 @@ using SysSize = Windows.Foundation.Size;
 using PdfSharp.Fonts.OpenType;
 using PdfSharp.Internal;
 using PdfSharp.Logging;
+using PdfSharp.Fonts;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.Internal;
 using PdfSharp.Pdf.Advanced;
 using PdfSharp.Pdf.IO;
-using PdfSharp.Fonts;
 
 // ReSharper disable RedundantNameQualifier
 // ReSharper disable CompareOfFloatsByEqualityOperator
@@ -105,7 +105,7 @@ namespace PdfSharp.Drawing.Pdf
         /// </summary>
         public void DrawLine(XPen pen, double x1, double y1, double x2, double y2)
         {
-            DrawLines(pen, new XPoint[] { new(x1, y1), new(x2, y2) });
+            DrawLines(pen, [new(x1, y1), new(x2, y2)]);
         }
 
         // ----- DrawLines ----------------------------------------------------------------------------
@@ -140,7 +140,7 @@ namespace PdfSharp.Drawing.Pdf
 
         public void DrawBezier(XPen pen, double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4)
         {
-            DrawBeziers(pen, new XPoint[] { new(x1, y1), new(x2, y2), new(x3, y3), new(x4, y4) });
+            DrawBeziers(pen, [new(x1, y1), new(x2, y2), new(x3, y3), new(x4, y4)]);
         }
 
         // ----- DrawBeziers --------------------------------------------------------------------------
@@ -240,7 +240,7 @@ namespace PdfSharp.Drawing.Pdf
 
             if (pen == null && brush == null)
             {    // ReSharper disable once NotResolvedInText
-                throw new ArgumentNullException("pen and brush");
+                throw new ArgumentNullException(nameof(pen) + " and " + nameof(brush));
             }
 
             const string format = Config.SignificantDecimalPlaces4;
@@ -326,7 +326,7 @@ namespace PdfSharp.Drawing.Pdf
 
             int count = points.Length;
             if (points.Length < 2)
-                throw new ArgumentException(PSSR.PointArrayAtLeast(2), nameof(points));
+                throw new ArgumentException(PsMsgs.PointArrayAtLeast(2), nameof(points));
 
             const string format = Config.SignificantDecimalPlaces4;
             AppendFormatPoint("{0:" + format + "} {1:" + format + "} m\n", points[0].X, points[0].Y);
@@ -421,7 +421,7 @@ namespace PdfSharp.Drawing.Pdf
                 AppendPath(path._pathGeometry);
             AppendStrokeFill(pen, brush, path.FillMode, false);
 #endif
-#if UWP
+#if WUI
             Realize(pen, brush);
             AppendPath(path._pathGeometry);
             AppendStrokeFill(pen, brush, path.FillMode, false);
@@ -444,7 +444,15 @@ namespace PdfSharp.Drawing.Pdf
             double cyAscent = lineSpace * font.CellAscent / font.CellSpace;
             double cyDescent = lineSpace * font.CellDescent / font.CellSpace;
 
+            //bool italicSimulation = (font.GlyphTypeface.StyleSimulations & XStyleSimulations.ItalicSimulation) != 0;
             bool boldSimulation = (font.GlyphTypeface.StyleSimulations & XStyleSimulations.BoldSimulation) != 0;
+            //bool strikeout = (font.Style & XFontStyleEx.Strikeout) != 0;
+            //bool underline = (font.Style & XFontStyleEx.Underline) != 0;
+
+            // Invoke PrepareTextEvent.
+            var args2 = new PrepareTextEventArgs(Owner, font, s);
+            Owner.RenderEvents.OnPrepareTextEvent(this, args2);
+            s = args2.Text;
 
             //var otDescriptor = font.OpenTypeDescriptor;
             //var ids = otDescriptor.GlyphIndicesFromCodepoints(codePoints);
@@ -456,18 +464,14 @@ namespace PdfSharp.Drawing.Pdf
             var otDescriptor = font.OpenTypeDescriptor;
             var codePointsWithGlyphIndices = otDescriptor.GlyphIndicesFromCodePoints(codePoints);
 
-            // Invoke RenderEvent.
-            var args = new RenderTextEventArgs(Owner)
-            {
-                Font = font,
-                CodePointGlyphIndexPairs = codePointsWithGlyphIndices
-            };
+            // Invoke RenderTextEvent.
+            var args = new RenderTextEventArgs(Owner, font, codePointsWithGlyphIndices);
 
             Owner.RenderEvents.OnRenderTextEvent(this, args);
             codePointsWithGlyphIndices = args.CodePointGlyphIndexPairs;
             if (args.ReevaluateGlyphIndices)
             {
-                codePoints = args.CodePointGlyphIndexPairs.Select(x => x.CodePoint).ToArray();
+                codePoints = args.CodePointGlyphIndexPairs.Select(pair => pair.CodePoint).ToArray();
                 codePointsWithGlyphIndices = otDescriptor.GlyphIndicesFromCodePoints(codePoints);
             }
 
@@ -565,17 +569,18 @@ namespace PdfSharp.Drawing.Pdf
                 }
             }
 
-            var length = codePoints.Length;
-
-            // Standard-case: characters do not have color-information
-            if (codePointsWithGlyphIndices.All(item => item.Color is null))
+            var glyphCount = codePoints.Length;
+            // Check font whether colored glyphs are opt-in.
+            bool isDefaultCase = font.PdfOptions.ColoredGlyphs == PdfFontColoredGlyphs.None;
+        DefaultCase:
+            if (isDefaultCase)
             {
-                string? text;
+                string text;
                 if (isAnsi)
                 {
                     // Use ANSI character encoding.
-                    byte[] bytes = new byte[length];
-                    for (int idx = 0; idx < length; idx++)
+                    byte[] bytes = new byte[glyphCount];
+                    for (int idx = 0; idx < glyphCount; idx++)
                     {
                         ref var item = ref codePoints[idx];
                         var ch = AnsiEncoding.UnicodeToAnsi((char)item);
@@ -586,8 +591,8 @@ namespace PdfSharp.Drawing.Pdf
                 else
                 {
                     // Use Unicode glyph encoding.
-                    var bytes = new byte[2 * length];
-                    for (int idx = 0; idx < length; idx++)
+                    var bytes = new byte[2 * glyphCount];
+                    for (int idx = 0; idx < glyphCount; idx++)
                     {
                         ref var item = ref codePointsWithGlyphIndices[idx];
                         bytes[idx * 2] = (byte)((item.GlyphIndex & 0xFF00) >>> 8);
@@ -599,45 +604,57 @@ namespace PdfSharp.Drawing.Pdf
                 return;
             }
 
-            // Special case: characters are colorized (e.g. Emoji-Fonts)
-            // we split the text based on whether special color-handling is required for a character
+            // Get glyph color records for all glyph indices.
+            var glyphColorRecords = otDescriptor.GlyphColorRecordsFromGlyphIndices(codePointsWithGlyphIndices);
 
-            List<List<CodePointGlyphIndexPair>> textParts = [];
-            var partGlyphs = new List<CodePointGlyphIndexPair>();
+            isDefaultCase = glyphColorRecords.All(item => item is null);
+            if (isDefaultCase)
+            {
+                // There is no glyph index with a glyph color record.
+                goto DefaultCase;
+            }
+
+            // Case: At least one glyph is colorized, e.g. an emoji in an emoji font.
+
+            // We split the text based on whether special color-handling is required for a glyph.
+            List<List<GlyphIndexGlyphColorRecordPair>> textParts = [];
+            var partGlyphs = new List<GlyphIndexGlyphColorRecordPair>();
             var isColorized = false;
-            for (int idx = 0; idx < length; idx++)
+            for (int idx = 0; idx < glyphCount; idx++)
             {
                 ref var cp = ref codePointsWithGlyphIndices[idx];
-                var color = cp.Color;
-                // if glyph is colored, render individually, else add to list
-                if (color != null || (color == null && isColorized))
+                ref var cr = ref glyphColorRecords[idx];
+
+                // If glyph is colored, render individually, else add to list.
+                if (cr != null || (cr == null && isColorized))
                 {
                     if (partGlyphs.Count > 0)
                         textParts.Add(partGlyphs);
                     partGlyphs = [];
-                    isColorized = color != null;
+                    isColorized = cr is not null;
                 }
-                partGlyphs.Add(cp);
+                partGlyphs.Add(new(cp.GlyphIndex, cr));
             }
             if (partGlyphs.Count > 0)
                 textParts.Add(partGlyphs);
 
-            Debug.Assert(textParts.Sum(p => p.Count) == length, "Character count mismatch");
+            Debug.Assert(textParts.Sum(p => p.Count) == glyphCount, "Character count mismatch.");
 
             const string format2 = Config.SignificantDecimalPlaces4;
             var layerBytes = new byte[2];
             foreach (var textPart in textParts)
             {
-                // textPart is either a single item having a color-record or 1-N items without color
-                if (textPart.Count == 1 && textPart[0].Color != null)
+                // textPart is either a single item having a color-record or 1-n items without color.
+                // if (textPart is [{ ColorRecord: not null } _]) ...when pattern matching is over the top. At least for me.
+                if (textPart.Count == 1 && textPart[0].ColorRecord != null)
                 {
                     var chunkWidth = 0.0;
-                    var glyphRecord = textPart[0].Color!.Value;
+                    var glyphRecord = textPart[0].ColorRecord!.Value;
                     for (var i = 0; i < glyphRecord.numLayers; i++)
                     {
                         var layer = otDescriptor.FontFace.colr!.layerRecords[i + glyphRecord.firstLayerIndex];
                         var cp = new CodePointGlyphIndexPair(layer.glyphId, layer.glyphId);
-                        // 0xffff is a special entry denoting the current foreground-color
+                        // 0xffff is a special entry denoting the current foreground-color.
                         if (layer.paletteIndex != 0xffff)
                         {
                             var color = otDescriptor.FontFace.cpal!.colorRecords[layer.paletteIndex];
@@ -662,7 +679,7 @@ namespace PdfSharp.Drawing.Pdf
                         }
                         else
                         {
-                            // rest of the layers are rendered on top of the first layer
+                            // Rest of the layers are rendered on top of the first layer.
                             AppendFormatArgs("0 0 Td {0} Tj\n", text);
                         }
                     }
@@ -670,7 +687,7 @@ namespace PdfSharp.Drawing.Pdf
                 }
                 else
                 {
-                    Debug.Assert(textPart.All(p => p.Color == null), "Colors should be null here");
+                    Debug.Assert(textPart.All(p => p.ColorRecord == null), "Colors should be null here.");
 
                     width = 0.0;
                     var bytes = new byte[textPart.Count * 2];
@@ -702,7 +719,6 @@ namespace PdfSharp.Drawing.Pdf
             bool underline = (font.Style & XFontStyleEx.Underline) != 0;
 
             var realizedFont = _gfxState.RealizedFont!;
-
             // Map absolute position to PDF world space.
             var pos = new XPoint(x, y);
             pos = WorldToView(pos);
@@ -886,7 +902,7 @@ namespace PdfSharp.Drawing.Pdf
                 {
                     var xForm = form as XPdfForm;
                     // Reset colors in this graphics state. Usually PDF images should set them.
-                    // But in rare cases they aren't which may result in changed colors inside the image.
+                    // But in rare cases they aren’t which may result in changed colors inside the image.
                     var resetColor = xForm != null ? "\n0 g\n0 G\n" : " ";
 
                     if (_gfx.PageDirection == XPageDirection.Downwards)
@@ -954,7 +970,7 @@ namespace PdfSharp.Drawing.Pdf
                 if (cx != 0 && cy != 0)
                 {
                     var xForm = form as XPdfForm;
-                    // Reset colors in this graphics state. Usually PDF images should set them, but in rare cases they don't which may result in changed colors inside the image.
+                    // Reset colors in this graphics state. Usually PDF images should set them, but in rare cases they don’t and this may result in changed colors inside the image.
                     var resetColor = xForm != null ? "\n0 g\n0 G\n" : " ";
 
                     if (_gfx.PageDirection == XPageDirection.Downwards)
@@ -1137,7 +1153,7 @@ namespace PdfSharp.Drawing.Pdf
         public void WriteComment(string comment)
         {
             comment = comment.Replace("\n", "\n% ");
-            // TODO: Some more checks necessary?
+            // Nothing right of '% ' can break a PDF file.
             Append("% " + comment + "\n");
         }
 
@@ -1207,7 +1223,7 @@ namespace PdfSharp.Drawing.Pdf
                         AppendPartialArcQuadrant(x, y, width, height, ξ1, ξ2, PathStart.Ignore1st, matrix);
                     }
 
-                    // Don't stop immediately if arc is greater than 270 degrees
+                    // Don’t stop immediately if arc is greater than 270 degrees
                     if (currentQuadrant == endQuadrant && smallAngle)
                         break;
 
@@ -1358,7 +1374,7 @@ namespace PdfSharp.Drawing.Pdf
             }
         }
 
-#if WPF || UWP
+#if WPF || WUI
         void AppendPartialArc(SysPoint point1, SysPoint point2, double rotationAngle,
             SysSize size, bool isLargeArc, SweepDirection sweepDirection, PathStart pathStart)
         {
@@ -1564,7 +1580,7 @@ namespace PdfSharp.Drawing.Pdf
 #endif
 
 #if CORE || GDI
-        void AppendPath(XPoint[] points, Byte[] types)
+        void AppendPath(XPoint[] points, byte[] types)
         {
             const string format = Config.SignificantDecimalPlaces4;
             int count = points.Length;
@@ -1575,14 +1591,14 @@ namespace PdfSharp.Drawing.Pdf
             {
                 // ReSharper disable InconsistentNaming
                 // From GDI+ documentation:
-                const byte PathPointTypeStart = 0; // move
-                const byte PathPointTypeLine = 1; // line
-                const byte PathPointTypeBezier = 3; // default Bezier (= cubic Bezier)
+                const byte PathPointTypeStart = 0;  // move
+                const byte PathPointTypeLine = 1;   // line
+                const byte PathPointTypeBezier = 3; // default Bézier (= cubic Bézier)
                 const byte PathPointTypePathTypeMask = 0x07; // type mask (lowest 3 bits).
-                                                             //const byte PathPointTypeDashMode = 0x10; // currently in dash mode.
-                                                             //const byte PathPointTypePathMarker = 0x20; // a marker for the path.
+                //const byte PathPointTypeDashMode = 0x10; // currently in dash mode.
+                //const byte PathPointTypePathMarker = 0x20; // a marker for the path.
                 const byte PathPointTypeCloseSubpath = 0x80; // closed flag
-                                                             // ReSharper restore InconsistentNaming
+                // ReSharper restore InconsistentNaming
 
                 byte type = types[idx];
                 switch (type & PathPointTypePathTypeMask)
@@ -1614,7 +1630,7 @@ namespace PdfSharp.Drawing.Pdf
         }
 #endif
 
-#if WPF || UWP
+#if WPF || WUI
         /// <summary>
         /// Appends the content of a PathGeometry object.
         /// </summary>
@@ -1627,7 +1643,7 @@ namespace PdfSharp.Drawing.Pdf
 #if DEBUG
                 //#war/ning For DdlGBE_Chart_Layout (WPF) execution sticks at this Assertion.
                 // The empty Figure is added via XGraphicsPath.CurrentPathFigure Getter.
-                // Some methods like XGraphicsPath.AddRectangle() or AddLine() use this empty Figure to add Segments, others like AddEllipse() don't.
+                // Some methods like XGraphicsPath.AddRectangle() or AddLine() use this empty Figure to add Segments, others like AddEllipse() don’t.
                 // Here, _pathGeometry.AddGeometry() of course ignores this first Figure and adds a second.
                 // Encapsulate relevant Add methods to delete a first empty Figure or move the Addition of a first empty Figure to a GetOrCreateCurrentPathFigure()
                 // or simply remove Assertion?
@@ -1722,7 +1738,7 @@ namespace PdfSharp.Drawing.Pdf
                                         Here is how to do it from GPT 4:
 
                                         To convert a quadratic Bézier curve to a cubic one, you need to adjust the control points of the
-                                        cubic curve so that it mimics the shape of the original quadratic curve. Here's how to do it:
+                                        cubic curve so that it mimics the shape of the original quadratic curve. Here’s how to do it:
 
                                         Assume that your quadratic Bézier curve is defined by the points P0, P1, and P2, where P0 and P2
                                         are the endpoints and P1 is the control point.

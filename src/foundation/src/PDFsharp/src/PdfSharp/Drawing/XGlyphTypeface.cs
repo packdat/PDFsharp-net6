@@ -1,4 +1,4 @@
-// PDFsharp - A .NET library for processing PDF
+﻿// PDFsharp - A .NET library for processing PDF
 // See the LICENSE file in the solution root for more information.
 
 #if GDI
@@ -17,7 +17,7 @@ using WpfTypeface = System.Windows.Media.Typeface;
 using WpfGlyphTypeface = System.Windows.Media.GlyphTypeface;
 using WpfStyleSimulations = System.Windows.Media.StyleSimulations;
 #endif
-#if UWP
+#if WUI
 using Windows.UI.Xaml.Media;
 #endif
 using Microsoft.Extensions.Logging;
@@ -115,7 +115,7 @@ namespace PdfSharp.Drawing
         }
 #endif
 
-#if UWP
+#if WUI
         XGlyphTypeface(string key, XFontFamily fontFamily, XFontSource fontSource, XStyleSimulations styleSimulations)
         {
             _key = key;
@@ -155,7 +155,7 @@ namespace PdfSharp.Drawing
                 const string message = "A font resolver throws an exception, but it must return null if the font cannot be resolved.";
                 try  // Custom font resolvers may throw an exception.
                 {
-                    // Try primary font resolver.
+                    // Try custom font resolver.
                     fontResolverInfo = FontFactory.ResolveTypeface(familyName, fontResolvingOptions, typefaceKey, false);
                 }
                 catch // (Exception ex)
@@ -185,7 +185,8 @@ namespace PdfSharp.Drawing
                         // Only Arial, Times, ...
                         throw new InvalidOperationException(
                             $"No appropriate font found for family name '{familyName}'. " +
-                                   "Implement IFontResolver and assign to 'GlobalFontSettings.FontResolver' to use fonts.");
+                                   "Implement IFontResolver and assign to 'GlobalFontSettings.FontResolver' to use fonts. " +
+                                   $"See {UrlLiterals.LinkToFontResolving}");
                     }
 #endif
                     throw new InvalidOperationException($"No appropriate font found for family name '{familyName}'.");
@@ -200,7 +201,7 @@ namespace PdfSharp.Drawing
                 WpfTypeface? wpfTypeface = null;
                 WpfGlyphTypeface? wpfGlyphTypeface = null;
 #endif
-#if UWP
+#if WUI
                 // Nothing to do.
 #endif
                 // Now create the font family at the first.
@@ -228,7 +229,7 @@ namespace PdfSharp.Drawing
                     wpfGlyphTypeface = platformFontResolverInfo.WpfGlyphTypeface;
                     fontFamily = XFontFamily.GetOrCreateFromWpf(wpfFontFamily);
 #endif
-#if UWP
+#if WUI
                     fontFamily = null;
 #endif
                 }
@@ -254,7 +255,7 @@ namespace PdfSharp.Drawing
 #if WPF
                 glyphTypeface = new XGlyphTypeface(typefaceKey, fontFamily, fontSource, fontResolverInfo.StyleSimulations, wpfTypeface, wpfGlyphTypeface);
 #endif
-#if UWP
+#if WUI
                 glyphTypeface = new XGlyphTypeface(typefaceKey, fontFamily, fontSource, fontResolverInfo.StyleSimulations);
 #endif
                 GlyphTypefaceCache.AddGlyphTypeface(glyphTypeface);
@@ -451,19 +452,11 @@ namespace PdfSharp.Drawing
         {
             string name = DisplayName;
             int ich = name.IndexOf("bold", StringComparison.OrdinalIgnoreCase);
-#if NET6_0_OR_GREATER || true
             if (ich > 0)
                 name = name[..ich] + name.Substring(ich + 4, name.Length - ich - 4);
             ich = name.IndexOf("italic", StringComparison.OrdinalIgnoreCase);
             if (ich > 0)
                 name = name[..ich] + name.Substring(ich + 6, name.Length - ich - 6);
-#else
-            if (ich > 0)
-                name = name.Substring(0, ich) + name.Substring(ich + 4, name.Length - ich - 4);
-            ich = name.IndexOf("italic", StringComparison.OrdinalIgnoreCase);
-            if (ich > 0)
-                name = name.Substring(0, ich) + name.Substring(ich + 6, name.Length - ich - 6);
-#endif
             //name = name.Replace(" ", "");
             name = name.Trim();
             name += GetFaceNameSuffix();
@@ -710,10 +703,10 @@ namespace PdfSharp.Drawing
    Gets the vendor URL information for the GlyphTypeface object.
    
    Version	
-   Gets the font face version interpreted from the font's 'NAME' table.
+   Gets the font face version interpreted from the font’s 'NAME' table.
    
    VersionStrings	
-   Gets the version string information for the GlyphTypeface object interpreted from the font's 'NAME' table.
+   Gets the version string information for the GlyphTypeface object interpreted from the font’s 'NAME' table.
    
    Weight	
    Gets the designed weight of the font represented by the GlyphTypeface object.

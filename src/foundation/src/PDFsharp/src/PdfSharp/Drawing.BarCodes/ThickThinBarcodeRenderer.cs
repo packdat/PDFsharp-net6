@@ -1,4 +1,4 @@
-// PDFsharp - A .NET library for processing PDF
+﻿// PDFsharp - A .NET library for processing PDF
 // See the LICENSE file in the solution root for more information.
 
 using System;
@@ -13,7 +13,7 @@ namespace PdfSharp.Drawing.BarCodes
         /// <summary>
         /// Initializes a new instance of the <see cref="ThickThinBarCode"/> class.
         /// </summary>
-        public ThickThinBarCode(string code, XSize size, CodeDirection direction)
+        protected ThickThinBarCode(string code, XSize size, CodeDirection direction)
             : base(code, size, direction)
         { }
 
@@ -22,7 +22,7 @@ namespace PdfSharp.Drawing.BarCodes
             base.InitRendering(info);
             CalcThinBarWidth(info);
             info.BarHeight = Size.Height;
-            // HACK in ThickThinBarCode
+            // HACK in ThickThinBarCode.
             if (TextLocation != TextLocation.None)
                 info.BarHeight *= 4.0 / 5;
 
@@ -151,7 +151,7 @@ namespace PdfSharp.Drawing.BarCodes
         /// Gets the width of a thick or a thin line (or gap). CalcLineWidth must have been called before.
         /// </summary>
         /// <param name="info"></param>
-        /// <param name="isThick">Determines whether a thick line's width shall be returned.</param>
+        /// <param name="isThick">Determines whether a thick line’s width shall be returned.</param>
         internal double GetBarWidth(BarCodeRenderInfo info, bool isThick)
         {
             if (isThick)

@@ -1,4 +1,4 @@
-// MigraDoc - Creating Documents on the Fly
+﻿// MigraDoc - Creating Documents on the Fly
 // See the LICENSE file in the solution root for more information.
 
 #define CACHE
@@ -60,9 +60,9 @@ namespace MigraDoc.DocumentObjectModel.Visitors
                             if (clmIdx + mergeRight >= columns)
                                 throw TH.InvalidOperationException_MergeRightTooLarge(rwIdx, clmIdx, mergeRight);
 
-                            for (int idxMergedRows = 0; idxMergedRows <= mergeDown; ++idxMergedRows)
+                            for (int idxMergedRows = 0; idxMergedRows <= mergeDown; idxMergedRows++)
                             {
-                                for (int idxMergedColumns = 0; idxMergedColumns <= mergeRight; ++idxMergedColumns)
+                                for (int idxMergedColumns = 0; idxMergedColumns <= mergeRight; idxMergedColumns++)
                                 {
                                     flags[rwIdx + idxMergedRows, clmIdx + idxMergedColumns] = true;
                                 }
@@ -220,8 +220,7 @@ namespace MigraDoc.DocumentObjectModel.Visitors
                 if (nbrBrdrs != null && GetEffectiveBorderWidth(nbrBrdrs, BorderType.Left) > GetEffectiveBorderWidth(borders, BorderType.Right))
                     borders.SetValue("Right", GetBorderFromBorders(nbrBrdrs, BorderType.Left));
             }
-
-
+            
             // If considering heading rows and if cellRowIndex is an index a header is been inserted at, override topRowIndex with the last heading row.
             // This way for rows after a repeated heading row the original last heading row is considered as the top neighbor for top border determination
             // instead of the last content row on the page before.
@@ -237,7 +236,7 @@ namespace MigraDoc.DocumentObjectModel.Visitors
             var topNeighbor = GetNeighborTop(cellIdx, topRowIndexOverride);
 
             // If not considering heading rows and if the topNeighbor is a heading row, set it to null to ignore it for top border determination.
-            // This way the first content row's top border doesn't possibly get the bottom border of the original last heading row.
+            // This way the first content row’s top border doesn’t possibly get the bottom border of the original last heading row.
             // This behaviour is wanted for RTF only, where all heading rows repetitions are rendered with their border formatting in the RTF application when displaying the
             // document and where content row movement or insertion in the RTF application must not copy formatting values that actually belong to the original last heading row.
             if (!considerHeadingRows && topNeighbor?.Row.HeadingFormat == true)
@@ -249,7 +248,6 @@ namespace MigraDoc.DocumentObjectModel.Visitors
                 if (nbrBrdrs != null && GetEffectiveBorderWidth(nbrBrdrs, BorderType.Bottom) >= GetEffectiveBorderWidth(borders, BorderType.Top))
                     borders.SetValue("Top", GetBorderFromBorders(nbrBrdrs, BorderType.Bottom));
             }
-
 
             var bottomNeighbor = GetNeighborBottom(cellIdx);
             if (bottomNeighbor != null && bottomNeighbor.RoundedCorner != RoundedCorner.TopLeft && bottomNeighbor.RoundedCorner != RoundedCorner.TopRight)
@@ -301,7 +299,7 @@ namespace MigraDoc.DocumentObjectModel.Visitors
 
         /// <summary>
         /// Returns the border of the given borders-object of the specified type (top, bottom, ...).
-        /// If that border doesn't exist, it returns a new border object that inherits all properties from the given borders object.
+        /// If that border doesn’t exist, it returns a new border object that inherits all properties from the given borders object.
         /// </summary>
         static Border GetBorderFromBorders(Borders borders, BorderType type)
         {
@@ -397,7 +395,7 @@ namespace MigraDoc.DocumentObjectModel.Visitors
         }
 
         /// <summary>
-        /// Gets the specified cell's uppermost neighbor at the specified position.
+        /// Gets the specified cell’s uppermost neighbor at the specified position.
         /// </summary>
         [Obsolete("Use GetNeighborTop, GetNeighborBottom, GetNeighborLeft, GetNeighborRight instead.")]
         Cell? GetNeighbor(int cellIdx, NeighborPosition position)
@@ -428,7 +426,7 @@ namespace MigraDoc.DocumentObjectModel.Visitors
                         if (cell2.Row.Index == cell.Row.Index)
                             return cell2;
                     }
-                    for (int index = cellIdx + 1; index < Count; ++index)
+                    for (int index = cellIdx + 1; index < Count; index++)
                     {
                         var currCell = this[index];
                         if (IsNeighbor(cell, currCell, position))
@@ -437,7 +435,7 @@ namespace MigraDoc.DocumentObjectModel.Visitors
                     break;
 
                 case NeighborPosition.Bottom:
-                    for (int index = cellIdx + 1; index < Count; ++index)
+                    for (int index = cellIdx + 1; index < Count; index++)
                     {
                         var currCell = this[index];
                         if (IsNeighbor(cell, currCell, position))
@@ -503,7 +501,7 @@ namespace MigraDoc.DocumentObjectModel.Visitors
                 if (cell2.Row.Index == cell.Row.Index)
                     return cell2;
             }
-            for (var index = cellIdx + 2; index < Count; ++index)
+            for (var index = cellIdx + 2; index < Count; index++)
             {
                 var currCell = this[index];
                 if (IsNeighborRight(cell, currCell))
@@ -518,7 +516,7 @@ namespace MigraDoc.DocumentObjectModel.Visitors
             if (cell.Row.Index + cell.MergeDown == cell.Table.Rows.Count - 1)
                 return null;
 
-            for (var index = cellIdx + 1; index < Count; ++index)
+            for (var index = cellIdx + 1; index < Count; index++)
             {
                 var currCell = this[index];
                 if (IsNeighborBottom(cell, currCell))
@@ -612,7 +610,6 @@ namespace MigraDoc.DocumentObjectModel.Visitors
                              c2CI + cell2.MergeRight >= c1CI &&
                              c2CI <= c1CI;
         }
-
 
         readonly SortedSet<int> _headerInsertionRowIndices = new();
 

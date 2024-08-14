@@ -33,8 +33,7 @@ namespace PdfSharp.Drawing.Pdf
             return state;
         }
 
-        object ICloneable.Clone()
-            => Clone();
+        object ICloneable.Clone() => Clone();
 
         internal int Level;
 
@@ -278,6 +277,7 @@ namespace PdfSharp.Drawing.Pdf
                 renderer.AppendFormatString("{0} gs\n", gs);
 
                 // Must create transparency group.
+                // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
                 if (renderer._page != null && color.A < 1)
                     renderer._page.TransparencyUsed = true;
             }

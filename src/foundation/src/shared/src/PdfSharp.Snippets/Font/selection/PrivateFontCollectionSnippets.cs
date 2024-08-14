@@ -60,14 +60,14 @@ namespace PdfSharp.Snippets.Font
 
 #if true
             // There is one problem with Arial and one problem with Tahoma.
-            // Maybe it's the same bug, but showing two different effects.
+            // Maybe it’s the same bug, but showing two different effects.
             // Add Arial and Tahoma from the Fonts directory to the private font collection.
 #if true
             // Register regular first.
-            string[] fonts = {
-                                "arial.ttf", "arialbd.ttf",
-                                "TAHOMA.ttf", "TAHOMABD.ttf"
-                             };
+            string[] fonts =
+            [
+                "arial.ttf", "arialbd.ttf", "TAHOMA.ttf", "TAHOMABD.ttf"
+            ];
 #else
             // Register bold first.
             // BOX3 causes an exception if bold fonts are loaded before regular fonts.

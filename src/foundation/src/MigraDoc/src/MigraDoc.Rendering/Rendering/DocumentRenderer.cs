@@ -1,16 +1,15 @@
-// MigraDoc - Creating Documents on the Fly
+﻿// MigraDoc - Creating Documents on the Fly
 // See the LICENSE file in the solution root for more information.
 
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using PdfSharp.Events;
 using PdfSharp.Pdf;
 using PdfSharp.Drawing;
 using MigraDoc.DocumentObjectModel;
 using MigraDoc.DocumentObjectModel.Visitors;
 using MigraDoc.DocumentObjectModel.Shapes;
 using MigraDoc.DocumentObjectModel.Tables;
-using MigraDoc.Rendering.Resources;
-using PdfSharp.Events;
 
 namespace MigraDoc.Rendering
 {
@@ -30,7 +29,7 @@ namespace MigraDoc.Rendering
         /// Prepares this instance for rendering.
         /// Commit renderEvents to allow RenderTextEvent calls.
         /// </summary>
-        public void PrepareDocument(RenderEvents renderEvents)
+        public void PrepareDocument(RenderEvents? renderEvents = null)
         {
             var visitor = new PdfFlattenVisitor();
             visitor.Visit(_document);
@@ -158,9 +157,10 @@ namespace MigraDoc.Rendering
             if (documentObject == null)
                 throw new ArgumentNullException(nameof(documentObject));
 
-            if (documentObject is not Shape && documentObject is not Table &&
+            if (documentObject is not Shape &&
+                documentObject is not Table &&
                 documentObject is not Paragraph)
-                throw new ArgumentException(Messages2.ObjectNotRenderable, nameof(documentObject));
+                throw new ArgumentException(MdPdfMsgs.ObjectNotRenderable(documentObject.GetType().Name).Message);
 
             var renderer = Renderer.Create(graphics, this, documentObject, null);
             renderer!.Format(new Rectangle(xPosition, yPosition, width, double.MaxValue), null);
@@ -206,7 +206,7 @@ namespace MigraDoc.Rendering
 
             // The footer is bottom-aligned and grows with its contents. topY specifies the Y position where the footer begins.
             XUnitPt topY = footerArea.Y + footerArea.Height - RenderInfo.GetTotalHeight(renderInfos);
-            // offsetY specifies the offset (amount of movement) for all footer items. It's the difference between topY and the position calculated for the first item.
+            // offsetY specifies the offset (amount of movement) for all footer items. It’s the difference between topY and the position calculated for the first item.
             XUnitPt offsetY = 0;
             bool notFirst = false;
 
@@ -315,7 +315,7 @@ namespace MigraDoc.Rendering
             /// Indicates the current step reached in document preparation.
             /// </summary>
             public int Value = value;
-            
+
             /// <summary>
             /// Indicates the final step in document preparation. The quotient of Value and Maximum can be used to calculate a percentage (e.g. for use in a progress bar).
             /// </summary>

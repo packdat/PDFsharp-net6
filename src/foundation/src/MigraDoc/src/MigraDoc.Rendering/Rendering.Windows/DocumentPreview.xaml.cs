@@ -261,7 +261,7 @@ namespace MigraDoc.Rendering.Windows
             Document = document;
             RenderEvents = renderEvents;
 
-            Renderer = new DocumentRenderer(Document);
+            Renderer = new(Document);
             Renderer.PrepareDocument(RenderEvents);
             Page = 1;
             //this.preview.Invalidate();
@@ -280,7 +280,7 @@ namespace MigraDoc.Rendering.Windows
         }
 
         /// <summary>
-        /// Encapsulates the document's render events.
+        /// Encapsulates the document’s render events.
         /// </summary>
         public RenderEvents? RenderEvents { get; private set; }
 

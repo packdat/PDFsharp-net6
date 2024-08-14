@@ -43,7 +43,7 @@ namespace PdfSharp.Pdf.Content
             switch (ch)
             {
                 case '%':
-                    // Eat comments, the parser doesn't handle them.
+                    // Eat comments, the parser doesn’t handle them.
                     //return symbol = ScanComment();
                     ScanComment();
                     goto Again;
@@ -173,7 +173,7 @@ namespace PdfSharp.Pdf.Content
                 if (ch == '#')
                 {
                     ScanNextChar();
-#if true
+
                     var newChar = (_currChar switch
                     {
                         >= '0' and <= '9' => _currChar - '0',
@@ -195,21 +195,12 @@ namespace PdfSharp.Pdf.Content
                         PdfSharpLogHost.Logger.LogError("Illegal character {char} in hex string.", ch);
                         return '\0';
                     }
-#else
-                    char[] hex = new char[2];
-                    hex[0] = _currChar;
-                    hex[1] = _nextChar;
-                    ScanNextChar();
-                    // TODO Check syntax
-                    ch = (char)(ushort)Int32.Parse(new string(hex), NumberStyles.AllowHexSpecifier);
-                    _currChar = ch;
-#endif
                 }
             }
 
             var name = Token;
             // Check token for UTF-8 encoding.
-            for (int idx = 0; idx < name.Length; ++idx)
+            for (int idx = 0; idx < name.Length; idx++)
             {
                 // If the two top most significant bits are set this identifies a 2, 3, or 4
                 // byte UTF-8 encoding sequence.
@@ -218,7 +209,7 @@ namespace PdfSharp.Pdf.Content
                     // Special characters in Name objects use UTF-8 encoding.
                     var length = name.Length;
                     var bytes = new byte[length];
-                    for (int idx2 = 0; idx2 < length; ++idx2)
+                    for (int idx2 = 0; idx2 < length; idx2++)
                         bytes[idx2] = (byte)name[idx2];
 
                     var decodedName = Encoding.UTF8.GetString(bytes);
@@ -419,7 +410,7 @@ namespace PdfSharp.Pdf.Content
             // Test UNICODE string
             if (ch == '\xFE' && _nextChar == '\xFF')
             {
-                // I'm not sure if the code is correct in any case.
+                // I’m not sure if the code is correct in any case.
                 // ? Can a UNICODE character not start with ')' as hibyte
                 // ? What about \# escape sequences
                 ScanNextChar();
@@ -529,15 +520,15 @@ namespace PdfSharp.Pdf.Content
                     ch = (char)((chHi << 8) + chLo);
                 }
             }
-            else if (ch == '\xFF' && _nextChar == '\xFE')
+            else if (ch == '\xFF' && _nextChar == '\xFE')  // Little endian?
             {
                 // Is this possible?
-                Debug.Assert(false, "Found UTF-16 LE string. Please send us the PDF file and we will fix it.");
+                Debug.Assert(false, "Found UTF-16LE string. Please send us the PDF file and we will fix it (issues (at) pdfsharp.net).");
                 return Symbol = CSymbol.None;
             }
             else
             {
-                // 8-bit characters
+                // 8-bit characters.
                 while (true)
                 {
                 SkipChar:
@@ -688,7 +679,7 @@ namespace PdfSharp.Pdf.Content
 
             static char LogError(char ch)
             {
-                PdfSharpLogHost.Logger.LogError("Illegal character {char} in hex string.", ch);
+                PdfSharpLogHost.Logger.LogError("Illegal character '{char}' in hex string.", ch);
                 return '\0';
             }
         }
@@ -721,7 +712,7 @@ namespace PdfSharp.Pdf.Content
                     }
                     else
                     {
-                        // Treat single CR as LF
+                        // Treat single CR as LF.
                         _currChar = Chars.LF;
                     }
                 }

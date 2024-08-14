@@ -22,10 +22,21 @@ namespace PdfSharp.Fonts
         /// The value is 0 if the specific font has no glyph for the code point.
         /// </summary>
         public ushort GlyphIndex = glyphIndex;
+    }
+
+    /// <summary>
+    /// The combination of a glyph index and its glyph record in the color table, if it exists.
+    /// </summary>
+    struct GlyphIndexGlyphColorRecordPair(ushort glyphIndex, ColorTable.GlyphRecord? colorRecord)
+    {
+        /// <summary>
+        /// The glyph index.
+        /// </summary>
+        public ushort GlyphIndex = glyphIndex;
 
         /// <summary>
-        /// The color-record of the Glyph if provided by the font.
+        /// The color-record of the glyph if provided by the font.
         /// </summary>
-        internal ColrTable.GlyphRecord? Color = null;
+        internal ColorTable.GlyphRecord? ColorRecord = colorRecord;
     }
 }

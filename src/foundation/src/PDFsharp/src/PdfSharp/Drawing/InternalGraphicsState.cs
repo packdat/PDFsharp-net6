@@ -61,7 +61,6 @@ namespace PdfSharp.Drawing
         public InternalGraphicsState(XGraphics gfx, XGraphicsContainer container)
         {
             _gfx = gfx;
-            //State = null!; // BUG
             container.InternalState = this;
         }
 
@@ -107,7 +106,7 @@ namespace PdfSharp.Drawing
 
 #if GDI_
         /// <summary>
-        /// The GDI+ GraphicsState if contructed from XGraphicsState.
+        /// The GDI+ GraphicsState if constructed from XGraphicsState.
         /// </summary>
         public GraphicsState GdiGraphicsState;
 #endif

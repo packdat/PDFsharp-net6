@@ -478,11 +478,11 @@ namespace MigraDoc.Tests
                 var decTabStopPos = rtf.LastIndexOf(decimalTabStopStr, valuePos, StringComparison.Ordinal);
                 decTabStopPos.Should().BeGreaterThan(cellPos, "for the cell a decimal tabstop should be defined.");
 
-                // Get the position of the tabstop's position element.
+                // Get the position of the tabstop’s position element.
                 var positionPos = rtf.LastIndexOf(tabStopPositionStr, valuePos, StringComparison.Ordinal);
                 positionPos.Should().BeGreaterThan(decTabStopPos, "for the decimal tabstop a position should be defined.");
 
-                // Get the tabstop's position value and ensure that it's not 0.
+                // Get the tabstop’s position value and ensure that it’s not 0.
                 var positionValuePos = positionPos + tabStopPositionStr.Length;
                 var positionValueEndPos = rtf.IndexOf("\\", positionValuePos, StringComparison.Ordinal);
                 var positionValueStr = rtf.Substring(positionValuePos, positionValueEndPos - positionValuePos);
@@ -502,11 +502,11 @@ namespace MigraDoc.Tests
                     // For DoNotUnifyTabStopHandling == false, the tabstop should exist.
                     leftTabStopPos.Should().BeGreaterThan(cellPos, "with DoNotUnifyTabStopHandling enabled, an additional left tabstop should be defined for the cell.");
 
-                    // Get the position of the tabstop's position element.
+                    // Get the position of the tabstop’s position element.
                     positionPos = rtf.LastIndexOf(tabStopPositionStr, decTabStopPos, StringComparison.Ordinal);
                     positionPos.Should().BeGreaterThan(leftTabStopPos, "for the left tabstop a position should be defined.");
 
-                    // Get the tabstop's position value and ensure that it's 0.
+                    // Get the tabstop’s position value and ensure that it’s 0.
                     positionValuePos = positionPos + tabStopPositionStr.Length;
                     positionValueEndPos = rtf.IndexOf("\\", positionValuePos, StringComparison.Ordinal);
                     positionValueStr = rtf.Substring(positionValuePos, positionValueEndPos - positionValuePos);
@@ -534,7 +534,7 @@ namespace MigraDoc.Tests
                 var containerPos = Math.Max(cellPos, parPos);
                 containerPos.Should().BeGreaterThan(0, $"\"{valueStr}\" should occur inside of a cell or paragraph.");
 
-                // Check all tabstop's position elements for this cell or paragraph.
+                // Check all tabstop’s position elements for this cell or paragraph.
                 var tabStopPositionSearchPos = containerPos;
                 // Exit the loop if or positionPos exceeds the position of the value or if no position element could be found.
                 while (tabStopPositionSearchPos < valuePos)
@@ -543,7 +543,7 @@ namespace MigraDoc.Tests
                     if (positionPos < 0 || positionPos > valuePos)
                         break;
 
-                    // Get the tabstop's position value and ensure that it's not 0, as no additional tabstop should be added here at position 0.
+                    // Get the tabstop’s position value and ensure that it’s not 0, as no additional tabstop should be added here at position 0.
                     var positionValuePos = positionPos + tabStopPositionStr.Length;
                     var positionValueEndPos = rtf.IndexOf("\\", positionValuePos, StringComparison.Ordinal);
                     var positionValueStr = rtf.Substring(positionValuePos, positionValueEndPos - positionValuePos);
@@ -794,7 +794,6 @@ VeP/8gP+s//MzMQAAAAASUVORK5CYII=
             var rtfRenderer = new RtfDocumentRenderer();
             rtfRenderer.Render(document, rtfFilename, Environment.CurrentDirectory);
 
-
             // Analyze rendered RTF.
             var rtf = File.ReadAllText(rtfFilename);
 
@@ -833,11 +832,7 @@ VeP/8gP+s//MzMQAAAAASUVORK5CYII=
 
             var bottomBorderPart = rowBorderParts[3];
             bottomBorderPart.Should().StartWith("b", "last border should be bottom border");
-#if NET6_0_OR_GREATER || true
             bottomBorderPart[1..].Should().Be(rtfHeadingBottomString, "heading bottom border should be defined heading bottom border");
-#else
-            bottomBorderPart.Substring(1).Should().Be(rtfHeadingBottomString, "heading bottom border should be defined heading bottom border");
-#endif
 
             // Row 1.
             rowBorderParts = rowsByBorders[1];
@@ -849,11 +844,7 @@ VeP/8gP+s//MzMQAAAAASUVORK5CYII=
 
             bottomBorderPart = rowBorderParts[3];
             bottomBorderPart.Should().StartWith("b", "last border should be bottom border");
-#if NET6_0_OR_GREATER || true
             bottomBorderPart[1..].Should().Be(rtfBottomString, "row 1 bottom border should be defined content bottom border");
-#else
-            bottomBorderPart.Substring(1).Should().Be(rtfBottomString, "row 1 bottom border should be defined content bottom border");
-#endif
 
             // Row 2-4.
             for (var r = 2; r < 5; r++)
@@ -862,19 +853,11 @@ VeP/8gP+s//MzMQAAAAASUVORK5CYII=
 
                 topBorderPart = rowBorderParts[0];
                 topBorderPart.Should().StartWith("t", "first border should be top border");
-#if NET6_0_OR_GREATER || true
                 topBorderPart[1..].Should().Be(rtfBottomString, $"row {r} top border should be the defined content bottom border of the top neighbor row");
-#else
-                topBorderPart.Substring(1).Should().Be(rtfBottomString, $"row {r} top border should be the defined content bottom border of the top neighbor row");
-#endif
 
                 bottomBorderPart = rowBorderParts[3];
                 bottomBorderPart.Should().StartWith("b", "last border should be bottom border");
-#if NET6_0_OR_GREATER || true
                 bottomBorderPart[1..].Should().Be(rtfBottomString, $"row {r} bottom border should be defined content bottom border");
-#else
-                bottomBorderPart.Substring(1).Should().Be(rtfBottomString, $"row {r} bottom border should be defined content bottom border");
-#endif
             }
         }
     }

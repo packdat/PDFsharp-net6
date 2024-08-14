@@ -1,4 +1,4 @@
-// PDFsharp - A .NET library for processing PDF
+﻿// PDFsharp - A .NET library for processing PDF
 // See the LICENSE file in the solution root for more information.
 
 using PdfSharp.Diagnostics;
@@ -83,7 +83,7 @@ namespace PdfSharp.Charting.Renderers
             cri.PlotAreaRendererInfo.Width = cri.YAxisRendererInfo.InnerRect.Width;
             cri.PlotAreaRendererInfo.Height = cri.XAxisRendererInfo.Height;
 
-            // Calculated remaining plot area, now it's safe to format.
+            // Calculated remaining plot area, now it’s safe to format.
             var renderer = GetPlotAreaRenderer();
             renderer.Format();
 
@@ -181,7 +181,7 @@ namespace PdfSharp.Charting.Renderers
             var seriesColl = cri.Chart.SeriesCollection;
             cri.SeriesRendererInfos = new SeriesRendererInfo[seriesColl.Count];
             // Lowest series is the first, like in Excel 
-            for (int idx = 0; idx < seriesColl.Count; ++idx)
+            for (int idx = 0; idx < seriesColl.Count; idx++)
             {
                 SeriesRendererInfo sri = new SeriesRendererInfo();
                 sri.Series = seriesColl[idx];

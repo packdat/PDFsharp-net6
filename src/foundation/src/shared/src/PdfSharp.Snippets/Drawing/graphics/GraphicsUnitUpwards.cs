@@ -5,7 +5,6 @@ using PdfSharp.Drawing;
 
 namespace PdfSharp.Snippets.Drawing
 {
-
     /// <summary>
     /// 
     /// </summary>
@@ -35,7 +34,6 @@ namespace PdfSharp.Snippets.Drawing
             gfx.DrawLine(XPens.Red, 0, 0, 100, 100);
             gfx.DrawString("Hello, 10pt", font10pt, XBrushes.Black, 10, 80);
             EndPdfPage();
-
 
             // Page 2 - mm
             gfx = BeginPdfPage(XUnit.FromPoint(WidthInPoint), XUnit.FromPoint(HeightInPoint), XGraphicsUnit.Millimeter, direction);

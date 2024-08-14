@@ -30,9 +30,14 @@ namespace PdfSharp.Features
 
             // Font/encoding
             public const string Font_encoding_Encodings_AnsiEncoding = "Font/encoding/Encodings:AnsiEncoding";
+            
+            // Pdf/annotations
+            
+            // Pdf/pdfa
+            public const string Pdf_pdfa_PdfA = "Pdf/pdfa/PDFA:Create";
+
         }
         // ReSharper restore InconsistentNaming
-
 
         /// <summary>
         /// The features by their names.
@@ -57,6 +62,11 @@ namespace PdfSharp.Features
 
             // Font/encoding
             { Names.Font_encoding_Encodings_AnsiEncoding,           new(Names.Font_encoding_Encodings_AnsiEncoding, () => new Font.Encodings().AnsiEncodingTable()) },
+
+            // Pdf/annotations
+            
+            // Pdf/pdfa
+            { Names.Pdf_pdfa_PdfA,                                  new(Names.Pdf_pdfa_PdfA, () => new Pdf.PdfA().CreatePdfA()) },
 
         };
 

@@ -179,7 +179,7 @@ namespace PdfSharp.Pdf
             if (outline == null)
                 throw new ArgumentNullException(nameof(outline));
             if (index < 0 || index >= _outlines.Count)
-                throw new ArgumentOutOfRangeException(nameof(index), index, PSSR.OutlineIndexOutOfRange);
+                throw new ArgumentOutOfRangeException(nameof(index), index, PsMsgs.OutlineIndexOutOfRange);
 
             AddToOutlinesTree(outline);
             _outlines.Insert(index, outline);
@@ -203,15 +203,15 @@ namespace PdfSharp.Pdf
             get
             {
                 if (index < 0 || index >= _outlines.Count)
-                    throw new ArgumentOutOfRangeException(nameof(index), index, PSSR.OutlineIndexOutOfRange);
+                    throw new ArgumentOutOfRangeException(nameof(index), index, PsMsgs.OutlineIndexOutOfRange);
                 return _outlines[index];
             }
             set
             {
                 if (index < 0 || index >= _outlines.Count)
-                    throw new ArgumentOutOfRangeException(nameof(index), index, PSSR.OutlineIndexOutOfRange);
+                    throw new ArgumentOutOfRangeException(nameof(index), index, PsMsgs.OutlineIndexOutOfRange);
                 if (value == null)
-                    throw new ArgumentOutOfRangeException(nameof(value), null, PSSR.SetValueMustNotBeNull);
+                    throw new ArgumentOutOfRangeException(nameof(value), null, PsMsgs.SetValueMustNotBeNull);
 
                 AddToOutlinesTree(value);
                 _outlines[index] = value;
@@ -254,10 +254,12 @@ namespace PdfSharp.Pdf
 
             //_outlines.Add(outline);
             if (!Owner.IrefTable.Contains(outline.ObjectID))
+            {
                 Owner.IrefTable.Add(outline);
+            }
             else
             {
-                outline.GetType();
+                _ = typeof(int);
             }
 
             //if (outline.Opened)

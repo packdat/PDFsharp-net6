@@ -210,7 +210,6 @@ namespace MigraDoc.RtfRendering
         /// </summary>
         /// <param name="unit"></param>
         /// <param name="rtfUnit"></param>
-        /// <returns></returns>
         internal static int ToRtfUnit(Unit unit, RtfUnit rtfUnit)
         {
             switch (rtfUnit)
@@ -358,7 +357,7 @@ namespace MigraDoc.RtfRendering
         }
 
         /// <summary>
-        /// Renders a trailing standard paragraph in case the last element in elements isn't a paragraph.
+        /// Renders a trailing standard paragraph in case the last element in elements isn’t a paragraph.
         /// (Some RTF elements need to close with a paragraph.)
         /// </summary>
         protected void RenderTrailingParagraph(DocumentElements elements)

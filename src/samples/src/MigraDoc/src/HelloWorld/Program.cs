@@ -11,7 +11,6 @@ using MigraDoc.DocumentObjectModel.Fields;
 using MigraDoc.DocumentObjectModel.Shapes;
 using MigraDoc.Rendering;
 
-
 // For clarity, we do not use var keyword.
 // ReSharper disable SuggestVarOrType_SimpleTypes
 #pragma warning disable IDE0090
@@ -22,7 +21,7 @@ namespace HelloWorld
     {
         static void Main()
         {
-            if (PdfSharp.Capabilities.Build.IsCoreBuild)
+            if (Capabilities.Build.IsCoreBuild)
                 GlobalFontSettings.FontResolver = new FailsafeFontResolver();
 
             // Create a MigraDoc document.

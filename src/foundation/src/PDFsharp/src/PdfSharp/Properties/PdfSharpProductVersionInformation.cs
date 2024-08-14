@@ -1,5 +1,7 @@
-// PDFsharp - A .NET library for processing PDF
+﻿// PDFsharp - A .NET library for processing PDF
 // See the LICENSE file in the solution root for more information.
+
+#pragma warning disable 0436
 
 namespace PdfSharp
 {
@@ -86,7 +88,7 @@ namespace PdfSharp
         /// <summary>
         /// The copyright information.
         /// </summary>
-        public const string Copyright = "Copyright � 2005-2024 empira Software GmbH.";
+        public const string Copyright = "Copyright © 2005-2024 empira Software GmbH.";
 
         /// <summary>
         /// The trademark of the product.
@@ -221,8 +223,8 @@ namespace PdfSharp
         // Hybrid - for testing only
         public const string Technology = "-h";
 #error Should not come here anymore. May be revived in the future.
-#elif UWP
-        // UWP - Universal Windows Platform
+#elif WUI
+        // WUI - Universal Windows Platform
         public const string Technology = "-uwp";
 #endif
     }
