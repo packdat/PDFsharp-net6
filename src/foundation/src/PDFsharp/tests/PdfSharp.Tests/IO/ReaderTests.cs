@@ -321,42 +321,41 @@ namespace PdfSharp.Tests.IO
         }
 
         [Theory]
-        //[InlineData(@"c:\Temp\TestPdf\16E_0721_Neuaufnahmeantrag_ENG_CMYK_A4_Web_barrierefrei.pdf")]
-        //[InlineData(@"c:\Temp\TestPdf\issue #70 - Copy.PDF")]
-        //[InlineData(@"c:\Temp\TestPdf\apoBank\Produktprofile\Versicherungsbedingungen der R+V apoGoldCardPlus\Versicherungsbedingungen der R+V für die apoGoldCard Plus_06.2018.pdf")]
-        //[InlineData(@"c:\Temp\TestPdf\Wiener Städtische Versicherung AG\Formulare\Unfallmeldung\Unfallsmeldung_55ME201s.pdf")]
-        //[InlineData(@"c:\Temp\TestPdf\apoBank\Studenten\Studie Generation Y\generation-y.pdf")]
-        //[InlineData(@"c:\Temp\TestPdf\apoBank\Über die apoBank\Halbjahresbericht 2020\apobank-halbjahresfinanzbericht-2020.pdf")]
-        // PNG-Decoder skipped:
-        //[InlineData(@"c:\Temp\TestPdf\16E_0721_Neuaufnahmeantrag_ENG_CMYK_A4_Web_barrierefrei.pdf")]
-        [InlineData(@"C:\Temp\GithubIssues\PdfSharp6\73\src\File.pdf")]
-        public void TestSingleFile(string filePath)
+        //[InlineData(@"c:\Temp\TestPdf\issue #148-1.PDF", 1)]
+        //[InlineData(@"c:\Temp\TestPdf\issue #148-2.PDF", 3)]
+        [InlineData(@"c:\Temp\TestPdf\issue #148-2 - Copy.PDF", 3)]
+        //[InlineData(@"c:\Temp\TestPdf\issue #70.PDF", 1)]
+        //[InlineData(@"c:\Temp\TestPdf\issue #70 - Copy.PDF", 1)]
+        //[InlineData(@"c:\Temp\TestPdf\PdfSharpForum\PdfTrailer_not_null_001(PageCount).pdf", 14)]
+        //[InlineData(@"c:\Temp\TestPdf\PdfSharpForum\PdfTrailer_not_null_002(PageCount).pdf", 1)]
+        //[InlineData(@"c:\Temp\TestPdf\PdfSharpForum\PdfTrailer_not_null_003(PageCount).pdf", 100)]
+        //[InlineData(@"c:\Temp\TestPdf\PdfSharpForum\Unexpected_Token_0x0029(PageCount).pdf", 120)]
+        //[InlineData(@"c:\Temp\TestPdf\PdfSharpForum\Unexpected_Token_426(PageCount).pdf", 2)]
+        //[InlineData(@"c:\Temp\TestPdf\PdfSharpForum\Unexpected_Token_EmptyChar(PageCount).pdf", 3)]
+        //[InlineData(@"c:\Temp\TestPdf\PdfSharpForum\Unexpected_Token_endobj(PageCount).pdf", 6)]
+        //[InlineData(@"c:\Temp\TestPdf\PdfSharpForum\Unexpected_Token_SlashE(PageCount).pdf", 7)]
+        //[InlineData(@"c:\Temp\TestPdf\apoBank\Produktprofile\Versicherungsbedingungen der R+V apoGoldCardPlus\Contains UTF16-LE.pdf", 74)]
+        public void TestSingleFile(string filePath, int expectedPageCount)
         {
             File.Exists(filePath).Should().BeTrue("File should exist");
-            VerifyPdfCanBeImported(filePath);
+            VerifyPdfCanBeImported(filePath, expectedPageCount);
         }
 
-        private bool VerifyPdfCanBeImported(string filePath)
+        private static void VerifyPdfCanBeImported(string filePath, int expectedPageCount = 0)
         {
-            try
+            var act = () =>
             {
                 var document = PdfReader.Open(filePath, PdfDocumentOpenMode.Import);
                 var documentCopy = new PdfDocument();
+                if (expectedPageCount > 0)
+                    document.Pages.Count.Should().Be(expectedPageCount);
                 foreach (var page in document.Pages)
                 {
                     documentCopy.AddPage(page);
                 }
                 documentCopy.Save(Path.Combine(Path.GetTempPath(), "out.pdf"));
-                return true;
-            }
-            catch (Exception ex)
-            {
-                var message = string.Format("{0}:{1}{2}{1}{1}", filePath, Environment.NewLine, ex);
-                Console.WriteLine(message);
-                Console.WriteLine();
-                output.WriteLine(message);
-            }
-            return false;
+            };
+            act.Should().NotThrow();
         }
     }
 }
