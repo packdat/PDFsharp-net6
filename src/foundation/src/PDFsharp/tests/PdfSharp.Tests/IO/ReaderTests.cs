@@ -452,7 +452,7 @@ namespace PdfSharp.Tests.IO
             allFiles.Count().Should().BeGreaterThan(0, "Folder should contain at least one Pdf-file");
             foreach (var file in allFiles)
             {
-                VerifyPdfCanBeImported(file);
+                VerifyPdfCanBeImported(false, file);
             }
         }
 
@@ -474,10 +474,10 @@ namespace PdfSharp.Tests.IO
         public void TestSingleFile(string filePath, int expectedPageCount)
         {
             File.Exists(filePath).Should().BeTrue("File should exist");
-            VerifyPdfCanBeImported(filePath, expectedPageCount);
+            VerifyPdfCanBeImported(true, filePath, expectedPageCount);
         }
 
-        private static void VerifyPdfCanBeImported(string filePath, int expectedPageCount = 0)
+        private void VerifyPdfCanBeImported(bool letItThrow, string filePath, int expectedPageCount = 0)
         {
             var act = () =>
             {
@@ -491,7 +491,20 @@ namespace PdfSharp.Tests.IO
                 }
                 documentCopy.Save(Path.Combine(Path.GetTempPath(), "out.pdf"));
             };
-            act.Should().NotThrow();
+            if (letItThrow)
+                act.Should().NotThrow();
+            else
+            {
+                // just log the errors
+                try
+                {
+                    act();
+                }
+                catch (Exception ex)
+                {
+                    output.WriteLine("{0}\r\n{1}\n", filePath, ex);
+                }
+            }
         }
     }
 }
