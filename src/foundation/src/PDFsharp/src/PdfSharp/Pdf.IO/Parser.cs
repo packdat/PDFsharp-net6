@@ -1080,6 +1080,8 @@ namespace PdfSharp.Pdf.IO
                     Debug.Assert(_document.IrefTable.Contains(pdfReference.ObjectID));
                 }
             }
+            // not needed anymore, let GC clean up
+            _objectStreamObjectSources.Clear();
         }
 
         List<PdfObjectID> LoadObjectStreamIDs(PdfReference[] pdfReferences)
@@ -1171,7 +1173,7 @@ namespace PdfSharp.Pdf.IO
                     }
 
                     // Create the parser for the object stream.
-                    var objectStreamParser = new Parser(_document, new MemoryStream(objectStream.Stream.Value), _documentParser);
+                    var objectStreamParser = new Parser(_document, new MemoryStream(objectStream.Stream.UnfilteredValue), _documentParser);
 
                     // Read and add all References to objects residing in the object stream and get all ObjectIDs and offsets .
                     var objectIDsWithOffset = objectStream.ReadReferencesAndOffsets(_document.IrefTable);
@@ -1182,7 +1184,8 @@ namespace PdfSharp.Pdf.IO
                         var objectID = objectIDWithOffset.Key;
                         var offset = objectIDWithOffset.Value;
 
-                        _objectStreamObjectSources.Add(objectID, (objectStreamParser, offset));
+                        if (!_objectStreamObjectSources.ContainsKey(objectID))
+                            _objectStreamObjectSources.Add(objectID, (objectStreamParser, offset));
                     }
                 }
 

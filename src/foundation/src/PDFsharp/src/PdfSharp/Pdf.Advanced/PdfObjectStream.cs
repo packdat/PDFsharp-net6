@@ -37,7 +37,7 @@ namespace PdfSharp.Pdf.Advanced
             int first = Elements.GetInteger(Keys.First);
             Stream.TryUncompress();
 
-            var parser = new Parser(_document, new MemoryStream(Stream.Value), documentParser);
+            var parser = new Parser(_document, new MemoryStream(Stream.UnfilteredValue), documentParser);
             _header = parser.ReadObjectStreamHeader(n, first);
 
 #if DEBUG_ && CORE
