@@ -219,7 +219,7 @@ namespace PdfSharp.Pdf.IO
 
                     static char LogError(char ch)
                     {
-                        PdfSharpLogHost.Logger.LogError("Illegal character {char} in hex string.", ch);
+                        PdfSharpLogHost.Logger.LogError("Illegal character '{char}' in hex string.", ch);
                         return '\0';
                     }
                 }
@@ -683,7 +683,7 @@ namespace PdfSharp.Pdf.IO
 
             static char LogError(char ch)
             {
-                PdfSharpLogHost.Logger.LogError("Illegal character {char} in hex string.", ch);
+                PdfSharpLogHost.Logger.LogError("Illegal character '{char}' in hex string.", ch);
                 return '\0';
             }
         }
@@ -772,7 +772,7 @@ namespace PdfSharp.Pdf.IO
                 ScanNextChar(true);
             }
 
-            if (skip > 0 || true)
+            if (skip > 0)
                 _logger.SkippedIllegalBlanksAfterStreamKeyword(skip, currentPosition, id);
 
             // Single LF.

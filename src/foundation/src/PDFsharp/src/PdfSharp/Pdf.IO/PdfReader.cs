@@ -317,8 +317,9 @@ namespace PdfSharp.Pdf.IO
                 {
                     _document.Trailer = parser.ReadTrailer();
                 }
-                catch
+                catch (Exception ex)
                 {
+                    PdfSharpLogHost.PdfReadingLogger.LogError(ex, "Exception reading the trailer");
                     _document.Trailer = PdfTrailer.Rebuild(_document, stream, parser);
                 }
                 if (_document.Trailer == null!)
