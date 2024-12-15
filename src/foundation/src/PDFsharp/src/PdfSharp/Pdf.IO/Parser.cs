@@ -574,7 +574,7 @@ namespace PdfSharp.Pdf.IO
             }
 
             streamLength = _lexer.DetermineStreamLength(streamStart, scanWindow, suppressObjectOrderExceptions);
-            if (SuppressExceptions.HasError(suppressObjectOrderExceptions))
+            if (streamLength < 0 || SuppressExceptions.HasError(suppressObjectOrderExceptions))
                 return false;
 #if DEBUG
             if (streamLength == oldLength)
@@ -1082,8 +1082,9 @@ namespace PdfSharp.Pdf.IO
             }
             // not needed anymore, let GC clean up
             _objectStreamObjectSources.Clear();
+            _objectStreamNumbersPerXref.Clear();
         }
-
+#if false
         List<PdfObjectID> LoadObjectStreamIDs(PdfReference[] pdfReferences)
         {
             // The PDF Reference 1.7 states in chapter 7.5.6 (Incremental Updates):
@@ -1119,6 +1120,7 @@ namespace PdfSharp.Pdf.IO
             var objectStreamIDs = objectStreamNumbers.Select(x => new PdfObjectID(x)).ToList();
             return objectStreamIDs;
         }
+#endif
 
         /// <summary>
         /// Reads all ObjectStreams and the references to the PdfObjects they hold.
@@ -1126,6 +1128,43 @@ namespace PdfSharp.Pdf.IO
         internal void ReadAllObjectStreamsAndTheirReferences()
         {
 #if true
+            // The spec. states in chapter 7.5.7 (Object Streams):
+            // "The following objects shall not be stored in an object stream:
+            // ...An object representing the value of the Length entry in an object stream dictionary"
+            // so we shouldn't have to worry about the length of the objectStream being stored in another objectStream
+            foreach (var objectStreamNumbers in _objectStreamNumbersPerXref)
+            {
+                var objectStreamIDsToLoad = objectStreamNumbers.Select(id => new PdfObjectID(id)).ToList();
+                foreach (var objectStreamID in objectStreamIDsToLoad)
+                {
+                    var objectStreamReference = _document.IrefTable[objectStreamID];
+                    // Read the PdfObjectStream object.
+                    var objectStream = ReadObjectStream(objectStreamReference!, null);
+                    // Create the parser for the object stream.
+                    var objectStreamParser = new Parser(_document, new MemoryStream(objectStream.Stream.UnfilteredValue), _documentParser);
+
+                    // Read and add all References to objects residing in the object stream and get all ObjectIDs and offsets .
+                    var objectIDsWithOffset = objectStream.ReadReferencesAndOffsets(_document.IrefTable);
+
+                    // Save all ObjectIDs with the parser of its ObjectStream and its offset.
+                    foreach (var objectIDWithOffset in objectIDsWithOffset)
+                    {
+                        var objectID = objectIDWithOffset.Key;
+                        var offset = objectIDWithOffset.Value;
+
+                        if (!_objectStreamObjectSources.ContainsKey(objectID))
+                            _objectStreamObjectSources.Add(objectID, (objectStreamParser, offset));
+                        else
+                        {
+                            // seems to be quite common for file that were incrementally updated
+                            //PdfSharpLogHost.PdfReadingLogger.LogWarning("Duplicate object definition in object stream {streamId}, object {objectId} already present",
+                            //    objectStream.ObjectID, objectID);
+                        }
+                    }
+                }
+            }
+
+#else
             // New code: Add an entry for each ObjectID saved in an ObjectStream to _objectStreamObjectSources.
             // Each entry holds the ObjectStream’s parser and the offset, to be able to directly load the object later.
 
@@ -1200,7 +1239,7 @@ namespace PdfSharp.Pdf.IO
                 throw new ObjectNotAvailableException($"Could not load the ObjectStreams with the following ObjectNumbers: {String.Join(", ", nextObjectStreamIDsToLoad)}. " +
                                                       $"Perhaps there is a cyclic reference between ObjectStreams, whose stream lengths are saved in an object inside the other ObjectStream.");
             }
-#else
+//#else
             // Old code: Add an entry for each ObjectStreamID to _objectStreamsWithParsers.
             // Each entry holds the ObjectStream and its Parser, to be able to scan the ObjectStreams later.
             // _objectStreamsWithParsers.ContainsKey(objectStreamID) caused performance issues and could be omitted, as the loop does not save the parser for an ObjectStream a second time.
@@ -1580,36 +1619,6 @@ namespace PdfSharp.Pdf.IO
             ReadStreamFromXRefTable(xrefStream);
 #endif
 
-            // Usually, the cross-reference stream and its reference have not been read yet.
-            if (!xrefTable.Contains(objectID))
-            {
-                var iref = new PdfReference(xrefStream)
-                {
-                    ObjectID = objectID,
-                    Value = xrefStream,
-                    Position = xrefStart
-                };
-                xrefTable.Add(iref);
-            }
-            // If a cross-reference stream B is referenced in the /Prev key of another cross-reference stream A dictionary,
-            // it doesn’t have to be referenced in the cross-reference stream A itself.
-            // But if it is, its reference has been already created, when reading all the cross-reference stream A
-            // references. So we reuse this reference here, but set the value,
-            // as the object itself has not been read, when reading the references.
-            else
-            {
-                var oldIref = xrefTable.AllReferences.First(x => x.ObjectID == objectID);
-                oldIref.Value = xrefStream;
-
-                if (oldIref.Position != xrefStart)
-                {
-                    PdfSharpLogHost.PdfReadingLogger.LogError("Object '{ObjectID}' already exists in xref table’s references, referring to position {Position}. The latter one referring to position {Position} is used. " +
-                                                              "This should not occur. If somebody came here, please send us your PDF file so that we can fix it (issues (at) pdfsharp.net.", oldIref.ObjectID, oldIref.Position, xrefStart);
-
-                    oldIref.Position = xrefStart;
-                }
-            }
-
             Debug.Assert(xrefStream.Stream != null);
             //string sValue = new RawEncoding().GetString(xrefStream.Stream.UnfilteredValue,);
             //_ = typeof(int);
@@ -1690,6 +1699,9 @@ namespace PdfSharp.Pdf.IO
                 }
             }
 #endif
+            // holds the objectStream-ids found in this xref-stream
+            HashSet<int> objectStreamNumbers = new();
+
             int index2 = -1;
             for (int ssc = 0; ssc < subsectionCount; ssc++)
             {
@@ -1698,16 +1710,11 @@ namespace PdfSharp.Pdf.IO
                 {
                     index2++;
 
-                    PdfCrossReferenceStream.CrossReferenceStreamEntry item = new()
-                    {
-                        Type = StreamHelper.ReadBytes(bytes, index2 * wsum, wsize[0]),
-                        Field2 = StreamHelper.ReadBytes(bytes, index2 * wsum + wsize[0], wsize[1]),
-                        Field3 = StreamHelper.ReadBytes(bytes, index2 * wsum + wsize[0] + wsize[1], wsize[2])
-                    };
+                    var iType = StreamHelper.ReadBytes(bytes, index2 * wsum, wsize[0]);
+                    var iField2 = StreamHelper.ReadBytes(bytes, index2 * wsum + wsize[0], wsize[1]);
+                    var iField3 = StreamHelper.ReadBytes(bytes, index2 * wsum + wsize[0] + wsize[1], wsize[2]);
 
-                    xrefStream.Entries.Add(item);
-
-                    switch (item.Type)
+                    switch (iType)
                     {
                         case 0:
                             // Nothing to do, not needed.
@@ -1717,13 +1724,21 @@ namespace PdfSharp.Pdf.IO
                             //// Even if it is restricted, an object can exist in more than one subsection.
                             //// (PDF Reference Implementation Notes 15).
 
-                            SizeType position = (SizeType)item.Field2;
+                            SizeType position = (SizeType)iField2;
                             objectID = ReadObjectNumber(position);
+                            if (objectID.ObjectNumber > size)
+                            {
+                                // the Spec. states about the /Size entry of a trailer:
+                                // "Any object in a cross-reference section whose number is greater than this 
+                                // value shall be ignored and defined to be missing by a conforming reader."
+                                PdfSharpLogHost.PdfReadingLogger.LogWarning("Object number ({objectNumber}) greater than max object number ({size}) specified in XRef-Stream {xrefId}",
+                                    objectID.ObjectNumber, size, xrefStream.ObjectID);
+                            }
 #if DEBUG_
                             if (objectID.ObjectNumber == 1074)
                                 _ = typeof(int);
 #endif
-                            Debug.Assert(objectID.GenerationNumber == item.Field3);
+                            Debug.Assert(objectID.GenerationNumber == iField3);
                             
                             // Ignore the latter one.
                             if (!xrefTable.Contains(objectID))
@@ -1740,11 +1755,25 @@ namespace PdfSharp.Pdf.IO
                             break;
 
                         case 2:
-                            // Nothing to do yet.
+                            // object-stream number / index in object-stream
+                            // collect objects stored in object streams
+                            //var objectNumber = subsections[ssc][0] + idx;
+                            var streamNumber = (int)iField2;
+                            //var indexInStream = (int)iField3;
+                            objectStreamNumbers.Add(streamNumber);
+                            if (streamNumber > size)
+                            {
+                                // the Spec. states about the /Size entry of a trailer:
+                                // "Any object in a cross-reference section whose number is greater than this 
+                                // value shall be ignored and defined to be missing by a conforming reader."
+                                PdfSharpLogHost.PdfReadingLogger.LogWarning("ObjectStream number ({streamId}) greater than max object number ({size}) specified in XRef-Stream {xrefId}",
+                                    streamNumber, size, xrefStream.ObjectID);
+                            }
                             break;
                     }
                 }
             }
+            _objectStreamNumbersPerXref.Add(objectStreamNumbers);
             return xrefStream;
         }
 
@@ -1847,6 +1876,8 @@ namespace PdfSharp.Pdf.IO
 #if true
         // Holds the parser and the offset for each ObjectID residing in an ObjectStream.
         readonly Dictionary<PdfObjectID, (Parser Parser, SizeType Offset)> _objectStreamObjectSources = new();
+        // list of objectStream-ids per xref-stream (newest first)
+        readonly List<HashSet<int>> _objectStreamNumbersPerXref = new();
 #else
         // Holds the ObjectStream and the parser for each ObjectStream’s ObjectID.
         readonly Dictionary<PdfObjectID, (PdfObjectStream ObjectStream, Parser Parser)> _objectStreamsWithParsers = new();
